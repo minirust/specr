@@ -1,5 +1,6 @@
 #![feature(let_else)]
 
+mod cp;
 mod source;
 mod argmatch;
 mod access;
@@ -9,27 +10,17 @@ mod clear_verbatim;
 mod ret;
 
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use quote::ToTokens;
 use std::process::Command;
 use reqwest::blocking::Client;
 
 fn main() {
-    let genpath = Path::new("generated");
-    if genpath.exists() {
-       fs::remove_dir_all(genpath).unwrap();
-    }
-
-    Command::new("cargo")
-        .args(&["new", "generated", "--lib"])
-        .output()
-        .unwrap();
+    let template_p = PathBuf::from("template");
+    let generated_p = PathBuf::from("generated");
+    cp::cp_dir(template_p, generated_p).expect("copying template failed!");
 
     let client = Client::new();
-
-    let gen_baselib: PathBuf = ["generated", "src", "baselib.rs"].iter().collect();
-    let baselib_code = include_str!("baselib.rs");
-    fs::write(&gen_baselib, &baselib_code).unwrap();
 
     make_mod(&client, "prelude", &["prelude.md"]);
 
@@ -49,20 +40,6 @@ fn main() {
         "mem/interface.md",
         "mem/intptrcast.md"
     ]);
-
-    let lib_path: PathBuf = ["generated", "src", "lib.rs"].iter().collect();
-	fs::write(&lib_path,
-		"#![feature(let_else)]                \n\
-		#![feature(try_trait_v2)]             \n\
-		#![feature(try_trait_v2_yeet)]        \n\
-		#![feature(yeet_expr)]                \n\
-		#![feature(associated_type_defaults)] \n\
-		#![allow(unused)]                     \n\
-		pub mod baselib;                      \n\
-		pub mod prelude;                      \n\
-		pub mod lang;                         \n\
-		pub mod mem;").unwrap();
-
 
     let cargo_toml: PathBuf = ["generated", "Cargo.toml"].iter().collect();
     Command::new("cargo")
