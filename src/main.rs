@@ -7,6 +7,7 @@ mod access;
 mod mac;
 mod merge_impls;
 mod clear_verbatim;
+mod typerec;
 mod ret;
 
 use std::fs;
@@ -63,6 +64,7 @@ fn make_mod(client: &Client, modname: &str, filenames: &[&str]) {
 		let ast = access::access(ast);
 		let ast = merge_impls::merge(ast);
 		let ast = clear_verbatim::clear_empty_impls(ast);
+		let ast = typerec::fix(ast);
 		let ast = ret::add_ret(ast);
 
 		let code = ast.into_token_stream().to_string();
