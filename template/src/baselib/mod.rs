@@ -4,6 +4,16 @@ use crate::lang::Endianess;
 use crate::prelude::{Signedness, Result, NdResult, TerminationInfo};
 use std::ops::FromResidual;
 
+pub mod prelude {
+    pub use super::{
+        BigInt,
+        ret,
+        List,
+        Set,
+        Map
+    };
+}
+
 mod bigint;
 pub use bigint::*;
 

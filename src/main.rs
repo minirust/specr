@@ -53,6 +53,7 @@ fn make_mod(client: &Client, modname: &str, filenames: &[&str]) {
     let mut modcode = String::new();
     if modname != "prelude" {
         modcode.push_str("use crate::prelude::*;\n");
+        modcode.push_str("use crate::baselib::prelude::*;\n");
     }
 
     for f in filenames {
