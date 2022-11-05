@@ -1,10 +1,14 @@
 use std::collections::HashSet;
 
+use syn::*;
+use quote::ToTokens;
+
 mod inf_enums;
 
 mod wrap;
 use wrap::wrap_variant_elements;
 
+mod pat_idents;
 mod fix;
 
 /// Specifies an Element of some enum Variant.

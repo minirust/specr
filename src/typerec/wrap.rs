@@ -1,6 +1,3 @@
-use syn::*;
-use quote::ToTokens;
-
 use crate::typerec::*;
 
 /// Finds potentially recursive variant elements, and wraps them behind an Rc.

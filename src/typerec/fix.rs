@@ -1,7 +1,5 @@
-use syn::*;
 use syn::visit_mut::*;
 use syn::token::Colon;
-use quote::ToTokens;
 
 use crate::typerec::*;
 
@@ -55,10 +53,22 @@ impl VisitMut for Visitor<'_> {
     }
 
     // `Foo { x } => { ... }` ==> `Foo { x } => { let x = *x; ... }`
-    fn visit_expr_match_mut(&mut self, i: &mut ExprMatch) {
-        // TODO
+    fn visit_arm_mut(&mut self, i: &mut Arm) {
+        let idents = pat_idents::pat_idents(&i.pat, self.elements);
 
-        visit_expr_match_mut(self, i);
+        // TODO use quote for stuff like this:
+        let mut s = String::from("{");
+        for id in idents {
+            // TODO write my own deref function to prevent referencing of being in the way.
+            s.push_str(&format!("let {id} = *{id};"));
+        }
+        s.push_str(&format!("{}", i.body.to_token_stream()));
+        s.push_str("}");
+        let new_body = parse_str::<Expr>(&s).unwrap();
+
+        i.body = Box::new(new_body);
+
+        visit_arm_mut(self, i);
     }
 }
 
@@ -71,9 +81,10 @@ fn wrap_expr(expr: &mut Expr) {
 
 // extract the last segment (i.e. the enum Variant) from a path
 // `Foo::Bar` => `Bar`
-fn extract_variant(p: &Path) -> String {
+pub(in crate::typerec) fn extract_variant(p: &Path) -> String {
     let p = p.segments.iter().last().unwrap(); 
     let p = format!("{}", p.to_token_stream());
 
     p
 }
+

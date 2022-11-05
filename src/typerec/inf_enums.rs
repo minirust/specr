@@ -1,6 +1,3 @@
-use syn::*;
-use quote::ToTokens;
-
 use crate::typerec::*;
 
 /// Returns all type names occuring inside of an enum.
