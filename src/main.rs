@@ -84,7 +84,7 @@ fn compile(modfiles: &[(/*modname: */ &str, /*files: */ &[&str])]) {
         let ast = ret::add_ret(ast);
 
         // write AST back to Rust file.
-		let code = ast.into_token_stream().to_string();
+        let code = ast.into_token_stream().to_string();
         let filename = format!("{}.rs", modname);
         let p: PathBuf = ["generated", "src", &filename].iter().collect();
         fs::write(&p, &code).unwrap();
