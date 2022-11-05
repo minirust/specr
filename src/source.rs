@@ -12,6 +12,15 @@ pub fn fetch(client: &Client, filename: &str) -> String {
     filter_pseudo_rust(&s)
 }
 
+// for testing purposes only:
+#[allow(unused)]
+pub fn fetch_local(client: &Client, filename: &str) -> String {
+    let filename = format!("../ml47-minirust/{}", filename);
+    let s = std::fs::read_to_string(filename).unwrap();
+
+    filter_pseudo_rust(&s)
+}
+
 fn filter_pseudo_rust(mut s: &str) -> String {
 	const OFFSET1: usize = "\n```rust".len();
 	const OFFSET2: usize = "\n```".len();
@@ -25,8 +34,6 @@ fn filter_pseudo_rust(mut s: &str) -> String {
 			s = &s[j+OFFSET2..];
 		} else { panic!("unclosed code segment!"); }
 	}
-
-	assert!(out.len() > 0);
 
 	out
 }
