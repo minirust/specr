@@ -7,11 +7,14 @@ use std::ops::FromResidual;
 pub mod prelude {
     pub use super::{
         BigInt,
-        ret,
         List,
         Set,
-        Map
+        Map,
     };
+}
+
+pub fn deref_rc<T: Clone>(rc: &Rc<T>) -> T {
+    (**rc).clone()
 }
 
 mod bigint;
