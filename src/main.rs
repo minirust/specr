@@ -71,7 +71,7 @@ fn compile(modfiles: &[(/*modname: */ &str, /*files: */ &[&str])]) {
     }
 
     // resolve infinite type recursion
-    let mods = typerec::typerec(&modnames[..], mods);
+    let mods = typerec::typerec(mods);
 
     for (modname, ast) in modnames.iter().zip(mods.into_iter()) {
         // apply all other compilation stages.
