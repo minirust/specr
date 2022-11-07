@@ -74,7 +74,7 @@ impl VisitMut for Visitor<'_> {
 
 // wraps an Expr in Rc::new(_)
 fn wrap_expr(expr: &mut Expr) {
-    let e = format!("Rc::new({})", expr.to_token_stream());
+    let e = format!("std::rc::Rc::new({})", expr.to_token_stream());
     let e = parse_str::<Expr>(&e).unwrap();
     *expr = e;
 }

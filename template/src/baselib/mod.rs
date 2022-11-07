@@ -1,6 +1,6 @@
 use std::collections::{HashSet, HashMap};
 use crate::mem::BasicMemory;
-use crate::lang::Endianess;
+use crate::lang::Endianness;
 use crate::prelude::{Signedness, Result, NdResult, TerminationInfo};
 use std::ops::FromResidual;
 

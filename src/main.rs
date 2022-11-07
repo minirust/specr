@@ -53,7 +53,7 @@ fn compile(modfiles: &[(/*modname: */ &str, /*files: */ &[&str])]) {
     let mut mods: Vec<syn::File> = Vec::new();
     for (modname, files) in modfiles.iter().cloned() {
         // add prelude imports
-        let mut code = String::from("use crate::baselib::prelude::*;\n");
+        let mut code = String::from("use crate::baselib::{self, prelude::*};\n");
         if modname != "prelude" {
             code.push_str("use crate::prelude::*;\n");
         }

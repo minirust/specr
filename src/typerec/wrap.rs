@@ -30,7 +30,7 @@ fn wrap_enum(it_enum: &mut ItemEnum, infs: &HashSet<String>) -> HashSet<VariantE
         for (i, f) in fields.into_iter().enumerate() {
             let ty_str = format!("{}", f.ty.to_token_stream());
             if infs.contains(&ty_str) {
-                let wrapped_ty = format!("Rc<{}>", &ty_str);
+                let wrapped_ty = format!("std::rc::Rc<{}>", &ty_str);
                 let wrapped_ty = parse_str::<Type>(&wrapped_ty).unwrap();
                 f.ty = wrapped_ty;
 
