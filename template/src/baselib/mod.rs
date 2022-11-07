@@ -1,5 +1,4 @@
 use std::collections::{HashSet, HashMap};
-use crate::mem::BasicMemory;
 use crate::prelude::{Endianness, Signedness, Result, NdResult, TerminationInfo};
 use std::ops::FromResidual;
 
@@ -21,7 +20,6 @@ pub use bigint::*;
 pub type List<T> = Vec<T>;
 pub type Set<T> = HashSet<T>;
 pub type Map<K, V> = HashMap<K, V>;
-pub type Memory = BasicMemory;
 
 pub fn default<T: Default>() -> T {
 	T::default()
