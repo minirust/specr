@@ -2,48 +2,95 @@ use std::mem;
 use syn::{*, token::{Brace, Match}, punctuated::Punctuated};
 use proc_macro2::{Ident, Span};
 use quote::ToTokens;
+use proc_macro2::TokenTree;
 
-// ItemImpl, but with only one item inside
-type SingletonItemImpl = ItemImpl;
+struct FwdDeclaration {
+    // stores all generic parameters etc. of the surrounding impl block
+    // but empty_ii.items is empty, so it's an empty impl block.
+    empty_ii: ItemImpl,
+
+    // stores the actual method forward declaration
+    iim: ImplItemMethod,
+
+    match_ident: String,
+    match_idx: usize,
+}
 
 pub fn argmatch(mut arg: syn::File) -> syn::File {
-    let fwd_decls = extract_forward_declarations(&mut arg);
+    let fwd_decls = extract_fwd_decls(&mut arg);
     for fwd_decl in fwd_decls {
         let impls = extract_implementations(&fwd_decl, &mut arg);
-        if impls.is_empty() { continue; }
-        let idx = get_match_idx(&fwd_decl, &impls);
-        let item_impl = merge_implementations(fwd_decl, impls, idx);
+        let item_impl = merge_implementations(fwd_decl, impls);
         arg.items.push(Item::Impl(item_impl));
     }
 
     arg
 }
 
-fn is_fwd_decl_block(b: &Block) -> bool {
-    if b.stmts.len() != 1 { return false; }
-    if let Stmt::Item(Item::Verbatim(ts)) = &b.stmts[0] {
-        format!("{}", &ts) == ";"
-    } else { false }
+fn get_argmatch_attr(attrs: &mut Vec<Attribute>) -> Option</*match ident: */ String> {
+    for i in 0..attrs.len() {
+        let attr = &attrs[i];
+        let segments: Vec<String> = attr.path.segments
+                                             .iter()
+                                             .map(|x| format!("{}", x.to_token_stream()))
+                                             .collect();
+        let [l, r] = &segments[..] else { continue };
+        if l == "specr" && r == "argmatch" {
+            let Some(tok) = attr.tokens.clone().into_iter().next() else { continue };
+            let TokenTree::Group(g) = tok else { continue };
+            let match_ident = format!("{}", g.stream());
+            attrs.remove(i);
+            return Some(match_ident);
+        }
+    }
+
+    None
 }
 
-fn extract_forward_declarations(arg: &mut syn::File) -> Vec<SingletonItemImpl> {
+fn get_fwd_decl(ii: &ItemImpl, iim: &mut ImplItemMethod) -> Option<FwdDeclaration> {
+    let mut empty_ii = ii.clone();
+    empty_ii.items = Vec::new();
+
+    let match_ident = get_argmatch_attr(&mut iim.attrs)?;
+
+    let match_idx = if match_ident == "self" {
+        0
+    } else {
+        iim.sig.inputs.iter().position(|arg| {
+            let FnArg::Typed(pat_ty) = arg else { return false };
+            format!("{}", pat_ty.pat.to_token_stream()) == match_ident
+        }).expect("Cannot find argmatch match_idx")
+    };
+
+    let iim = iim.clone();
+    Some(FwdDeclaration {
+        empty_ii,
+        iim,
+        match_ident,
+        match_idx,
+    })
+}
+
+fn extract_fwd_decls(arg: &mut syn::File) -> Vec<FwdDeclaration> {
     let mut out = Vec::new();
 
     for i in &mut arg.items {
         if let Item::Impl(x) = i {
-            let mut old_items = Vec::new();
+            let mut old_items: Vec<syn::ImplItem> = Vec::new();
             mem::swap(&mut x.items, &mut old_items);
 
-            let mut new_items = Vec::new();
+            let mut new_items: Vec<syn::ImplItem> = Vec::new();
 
-            for ii in old_items {
-                if let ImplItem::Method(iim) = &ii && is_fwd_decl_block(&iim.block) {
-                    let mut candidate = x.clone();
-                    candidate.items = vec![ii];
-                    out.push(candidate);
-                } else {
-                    new_items.push(ii);
+            for mut ii in old_items {
+                if let ImplItem::Method(iim) = &mut ii {
+                    if let Some(fwd_decl) = get_fwd_decl(x, iim) {
+                        out.push(fwd_decl);
+                        continue;
+                    }
                 }
+
+                // called if ii is not a fwd declaration
+                new_items.push(ii);
             }
             mem::swap(&mut x.items, &mut new_items);
         }
@@ -52,27 +99,14 @@ fn extract_forward_declarations(arg: &mut syn::File) -> Vec<SingletonItemImpl> {
     out
 }
 
-fn get_match_idx(_fwd_decl: &SingletonItemImpl, impls: &[ImplItemMethod]) -> usize {
-    let n = impls[0].sig.inputs.len();
-    for i in 0..n {
-        let f = |j: usize| format!("{}", impls[j].sig.inputs[i].to_token_stream());
-        if f(0) != f(1) {
-            return i;
-        }
-    }
-    unreachable!()
-}
-
-fn method_fits_fwd_decl(fwd_decl: &SingletonItemImpl, iim: &ImplItemMethod) -> bool {
-    if let ImplItem::Method(singleton_iim) = &fwd_decl.items[0] {
-        let fwd_ident = &singleton_iim.sig.ident;
-        let iim_ident = &iim.sig.ident;
-        format!("{}", fwd_ident) == format!("{}", iim_ident)
-    } else { unreachable!() }
+fn method_fits_fwd_decl(fwd_decl: &FwdDeclaration, iim: &ImplItemMethod) -> bool {
+    let fwd_ident = &fwd_decl.iim.sig.ident;
+    let iim_ident = &iim.sig.ident;
+    format!("{}", fwd_ident) == format!("{}", iim_ident)
 }
 
 // extracts all fitting ImplItemMethods
-fn extract_implementations(fwd_decl: &SingletonItemImpl, arg: &mut syn::File) -> Vec<ImplItemMethod> {
+fn extract_implementations(fwd_decl: &FwdDeclaration, arg: &mut syn::File) -> Vec<ImplItemMethod> {
     let mut out = Vec::new();
 
     for i in &mut arg.items {
@@ -97,17 +131,8 @@ fn extract_implementations(fwd_decl: &SingletonItemImpl, arg: &mut syn::File) ->
     out
 }
 
-fn merge_implementations(fwd: SingletonItemImpl, impls: Vec<ImplItemMethod>, idx: usize) -> ItemImpl {
-    let match_ident: Ident = if let ImplItem::Method(iim) = &fwd.items[0] {
-        match &iim.sig.inputs[idx] {
-            FnArg::Receiver(_) => { Ident::new("self", Span::call_site()) },
-            FnArg::Typed(pt) => {
-                if let Pat::Ident(pi) = &*pt.pat {
-                    pi.ident.clone()
-                } else { unreachable!() }
-            },
-        }
-    } else { unreachable!() };
+fn merge_implementations(fwd_decl: FwdDeclaration, impls: Vec<ImplItemMethod>) -> ItemImpl {
+    let match_ident = Ident::new(&fwd_decl.match_ident, Span::call_site());
 
     let match_expr = Box::new(Expr::Path(ExprPath {
         attrs: Vec::new(),
@@ -122,13 +147,10 @@ fn merge_implementations(fwd: SingletonItemImpl, impls: Vec<ImplItemMethod>, idx
         }
     }));
 
-    let mut out = fwd;
-
     let mut arms = Vec::new();
     for iim in impls {
-        let pat = if let FnArg::Typed(pt) = &iim.sig.inputs[idx] {
-            pt.pat.clone()
-        } else { unreachable!() };
+        let FnArg::Typed(pt) = &iim.sig.inputs[fwd_decl.match_idx] else { unreachable!() };
+        let pat = pt.pat.clone();
 
         arms.push(Arm {
             attrs: Vec::new(),
@@ -144,18 +166,19 @@ fn merge_implementations(fwd: SingletonItemImpl, impls: Vec<ImplItemMethod>, idx
         });
     }
 
-    if let ImplItem::Method(iim) = &mut out.items[0] {
-        iim.block.stmts = vec![
-            Stmt::Expr(Expr::Match(ExprMatch {
-                attrs: Vec::new(),
-                match_token: Match::default(),
-                expr: match_expr,
-                brace_token: Brace::default(),
-                arms,
-            }))
-        ];
-    } else { unreachable!() }
+    let mut iim = fwd_decl.iim.clone();
+    iim.block.stmts = vec![
+        Stmt::Expr(Expr::Match(ExprMatch {
+            attrs: Vec::new(),
+            match_token: Match::default(),
+            expr: match_expr,
+            brace_token: Brace::default(),
+            arms,
+        }))
+    ];
+
+    let mut out = fwd_decl.empty_ii.clone();
+    out.items = vec![ImplItem::Method(iim)];
 
     out
-        
 }
