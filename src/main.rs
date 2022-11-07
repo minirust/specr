@@ -68,7 +68,8 @@ fn compile(modfiles: &[(/*modname: */ &str, /*files: */ &[&str])]) {
         // add prelude imports
         let mut code = String::new();
         code.push_str("use crate::baselib::prelude::*;\n");
-        code.push_str("use crate::{lang, mem, baselib};\n");
+        code.push_str("use crate::hiddenlib::prelude::*;\n");
+        code.push_str("use crate::{lang, mem, baselib, hiddenlib};\n");
         if modname != "prelude" {
             code.push_str("use crate::prelude::*;\n");
         }

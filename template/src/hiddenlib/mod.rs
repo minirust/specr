@@ -1,4 +1,10 @@
-use super::*;
+use std::rc::Rc;
+
+pub mod prelude {}
+
+pub fn deref_rc<T: Clone>(rc: &Rc<T>) -> T {
+    (**rc).clone()
+}
 
 pub trait MonadicReturn<T> {
 	fn monadic_return(t: T) -> Self;
@@ -22,3 +28,4 @@ fn monadic_return_test() {
 	let _: Nondet<i32> = ret(5);
 	let _: NdResult<i32> = ret(5);
 }
+

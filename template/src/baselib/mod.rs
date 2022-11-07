@@ -2,7 +2,6 @@ use std::collections::{HashSet, HashMap};
 use crate::mem::BasicMemory;
 use crate::prelude::{Endianness, Signedness, Result, NdResult, TerminationInfo};
 use std::ops::FromResidual;
-use std::rc::Rc;
 
 pub mod prelude {
     pub use super::{
@@ -13,15 +12,8 @@ pub mod prelude {
     };
 }
 
-pub fn deref_rc<T: Clone>(rc: &Rc<T>) -> T {
-    (**rc).clone()
-}
-
 mod bigint;
 pub use bigint::*;
-
-mod ret;
-pub use ret::*;
 
 pub type List<T> = Vec<T>;
 pub type Set<T> = HashSet<T>;
@@ -40,7 +32,6 @@ pub struct ArgAbi;
 impl Endianness {
     fn decode<const N: usize>(self, _signed: Signedness, _bytes: [u8; N]) -> BigInt { todo!() }
     fn encode<const N: usize>(self, _signed: Signedness, _int: BigInt) -> Option<[u8; N]> { todo!() }
-
 }
 
 pub type BbName = String;

@@ -17,11 +17,11 @@ fn parse<T: Parse>(s: &str) -> T {
 }
 
 fn empty_ret() -> Expr {
-    parse::<Expr>("baselib::ret(())")
+    parse::<Expr>("hiddenlib::ret(())")
 }
 
 fn wrap_ret_expr(expr: &mut Expr) {
-    let s = format!("baselib::ret({})", expr.to_token_stream());
+    let s = format!("hiddenlib::ret({})", expr.to_token_stream());
     *expr = parse::<Expr>(&s);
 }
 
