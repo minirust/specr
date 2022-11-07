@@ -7,7 +7,6 @@ mod argmatch;
 mod merge_impls;
 mod baselib_use;
 mod source;
-mod mac;
 mod clear_verbatim;
 mod typerec;
 mod ret;
@@ -66,18 +65,15 @@ fn compile(modfiles: &[(/*modname: */ &str, /*files: */ &[&str])]) {
     let modnames: Vec<&str> = modfiles.iter().cloned().map(|(x, _)| x).collect();
 
     let mut mods: Vec<syn::File> = Vec::new();
-    for (modname, files) in modfiles.iter().cloned() {
-        // add prelude imports
-        let mut code = String::new();
-        code.push_str("use crate::baselib::prelude::*;\n");
-        code.push_str("use crate::hiddenlib::prelude::*;\n");
-        code.push_str("use crate::{lang, mem, baselib, hiddenlib};\n");
-        if modname != "prelude" {
-            code.push_str("use crate::prelude::*;\n");
-        }
+    for (_, files) in modfiles.iter() {
+        // add imports
+        let mut code = String::from(
+            "use crate::baselib::prelude::*;\n
+            use crate::{baselib, lang, mem};\n"
+        );
 
         // merge all .md files into one rust file
-        for f in files {
+        for f in *files {
             code.push_str(&source::fetch(f));
         }
 
@@ -95,7 +91,6 @@ fn compile(modfiles: &[(/*modname: */ &str, /*files: */ &[&str])]) {
         let ast = merge_impls::merge(ast);
         let ast = baselib_use::apply_baselib_use(ast);
         let ast = clear_verbatim::clear_verbatim(ast);
-        let ast = mac::add_macro_exports(ast);
         let ast = ret::add_ret(ast);
 
         // write AST back to Rust file.

@@ -1,9 +1,6 @@
 use std::rc::Rc;
 use crate::baselib::{Nondet, NdResult, Result};
 
-pub mod prelude {}
-
-
 pub fn deref_rc<T: Clone>(rc: &Rc<T>) -> T {
     (**rc).clone()
 }

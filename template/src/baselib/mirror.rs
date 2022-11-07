@@ -1,7 +1,5 @@
 use crate::baselib::*;
 
-// This module mirrors the `prelude.md` file that is "rust,ignore"d.
-
 pub type Result<T=()> = std::result::Result<T, TerminationInfo>;
 
 #[non_exhaustive]

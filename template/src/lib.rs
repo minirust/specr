@@ -6,8 +6,6 @@
 #![allow(unused)]
 
 #[macro_use]
-pub mod hiddenlib;
-#[macro_use]
 pub mod baselib;
 
 #[macro_use]

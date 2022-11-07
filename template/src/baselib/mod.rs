@@ -1,45 +1,35 @@
 use std::collections::{HashSet, HashMap};
 
+// mirrors the ignored `prelude.md`.
+// accessed using `_`.
 #[macro_use]
 mod mirror;
-pub use mirror::*;
+use mirror::*;
 
+// contains the BigInt implemenation.
+// accessed using `BigInt`.
 mod bigint;
 pub use bigint::BigInt;
 
+// contains hidden functions that are called only due to generated code.
+// accessed using `baselib::hidden::_`.
+pub mod hidden;
+
+// contains items to be exposed to the user without importing.
+// like List, Set etc.
+// accessed using `_`.
+#[macro_use]
+mod env;
+pub use env::*;
+
+// contains implementation for opaque items from MiniRust, which are not already defined in mirror.
+// accessed using `baselib::_`.
+#[macro_use]
+mod intrinsics;
+pub use intrinsics::*;
+
 pub mod prelude {
     pub use crate::baselib::mirror::*;
-    pub use super::{
-        BigInt,
-        List,
-        Set,
-        Map,
-        pick,
-        predict,
-        default,
-    };
-}
-
-pub type List<T> = Vec<T>;
-pub type Set<T> = HashSet<T>;
-pub type Map<K, V> = HashMap<K, V>;
-
-pub fn default<T: Default>() -> T {
-	T::default()
-}
-
-pub struct ArgAbi;
-
-pub type BbName = String;
-pub type LocalName = String;
-pub type FnName = String;
-
-pub fn pick<T>(f: impl Fn(T) -> bool) -> Nondet<T> { todo!() }
-pub fn predict<T>(f: impl Fn(T) -> bool) -> Nondet<T> { todo!() }
-
-#[macro_export]
-macro_rules! list {
-	() => { vec![] };
-	($start:expr $(,$a:expr)*) => { vec![$start $(,$a)* ] };
-	($a:expr ; $b:expr) => { vec![$a ; $b] };
+    pub use crate::baselib::BigInt;
+    pub use crate::baselib::env::*;
 }

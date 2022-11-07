@@ -60,7 +60,7 @@ impl VisitMut for Visitor<'_> {
         let mut s = String::from("{");
         for id in idents {
             // TODO write my own deref function to prevent referencing of being in the way.
-            s.push_str(&format!("let {id} = hiddenlib::deref_rc(&{id});"));
+            s.push_str(&format!("let {id} = baselib::hidden::deref_rc(&{id});"));
         }
         s.push_str(&format!("{}", i.body.to_token_stream()));
         s.push_str("}");
