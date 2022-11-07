@@ -1,21 +1,7 @@
 /// This module gets the source code of MiniRust.
 
-use reqwest::blocking::Client;
-
-pub fn fetch(client: &Client, filename: &str) -> String {
-    let filename = format!("{}{}", "https://raw.githubusercontent.com/memoryleak47/minirust/dev/", filename);
-
-    let s = client.get(filename)
-        .send().expect("download failed!")
-        .text().expect("Cannot convert HTTP Response to text!");
-
-    filter_pseudo_rust(&s)
-}
-
-// for testing purposes only:
-#[allow(unused)]
-pub fn fetch_local(client: &Client, filename: &str) -> String {
-    let filename = format!("../ml47-minirust/{}", filename);
+pub fn fetch(filename: &str) -> String {
+    let filename = format!("minirust/{}", filename);
     let s = std::fs::read_to_string(filename).unwrap();
 
     filter_pseudo_rust(&s)

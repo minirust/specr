@@ -14,7 +14,6 @@ use std::fs;
 use std::path::PathBuf;
 use quote::ToTokens;
 use std::process::Command;
-use reqwest::blocking::Client;
 
 fn main() {
     let template_p = PathBuf::from("template");
@@ -49,7 +48,6 @@ fn main() {
 }
 
 fn compile(modfiles: &[(/*modname: */ &str, /*files: */ &[&str])]) {
-    let client = Client::new();
     let modnames: Vec<&str> = modfiles.iter().cloned().map(|(x, _)| x).collect();
 
     let mut mods: Vec<syn::File> = Vec::new();
@@ -62,7 +60,7 @@ fn compile(modfiles: &[(/*modname: */ &str, /*files: */ &[&str])]) {
 
         // merge all .md files into one rust file
         for f in files {
-            code.push_str(&source::fetch(&client, f));
+            code.push_str(&source::fetch(f));
         }
 
         let ast = syn::parse_str::<syn::File>(&code)
