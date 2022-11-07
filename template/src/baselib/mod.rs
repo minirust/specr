@@ -9,6 +9,9 @@ pub mod prelude {
         List,
         Set,
         Map,
+        pick,
+        predict,
+        default,
     };
 }
 
@@ -38,7 +41,7 @@ pub type BbName = String;
 pub type LocalName = String;
 pub type FnName = String;
 
-pub struct Nondet<T>(T);
+pub struct Nondet<T>(pub T);
 pub fn pick<T>(f: impl Fn(T) -> bool) -> Nondet<T> { todo!() }
 pub fn predict<T>(f: impl Fn(T) -> bool) -> Nondet<T> { todo!() }
 
