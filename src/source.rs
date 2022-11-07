@@ -7,14 +7,17 @@ pub fn fetch(filename: &str) -> String {
     filter_pseudo_rust(&s)
 }
 
+// this filters out the code blocks ```rust <code> ```
+// it will ignore ```rust,ignore <code> ``` blocks
 fn filter_pseudo_rust(mut s: &str) -> String {
-    const OFFSET1: usize = "\n```rust".len();
-    const OFFSET2: usize = "\n```".len();
+    const OFFSET1: usize = "\n```rust\n".len();
+    const OFFSET2: usize = "\n```\n".len();
 
     let mut out = String::new();
-    while let Some(i) = s.find("\n```rust") {
+    // note that this find(_) pattern doesn't match "```rust,ignore" due to the final newline.
+    while let Some(i) = s.find("\n```rust\n") {
         s = &s[i+OFFSET1..];
-        if let Some(j) = s.find("\n```") {
+        if let Some(j) = s.find("\n```\n") {
             out.push_str(&s[..j]);
             out.push_str("\n\n");
             s = &s[j+OFFSET2..];
