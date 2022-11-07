@@ -1,11 +1,14 @@
 #![feature(let_else)]
 
 mod cp;
-mod source;
+
+// TODO consistent module naming scheme for module and entry function.
 mod argmatch;
+mod merge_impls;
+mod baselib_use;
+mod source;
 mod access;
 mod mac;
-mod merge_impls;
 mod clear_verbatim;
 mod typerec;
 mod ret;
@@ -89,12 +92,12 @@ fn compile(modfiles: &[(/*modname: */ &str, /*files: */ &[&str])]) {
 
     for (modname, ast) in modnames.iter().zip(mods.into_iter()) {
         // apply all other compilation stages.
+        let ast = access::access(ast);
         let ast = argmatch::argmatch(ast);
+        let ast = merge_impls::merge(ast);
+        let ast = baselib_use::apply_baselib_use(ast);
         let ast = clear_verbatim::clear_verbatim(ast);
         let ast = mac::add_macro_exports(ast);
-        let ast = access::access(ast);
-        let ast = merge_impls::merge(ast);
-        let ast = clear_verbatim::clear_empty_impls(ast);
         let ast = ret::add_ret(ast);
 
         // write AST back to Rust file.
