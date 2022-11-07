@@ -28,9 +28,11 @@ fn wrap_enum(it_enum: &mut ItemEnum, infs: &HashSet<String>) -> HashSet<VariantE
         };
 
         for (i, f) in fields.into_iter().enumerate() {
-            let ty_str = format!("{}", f.ty.to_token_stream());
-            if infs.contains(&ty_str) {
-                let wrapped_ty = format!("std::rc::Rc<{}>", &ty_str);
+            let Type::Path(tp) = &f.ty else { continue };
+            let last_ident = &tp.path.segments.last().unwrap().ident;
+            let ty_name_str = format!("{}", last_ident);
+            if infs.contains(&ty_name_str) {
+                let wrapped_ty = format!("std::rc::Rc<{}>", f.ty.to_token_stream());
                 let wrapped_ty = parse_str::<Type>(&wrapped_ty).unwrap();
                 f.ty = wrapped_ty;
 

@@ -10,7 +10,7 @@ fn attr_is_rc(attr: &Attribute) -> bool {
     s1 == "specr" && s2 == "rc"
 }
 
-/// Returns the enums being marked with `#[specr::rc]`
+/// Returns the enums being marked with `#[specr::rc]` without any generic parameters.
 /// It also removes this attribute from the source code.
 pub fn inf_size_enums(mods: &mut [syn::File]) -> HashSet<String> {
     let mut enums = HashSet::new();
