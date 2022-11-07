@@ -1,8 +1,8 @@
 use std::collections::{HashSet, HashMap};
 use crate::mem::BasicMemory;
-use crate::lang::Endianness;
-use crate::prelude::{Signedness, Result, NdResult, TerminationInfo};
+use crate::prelude::{Endianness, Signedness, Result, NdResult, TerminationInfo};
 use std::ops::FromResidual;
+use std::rc::Rc;
 
 pub mod prelude {
     pub use super::{
@@ -37,19 +37,15 @@ pub struct Align;
 
 pub struct ArgAbi;
 
-pub struct MyEndianess;
-impl Endianess for MyEndianess {
+impl Endianness {
     fn decode<const N: usize>(self, _signed: Signedness, _bytes: [u8; N]) -> BigInt { todo!() }
     fn encode<const N: usize>(self, _signed: Signedness, _int: BigInt) -> Option<[u8; N]> { todo!() }
 
 }
-pub const ENDIANESS: MyEndianess = MyEndianess;
 
 pub type BbName = String;
 pub type LocalName = String;
 pub type FnName = String;
-
-pub const PTR_SIZE: usize = 8;
 
 pub struct Nondet<T>(T);
 pub fn pick<T>(f: impl Fn(T) -> bool) -> Nondet<T> { todo!() }
