@@ -7,7 +7,6 @@ mod argmatch;
 mod merge_impls;
 mod baselib_use;
 mod source;
-mod access;
 mod mac;
 mod clear_verbatim;
 mod typerec;
@@ -92,7 +91,6 @@ fn compile(modfiles: &[(/*modname: */ &str, /*files: */ &[&str])]) {
 
     for (modname, ast) in modnames.iter().zip(mods.into_iter()) {
         // apply all other compilation stages.
-        let ast = access::access(ast);
         let ast = argmatch::argmatch(ast);
         let ast = merge_impls::merge(ast);
         let ast = baselib_use::apply_baselib_use(ast);
