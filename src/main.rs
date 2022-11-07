@@ -26,7 +26,7 @@ fn main() {
     // setup "generated" directory.
 
     if !exists("template") {
-        eprintln!("You need to be at the project root to run `speccer`!");
+        eprintln!("You need to be at the project root to run `specr`!");
         std::process::exit(1);
     }
 
