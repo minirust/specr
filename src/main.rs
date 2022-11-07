@@ -15,10 +15,23 @@ use std::path::PathBuf;
 use quote::ToTokens;
 use std::process::Command;
 
+fn exists(s: &str) -> bool {
+    std::path::Path::new(s).exists()
+}
+
 fn main() {
-    let template_p = PathBuf::from("template");
-    let generated_p = PathBuf::from("generated");
-    cp::cp_dir(template_p, generated_p).expect("copying template failed!");
+    // setup "generated" directory.
+
+    if !exists("template") {
+        eprintln!("You need to be at the project root to run `speccer`!");
+        std::process::exit(1);
+    }
+
+    if !exists("generated") {
+        fs::create_dir("generated").expect("Could not create \"generated\" directory.");
+    }
+    fs::copy("template/Cargo.toml", "generated/Cargo.toml").expect("Could not copy Cargo.toml");
+    cp::cp_dir("template/src", "generated/src").expect("copying src failed!");
 
     // TODO automatically find files!
     compile(&[
