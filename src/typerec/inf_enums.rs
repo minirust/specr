@@ -1,56 +1,30 @@
 use crate::typerec::*;
 
-/// Returns all type names occuring inside of an enum.
-fn enum_types(it_enum: &ItemEnum) -> HashSet<String> {
-    let mut types = HashSet::new();
+/// returns whether `attr` is `#[specr::rc]`
+fn attr_is_rc(attr: &Attribute) -> bool {
+    let segments: Vec<String> = attr.path.segments.iter()
+                                    .map(|x| format!("{}", x.ident))
+                                    .collect();
+    let [s1, s2] = &segments[..] else { return false };
 
-    for variant in &it_enum.variants {
-        let fields: Vec<&Field> = match &variant.fields {
-            Fields::Named(x) => x.named.iter().collect(),
-            Fields::Unnamed(x) => x.unnamed.iter().collect(),
-            Fields::Unit => Vec::new(),
-        };
-
-        for f in fields {
-            let ty_str = format!("{}", f.ty.to_token_stream());
-            types.insert(ty_str);
-        }
-    }
-
-    types
+    s1 == "specr" && s2 == "rc"
 }
 
-/// Returns the names of all enums defined in the given modules.
-fn enum_names(mods: &[syn::File]) -> HashSet<String> {
-    let mut names = HashSet::new();
+/// Returns the enums being marked with `#[specr::rc]`
+/// It also removes this attribute from the source code.
+pub fn inf_size_enums(mods: &mut [syn::File]) -> HashSet<String> {
+    let mut enums = HashSet::new();
+
     for m in mods {
-        for item in &m.items {
-            if let Item::Enum(it_enum) = item {
-                let n = format!("{}", it_enum.ident);
-                names.insert(n);
-            }
+        for item in &mut m.items {
+            let Item::Enum(it_enum) = item else { continue };
+            let Some(i) = it_enum.attrs.iter().position(attr_is_rc) else { continue };
+
+            it_enum.attrs.remove(i);
+            let name = format!("{}", it_enum.ident);
+            enums.insert(name);
         }
     }
 
-    names
-}
-
-/// Returns the subset of enums which contain other enums, and hence having potentially(!) infinite size.
-pub fn inf_size_enums(mods: &[syn::File]) -> HashSet<String> {
-    let names = enum_names(mods);
-
-    let mut cands = HashSet::new();
-    for m in mods {
-        for item in &m.items {
-            if let Item::Enum(it_enum) = item {
-                let types = enum_types(it_enum);
-                if !types.is_disjoint(&names) {
-                    let n = format!("{}", it_enum.ident);
-                    cands.insert(n);
-                }
-            }
-        }
-    }
-
-    cands
+    enums
 }
