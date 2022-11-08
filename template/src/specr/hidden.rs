@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use crate::baselib::Nondet;
+use crate::specr::Nondet;
 
 pub fn deref_rc<T: Clone>(rc: &Rc<T>) -> T {
     (**rc).clone()

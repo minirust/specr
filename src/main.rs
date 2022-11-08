@@ -6,7 +6,6 @@ mod cp;
 mod imports;
 mod argmatch;
 mod merge_impls;
-mod baselib_use;
 mod source;
 mod clear_verbatim;
 mod typerec;
@@ -55,7 +54,6 @@ fn compile(mods: Vec<Module>) {
         // apply all other compilation stages.
         let ast = argmatch::argmatch(m.ast);
         let ast = merge_impls::merge(ast);
-        let ast = baselib_use::apply_baselib_use(ast);
         let ast = clear_verbatim::clear_verbatim(ast);
         let ast = ret::add_ret(ast);
 

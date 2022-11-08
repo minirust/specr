@@ -1,8 +1,8 @@
-use crate::baselib::*;
+use crate::specr::*;
 
 pub struct ArgAbi;
 pub type BbName = String;
 pub type LocalName = String;
 pub type FnName = String;
 
-pub struct Nondet<T>(pub(in crate::baselib) T);
+pub struct Nondet<T>(pub(in crate::specr) T);

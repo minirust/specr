@@ -10,8 +10,8 @@ pub fn add_imports(mut mods: Vec<Module>) -> Vec<Module> {
     // add imports within module
     for m in mods.iter_mut() {
         let mut imports = vec![
-            "use crate::baselib::prelude::*;\n",
-            "use crate::baselib;\n",
+            "use crate::specr::prelude::*;\n",
+            "use crate::specr;\n",
             &modimport_str,
         ];
         if m.name != "prelude" {
