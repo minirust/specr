@@ -1,10 +1,58 @@
 /// This module gets the source code of MiniRust.
 
-pub fn fetch(filename: &str) -> String {
-    let filename = format!("minirust/{}", filename);
-    let s = std::fs::read_to_string(filename).unwrap();
+use std::fs;
 
-    filter_pseudo_rust(&s)
+pub struct Module {
+    pub name: String,
+    pub ast: syn::File,
+}
+
+// returns None if the module doesn't contain any source code.
+fn mk_mod(basename: &str, modname: &str) -> Option<Module> {
+    let mut code = String::new();
+    let dirname = format!("{basename}/{modname}");
+
+    for f in fs::read_dir(&dirname).unwrap() {
+        let f = f.unwrap();
+        let ty = f.file_type().unwrap();
+        if !ty.is_file() { continue; }
+
+        let name = f.file_name().into_string().unwrap();
+        let name = format!("{dirname}/{name}");
+
+        let fcode = fs::read_to_string(name).unwrap();
+        let fcode = filter_pseudo_rust(&*fcode);
+        code.push_str(&*fcode);
+    }
+
+    if code.is_empty() { return None; }
+
+    let ast = syn::parse_str::<syn::File>(&*code).unwrap();
+    Some(Module {
+        name: modname.to_string(),
+        ast
+    })
+}
+
+pub fn fetch(folder: &str) -> Vec<Module> {
+    let mut mods = Vec::new();
+
+    for d in fs::read_dir(folder).unwrap() {
+        let d = d.unwrap();
+        let ty = d.file_type().unwrap();
+        if ty.is_dir() {
+            let name = d.file_name().into_string().unwrap();
+
+            // TODO find a less error-prone way to iterate over modules.
+            if name == ".git" { continue; }
+
+            if let Some(m) = mk_mod(folder, &*name) {
+                mods.push(m);
+            }
+        }
+    }
+
+    mods
 }
 
 // this filters out the code blocks ```rust <code> ```

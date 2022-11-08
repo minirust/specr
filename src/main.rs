@@ -3,6 +3,7 @@
 mod cp;
 
 // TODO consistent module naming scheme for module and entry function.
+mod imports;
 mod argmatch;
 mod merge_impls;
 mod baselib_use;
@@ -15,6 +16,8 @@ use std::fs;
 use std::path::PathBuf;
 use quote::ToTokens;
 use std::process::Command;
+
+use source::Module;
 
 fn exists(s: &str) -> bool {
     std::path::Path::new(s).exists()
@@ -34,25 +37,8 @@ fn main() {
     fs::copy("template/Cargo.toml", "generated/Cargo.toml").expect("Could not copy Cargo.toml");
     cp::cp_dir("template/src", "generated/src").expect("copying src failed!");
 
-    // TODO automatically find files!
-    compile(&[
-        ("prelude", &["prelude.md"]),
-        ("lang", &[
-            "lang/machine.md",
-            "lang/operator.md",
-            "lang/prelude.md",
-            "lang/step.md",
-            "lang/syntax.md",
-            "lang/types.md",
-            "lang/values.md",
-            "lang/well-formed.md"
-        ]),
-        ("mem", &[
-            "mem/basic.md",
-            "mem/interface.md",
-            "mem/intptrcast.md"
-        ])
-    ]);
+    let mods = source::fetch("minirust");
+    compile(mods);
 
     let cargo_toml: PathBuf = ["generated", "Cargo.toml"].iter().collect();
     Command::new("cargo")
@@ -61,33 +47,13 @@ fn main() {
         .unwrap();
 }
 
-fn compile(modfiles: &[(/*modname: */ &str, /*files: */ &[&str])]) {
-    let modnames: Vec<&str> = modfiles.iter().cloned().map(|(x, _)| x).collect();
-
-    let mut mods: Vec<syn::File> = Vec::new();
-    for (_, files) in modfiles.iter() {
-        // add imports
-        let mut code = String::from(
-            "use crate::baselib::prelude::*;\n
-            use crate::{baselib, lang, mem};\n"
-        );
-
-        // merge all .md files into one rust file
-        for f in *files {
-            code.push_str(&source::fetch(f));
-        }
-
-        let ast = syn::parse_str::<syn::File>(&code)
-                    .unwrap_or_else(|_| panic!("Cannot parse code:\n{code}"));
-        mods.push(ast);
-    }
-
-    // resolve infinite type recursion
+fn compile(mods: Vec<Module>) {
+    let mods = imports::add_imports(mods);
     let mods = typerec::typerec(mods);
 
-    for (modname, ast) in modnames.iter().zip(mods.into_iter()) {
+    for m in mods.into_iter() {
         // apply all other compilation stages.
-        let ast = argmatch::argmatch(ast);
+        let ast = argmatch::argmatch(m.ast);
         let ast = merge_impls::merge(ast);
         let ast = baselib_use::apply_baselib_use(ast);
         let ast = clear_verbatim::clear_verbatim(ast);
@@ -95,7 +61,7 @@ fn compile(modfiles: &[(/*modname: */ &str, /*files: */ &[&str])]) {
 
         // write AST back to Rust file.
         let code = ast.into_token_stream().to_string();
-        let filename = format!("{}.rs", modname);
+        let filename = format!("{}.rs", m.name);
         let p: PathBuf = ["generated", "src", &filename].iter().collect();
         fs::write(&p, &code).unwrap();
     }

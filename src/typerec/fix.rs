@@ -3,9 +3,9 @@ use syn::token::Colon;
 
 use crate::typerec::*;
 
-pub(in crate::typerec) fn fix(mods: &mut [syn::File], elements: &HashSet<VariantElement>) {
+pub(in crate::typerec) fn fix(mods: &mut [Module], elements: &HashSet<VariantElement>) {
     for m in mods {
-        Visitor { elements }.visit_file_mut(m);
+        Visitor { elements }.visit_file_mut(&mut m.ast);
     }
 }
 

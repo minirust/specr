@@ -7,8 +7,3 @@
 
 #[macro_use]
 pub mod baselib;
-
-#[macro_use]
-pub mod prelude;
-pub mod lang;
-pub mod mem;

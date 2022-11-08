@@ -1,13 +1,13 @@
 use crate::typerec::*;
 
 /// Finds potentially recursive variant elements, and wraps them behind an Rc.
-pub(in crate::typerec) fn wrap_variant_elements(mods: &mut [syn::File]) -> HashSet<VariantElement> {
+pub(in crate::typerec) fn wrap_variant_elements(mods: &mut [Module]) -> HashSet<VariantElement> {
     let infs = inf_enums::inf_size_enums(mods);
 
     let mut elements = HashSet::new();
 
     for m in mods {
-        for item in &mut m.items {
+        for item in &mut m.ast.items {
             if let Item::Enum(it_enum) = item {
                 elements.extend(wrap_enum(it_enum, &infs));
             }

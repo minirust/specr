@@ -2,6 +2,7 @@ use std::collections::HashSet;
 
 use syn::*;
 use quote::ToTokens;
+use crate::Module;
 
 mod inf_enums;
 
@@ -39,7 +40,7 @@ enum ElementIdx {
 }
 
 // TODO support generic enums.
-pub fn typerec(mut mods: Vec<syn::File>) -> Vec<syn::File> {
+pub fn typerec(mut mods: Vec<Module>) -> Vec<Module> {
     let elements = wrap_variant_elements(&mut mods);
     fix::fix(&mut mods, &elements);
 

@@ -12,11 +12,11 @@ fn attr_is_rc(attr: &Attribute) -> bool {
 
 /// Returns the enums being marked with `#[specr::rc]` without any generic parameters.
 /// It also removes this attribute from the source code.
-pub fn inf_size_enums(mods: &mut [syn::File]) -> HashSet<String> {
+pub fn inf_size_enums(mods: &mut [Module]) -> HashSet<String> {
     let mut enums = HashSet::new();
 
     for m in mods {
-        for item in &mut m.items {
+        for item in &mut m.ast.items {
             let Item::Enum(it_enum) = item else { continue };
             let Some(i) = it_enum.attrs.iter().position(attr_is_rc) else { continue };
 
