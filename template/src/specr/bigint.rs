@@ -22,6 +22,12 @@ impl BigInt {
     pub fn from(t: i64) -> BigInt {
         Self(t.to_bigint().unwrap())
     }
+
+    pub fn is_power_of_two(&self) -> bool {
+        if let Some(uint) = self.0.to_biguint() {
+            uint.count_ones() == 1
+        } else { false }
+    }
 }
 
 impl Neg for BigInt {
