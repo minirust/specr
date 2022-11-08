@@ -47,12 +47,13 @@ fn main() {
 
 fn compile(mods: Vec<Module>) {
     let mods = imports::add_imports(mods);
+    // argmatch needs to be before typerec, as argmatch generates new match blocks!
+    let mods = argmatch::argmatch(mods);
     let mods = typerec::typerec(mods);
 
     for m in mods.into_iter() {
         // apply all other compilation stages.
-        let ast = argmatch::argmatch(m.ast);
-        let ast = merge_impls::merge(ast);
+        let ast = merge_impls::merge(m.ast);
         let ast = ret::add_ret(ast);
 
         // write AST back to Rust file.

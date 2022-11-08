@@ -4,6 +4,8 @@ use proc_macro2::{Ident, Span};
 use quote::ToTokens;
 use proc_macro2::TokenTree;
 
+use crate::Module;
+
 struct FwdDeclaration {
     // stores all generic parameters etc. of the surrounding impl block
     // but empty_ii.items is empty, so it's an empty impl block.
@@ -16,7 +18,15 @@ struct FwdDeclaration {
     match_idx: usize,
 }
 
-pub fn argmatch(mut arg: syn::File) -> syn::File {
+pub fn argmatch(mut mods: Vec<Module>) -> Vec<Module> {
+    for m in mods.iter_mut() {
+        m.ast = argmatch_ast(m.ast.clone());
+    }
+
+    mods
+}
+
+fn argmatch_ast(mut arg: syn::File) -> syn::File {
     let fwd_decls = extract_fwd_decls(&mut arg);
     for fwd_decl in fwd_decls {
         let impls = extract_implementations(&fwd_decl, &mut arg);
