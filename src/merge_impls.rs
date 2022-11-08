@@ -20,6 +20,13 @@ pub fn merge(mut ast: syn::File) -> syn::File {
         }
     }
 
+    // remove empty impls
+    ast.items.retain(|item| match item {
+        Item::Impl(ii) if ii.items.len() == 0 => false,
+        _ => true,
+    });
+
+
     ast
 }
 
