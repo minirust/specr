@@ -1,11 +1,5 @@
 use std::collections::{HashSet, HashMap};
 
-// mirrors the ignored `prelude.md`.
-// accessed using `_`.
-#[macro_use]
-mod mirror;
-use mirror::*;
-
 // contains the BigInt implemenation.
 // accessed using `BigInt`.
 mod bigint;
@@ -29,7 +23,6 @@ mod intrinsics;
 pub use intrinsics::*;
 
 pub mod prelude {
-    pub use crate::baselib::mirror::*;
     pub use crate::baselib::BigInt;
     pub use crate::baselib::env::*;
 }

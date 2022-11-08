@@ -37,6 +37,7 @@ fn mk_mod(basename: &str, modname: &str) -> Option<Module> {
 pub fn fetch(folder: &str) -> Vec<Module> {
     let mut mods = Vec::new();
 
+    // create the modules
     for d in fs::read_dir(folder).unwrap() {
         let d = d.unwrap();
         let ty = d.file_type().unwrap();
@@ -51,6 +52,11 @@ pub fn fetch(folder: &str) -> Vec<Module> {
             }
         }
     }
+
+    // move prelude to the beginning to get macros to work.
+    // TODO there needs to be a better solution.
+    let i = mods.iter().position(|x| x.name == "prelude").unwrap();
+    mods.swap(0, i);
 
     mods
 }

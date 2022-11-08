@@ -1,7 +1,5 @@
 use std::ops::*;
 
-use crate::baselib::Signedness;
-
 use num_bigint::ToBigInt;
 
 pub struct BigInt(num_bigint::BigInt);
@@ -34,17 +32,6 @@ impl Mul for BigInt {
 
 impl PartialEq<usize> for BigInt {
 	fn eq(&self, other: &usize) -> bool {
-        self.0 == other.to_bigint()
+        Some(&self.0) == other.to_bigint().as_ref()
     }
 }
-
-impl BigInt {
-	pub fn checked_div(self, other: BigInt) -> Option<BigInt> {
-        self.0.checked_div().map(Self)
-	}
-
-	pub fn modulo(self, _: Signedness, other: usize) -> BigInt {
-        todo!()
-	}
-}
-
