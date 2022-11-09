@@ -15,5 +15,5 @@ macro_rules! list {
 	($a:expr ; $b:expr) => { vec![$a ; $b] };
 }
 
-pub fn pick<T>(f: impl Fn(T) -> bool) -> Nondet<T> { todo!() }
-pub fn predict<T>(f: impl Fn(T) -> bool) -> Nondet<T> { todo!() }
+pub fn pick<T>(_f: impl Fn(T) -> bool) -> Nondet<T> { todo!() }
+pub fn predict<T>(_f: impl Fn(T) -> bool) -> Nondet<T> { todo!() }

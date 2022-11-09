@@ -50,6 +50,22 @@ impl BigInt {
 
         n
     }
+
+    pub fn pow(&self, other: BigInt) -> BigInt {
+        assert!(self.0 != ExtBigInt::from(0));
+
+        if other.0 == ExtBigInt::from(0) {
+            BigInt::from(1)
+        } else if other.0 == ExtBigInt::from(1) {
+            self.clone()
+        } else if other.0.clone() % ExtBigInt::from(2) == ExtBigInt::from(0) {
+            let a = self.pow(other.clone()/2);
+            a.clone() * a
+        } else {
+            let a = self.pow((other.clone()-1)/2);
+            a.clone() * a * self.clone()
+        }
+    }
 }
 
 impl Neg for BigInt {
@@ -109,26 +125,26 @@ macro_rules! setup_bigint_ops {
 
         impl Shl<$ty> for BigInt {
             type Output = Self;
-            fn shl(self, other: $ty) -> Self {
+            fn shl(self, _other: $ty) -> Self {
                 todo!()
             }
         }
 
         impl Shr<$ty> for BigInt {
             type Output = Self;
-            fn shr(self, other: $ty) -> Self {
+            fn shr(self, _other: $ty) -> Self {
                 todo!()
             }
         }
 
         impl ShlAssign<$ty> for BigInt {
-            fn shl_assign(&mut self, other: $ty) {
+            fn shl_assign(&mut self, _other: $ty) {
                 todo!()
             }
         }
 
         impl ShrAssign<$ty> for BigInt {
-            fn shr_assign(&mut self, other: $ty) {
+            fn shr_assign(&mut self, _other: $ty) {
                 todo!()
             }
         }
