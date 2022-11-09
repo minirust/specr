@@ -20,7 +20,17 @@ pub fn merge(mut ast: syn::File) -> syn::File {
         }
     }
 
-    // remove empty impls
+    // remove ';'-methods
+    for i in &mut ast.items {
+        let Item::Impl(ii) = i else { continue };
+        ii.items.retain(|ii| {
+            let ImplItem::Method(iim) = ii else { return true };
+            let blk = format!("{}", iim.block.to_token_stream());
+
+            blk != "{ ; }"
+        });
+    }
+
     ast.items.retain(|item| match item {
         Item::Impl(ii) if ii.items.len() == 0 => false,
         _ => true,

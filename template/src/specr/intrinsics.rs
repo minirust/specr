@@ -3,12 +3,13 @@ use crate::specr::*;
 use std::ops::{Try, FromResidual, ControlFlow};
 use std::convert::Infallible;
 
-pub struct ArgAbi;
-pub type BbName = String;
-pub type LocalName = String;
-pub type FnName = String;
-
+pub struct Name(pub(in crate::specr) String);
 pub struct Nondet<T>(pub(in crate::specr) T);
+
+// TODO specr::yeet is not found in minirust, it's called `yeet!`.
+macro_rules! yeet {
+    () => ();
+}
 
 impl<T, E> Try for Nondet<Result<T, E>> {
     type Output = T;

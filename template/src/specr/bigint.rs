@@ -28,6 +28,28 @@ impl BigInt {
             uint.count_ones() == 1
         } else { false }
     }
+
+    pub fn next_power_of_two(&self) -> BigInt {
+        // TODO improve implementation
+
+        // better implementation idea:
+        // return self, is already power of two.
+        // if self == 0, return 1.
+        // otherwise:
+        // look for most-significant one-bit,
+        // and set the next significant bit to 1 instead.
+        // [01010]
+        //   | most-significant one!
+        //
+        // [10000] <- correct result
+
+        let mut n = self.clone();
+        while !n.is_power_of_two() {
+            n = n + 1;
+        }
+
+        n
+    }
 }
 
 impl Neg for BigInt {
