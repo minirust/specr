@@ -1,4 +1,4 @@
-use std::ops::{Try, FromResidual, ControlFlow};
+use std::ops::{Try, FromResidual, ControlFlow, Residual, Yeet};
 use std::convert::Infallible;
 
 #[derive(Clone)]
@@ -43,5 +43,15 @@ impl<T, E> FromResidual<Result<Infallible, E>> for Nondet<Result<T, E>> {
             Ok(x) => match x {},
             Err(e) => Nondet(Err(e))
         }
+    }
+}
+
+impl<T, E> Residual<T> for Nondet<Result<Infallible, E>> {
+    type TryType = Nondet<Result<T, E>>;
+}
+
+impl<T, E> FromResidual<Yeet<E>> for Nondet<Result<T, E>> {
+    fn from_residual(residual: Yeet<E>) -> Self {
+        Nondet(Err(residual.0))
     }
 }

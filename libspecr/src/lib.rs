@@ -1,6 +1,7 @@
 #![feature(let_else)]
 #![feature(try_trait_v2)]
 #![feature(try_trait_v2_yeet)]
+#![feature(try_trait_v2_residual)]
 #![feature(yeet_expr)]
 
 use std::collections::{HashSet, HashMap};
