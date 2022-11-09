@@ -1,3 +1,8 @@
+#![feature(let_else)]
+#![feature(try_trait_v2)]
+#![feature(try_trait_v2_yeet)]
+#![feature(yeet_expr)]
+
 use std::collections::{HashSet, HashMap};
 
 // contains the BigInt implemenation.
@@ -23,6 +28,6 @@ mod intrinsics;
 pub use intrinsics::*;
 
 pub mod prelude {
-    pub use crate::specr::BigInt;
-    pub use crate::specr::env::*;
+    pub use crate::BigInt;
+    pub use crate::env::*;
 }

@@ -1,6 +1,5 @@
 #![feature(let_else)]
 
-mod cp;
 
 // TODO consistent module naming scheme for module and entry function.
 mod imports;
@@ -22,28 +21,65 @@ fn exists(s: &str) -> bool {
     std::path::Path::new(s).exists()
 }
 
+fn mkdir(name: &str) {
+    if !exists(name) {
+        let err_str = format!("Could not create directory \"{}\"", name);
+        fs::create_dir(name).expect(&err_str);
+    }
+}
+
 fn main() {
     // setup "generated" directory.
-
-    if !exists("template") {
-        eprintln!("You need to be at the project root to run `specr`!");
+    if !exists("minirust") {
+        eprintln!("You need to be at the project root to run `specr-transpile`!");
+        eprintln!("Further `minirust` needs to be added (for example by using `./clone-minirust.sh`)");
         std::process::exit(1);
     }
 
-    if !exists("generated") {
-        fs::create_dir("generated").expect("Could not create \"generated\" directory.");
-    }
-    fs::copy("template/Cargo.toml", "generated/Cargo.toml").expect("Could not copy Cargo.toml");
-    cp::cp_dir("template/src", "generated/src").expect("copying src failed!");
+    mkdir("generated");
+    mkdir("generated/src");
 
     let mods = source::fetch("minirust");
+    create_cargo_toml();
+    create_lib(&mods);
     compile(mods);
 
-    let cargo_toml: PathBuf = ["generated", "Cargo.toml"].iter().collect();
     Command::new("cargo")
-        .args(&["fmt", "--manifest-path", cargo_toml.to_str().unwrap()])
+        .args(&["fmt", "--manifest-path", "generated/Cargo.toml"])
         .output()
         .unwrap();
+}
+
+fn create_cargo_toml() {
+    let toml = "[package]\n\
+                name = \"generated\"\n\
+                version = \"0.1.0\"\n\
+                edition = \"2021\"\n\
+                \n\
+                [dependencies]\n\
+                libspecr = {path = \"../libspecr\"}\n\
+               ";
+    fs::write("generated/Cargo.toml", &toml).unwrap();
+}
+
+fn create_lib(mods: &[Module]) {
+    let code = "#![feature(let_else)]\n\
+                #![feature(try_trait_v2)]\n\
+                #![feature(try_trait_v2_yeet)]\n\
+                #![feature(yeet_expr)]\n\
+                #![feature(associated_type_defaults)]\n\
+                #![feature(iterator_try_collect)]\n\
+                #![feature(never_type)]\n\
+                #![allow(unused)]\n\
+                \n\
+                #[macro_use]\n\
+                extern crate libspecr as specr;\n\
+               ";
+    let mut code = String::from(code);
+    for m in mods {
+        code.push_str(&format!("#[macro_use] pub mod {};", m.name));
+    }
+    fs::write("generated/src/lib.rs", &code).unwrap();
 }
 
 fn compile(mods: Vec<Module>) {

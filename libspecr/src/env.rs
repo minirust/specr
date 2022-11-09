@@ -1,4 +1,4 @@
-use crate::specr::*;
+use crate::*;
 
 pub type List<T> = Vec<T>;
 pub type Set<T> = HashSet<T>;

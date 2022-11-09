@@ -1,14 +1,14 @@
-use crate::specr::*;
-
 use std::ops::{Try, FromResidual, ControlFlow};
 use std::convert::Infallible;
 
-pub struct Name(pub(in crate::specr) String);
-pub struct Nondet<T>(pub(in crate::specr) T);
+pub struct Name(pub String);
+pub struct Nondet<T>(pub T);
 
-// TODO specr::yeet is not found in minirust, it's called `yeet!`.
+#[macro_export]
 macro_rules! yeet {
-    () => ();
+    ($x:expr) => {
+        do yeet $x
+    };
 }
 
 impl<T, E> Try for Nondet<Result<T, E>> {
