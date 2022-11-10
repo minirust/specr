@@ -1,7 +1,7 @@
 use std::ops::{Try, FromResidual, ControlFlow, Residual, Yeet};
 use std::convert::Infallible;
 
-#[derive(Clone)]
+#[derive(Clone, Hash)]
 pub struct Name(pub String);
 pub struct Nondet<T>(pub T);
 

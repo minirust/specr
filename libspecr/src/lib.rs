@@ -34,4 +34,5 @@ pub mod prelude {
     pub use crate::BigInt;
     pub use crate::env::*;
     pub use crate::list::*;
+    pub use std::hash::Hash;
 }
