@@ -11,6 +11,8 @@ use std::collections::{HashSet, HashMap};
 mod bigint;
 pub use bigint::BigInt;
 
+mod list;
+
 // contains hidden functions that are called only due to generated code.
 // accessed using `specr::hidden::_`.
 pub mod hidden;
@@ -31,4 +33,5 @@ pub use intrinsics::*;
 pub mod prelude {
     pub use crate::BigInt;
     pub use crate::env::*;
+    pub use crate::list::*;
 }

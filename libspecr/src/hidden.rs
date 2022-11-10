@@ -28,3 +28,20 @@ fn monadic_return_test() {
 	let _: Nondet<Result<i32, ()>> = ret(5);
 }
 
+// TODO this function panics in some cases. I should handle those cases.
+pub fn bigint_to_usize(b: crate::BigInt) -> usize {
+    let (sign, digits) = b.0.to_u64_digits();
+    if sign == num_bigint::Sign::Minus {
+        panic!("cannot convert negative number to usize");
+    }
+    if digits.len() > 1 {
+        panic!("number too large to fit into usize!");
+    }
+
+    *digits.get(0).unwrap_or(&0) as usize
+}
+
+pub fn vec_to_list<T>(v: Vec<T>) -> crate::list::List<T> {
+    crate::list::List(v)
+}
+
