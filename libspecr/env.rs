@@ -1,4 +1,4 @@
-use crate::*;
+use crate::specr::*;
 
 pub type Set<T> = HashSet<T>;
 pub type Map<K, V> = HashMap<K, V>;

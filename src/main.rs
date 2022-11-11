@@ -1,7 +1,7 @@
 #![feature(let_else)]
 
-
 // TODO consistent module naming scheme for module and entry function.
+mod cp;
 mod imports;
 mod argmatch;
 mod autoclone;
@@ -39,6 +39,8 @@ fn main() {
     mkdir("generated");
     mkdir("generated/src");
 
+    cp::cp_dir("libspecr", "generated/src/specr").expect("Copying libspecr to generated failed!");
+
     let mods = source::fetch("minirust");
     create_cargo_toml();
     create_lib(&mods);
@@ -57,7 +59,7 @@ fn create_cargo_toml() {
                 edition = \"2021\"\n\
                 \n\
                 [dependencies]\n\
-                libspecr = {path = \"../libspecr\"}\n\
+                num-bigint = \"0.4\"\n\
                ";
     fs::write("generated/Cargo.toml", &toml).unwrap();
 }
@@ -66,14 +68,14 @@ fn create_lib(mods: &[Module]) {
     let code = "#![feature(let_else)]\n\
                 #![feature(try_trait_v2)]\n\
                 #![feature(try_trait_v2_yeet)]\n\
+                #![feature(try_trait_v2_residual)]\n\
                 #![feature(yeet_expr)]\n\
-                #![feature(associated_type_defaults)]\n\
                 #![feature(iterator_try_collect)]\n\
                 #![feature(never_type)]\n\
+                #![feature(decl_macro)]\n\
                 #![allow(unused)]\n\
                 \n\
-                #[macro_use]\n\
-                extern crate libspecr as specr;\n\
+                #[macro_use] pub mod specr;\n\
                ";
     let mut code = String::from(code);
     for m in mods {

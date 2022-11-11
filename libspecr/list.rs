@@ -1,22 +1,21 @@
 use std::iter::FromIterator;
 use std::ops::{Index, IndexMut};
 
-use crate::BigInt;
+use crate::specr::BigInt;
 
 #[derive(Clone)]
-pub struct List<T>(pub(crate) Vec<T>);
+pub struct List<T>(pub(in crate::specr) Vec<T>);
 
-#[macro_export]
-macro_rules! list {
-	() => { List::new() };
-	($start:expr $(,$a:expr)*) => { specr::hidden::vec_to_list(vec![$start $(,$a)* ]) };
+pub macro list {
+	() => { List::new() },
+	($start:expr $(,$a:expr)*) => { crate::specr::hidden::vec_to_list(vec![$start $(,$a)* ]) },
 	($a:expr ; $b:expr) => {
-        specr::hidden::vec_to_list(
+        crate::specr::hidden::vec_to_list(
             vec![$a;
-                specr::hidden::bigint_to_usize(BigInt::from($b))
+                crate::specr::hidden::bigint_to_usize(BigInt::from($b))
             ]
         )
-    };
+    },
 }
 
 impl<T> IntoIterator for List<T> {
@@ -39,14 +38,14 @@ impl<T> Index<BigInt> for List<T> {
     type Output = T;
 
     fn index(&self, other: BigInt) -> &T {
-        let other = crate::hidden::bigint_to_usize(other);
+        let other = crate::specr::hidden::bigint_to_usize(other);
         &self.0[other]
     }
 }
 
 impl<T> IndexMut<BigInt> for List<T> {
     fn index_mut(&mut self, other: BigInt) -> &mut T {
-        let other = crate::hidden::bigint_to_usize(other);
+        let other = crate::specr::hidden::bigint_to_usize(other);
         &mut self.0[other]
     }
 }

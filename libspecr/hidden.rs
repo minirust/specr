@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use crate::Nondet;
+use crate::specr::{Nondet, BigInt, list::List};
 
 pub fn deref_rc<T: Clone>(rc: &Rc<T>) -> T {
     (**rc).clone()
@@ -29,7 +29,7 @@ fn monadic_return_test() {
 }
 
 // TODO this function panics in some cases. I should handle those cases.
-pub fn bigint_to_usize(b: crate::BigInt) -> usize {
+pub fn bigint_to_usize(b: BigInt) -> usize {
     let (sign, digits) = b.0.to_u64_digits();
     if sign == num_bigint::Sign::Minus {
         panic!("cannot convert negative number to usize");
@@ -41,7 +41,7 @@ pub fn bigint_to_usize(b: crate::BigInt) -> usize {
     *digits.get(0).unwrap_or(&0) as usize
 }
 
-pub fn vec_to_list<T>(v: Vec<T>) -> crate::list::List<T> {
-    crate::list::List(v)
+pub fn vec_to_list<T>(v: Vec<T>) -> List<T> {
+    List(v)
 }
 
