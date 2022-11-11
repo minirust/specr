@@ -24,6 +24,9 @@ pub use env::*;
 mod intrinsics;
 pub use intrinsics::*;
 
+// implements some operators for Size.
+mod impls;
+
 pub mod prelude {
     pub use crate::specr::BigInt;
     pub use crate::specr::env::*;
