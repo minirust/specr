@@ -32,4 +32,5 @@ pub mod prelude {
     pub use crate::specr::env::*;
     pub use crate::specr::list::*;
     pub use std::hash::Hash;
+    pub use std::fmt::Debug;
 }
