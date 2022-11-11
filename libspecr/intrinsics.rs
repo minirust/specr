@@ -54,3 +54,29 @@ impl<T, E> FromResidual<Yeet<E>> for Nondet<Result<T, E>> {
         Nondet(Err(residual.0))
     }
 }
+
+
+impl<T> Try for Nondet<Option<T>> {
+    type Output = T;
+    type Residual = Nondet<Option<Infallible>>;
+
+    fn from_output(output: Self::Output) -> Self {
+        Nondet(Some(output))
+    }
+
+    fn branch(self) -> ControlFlow<Self::Residual, Self::Output> {
+        match self.0 {
+            Some(x) => ControlFlow::Continue(x),
+            None => ControlFlow::Break(Nondet(None)),
+        }
+    }
+}
+
+impl<T> FromResidual<Nondet<Option<Infallible>>> for Nondet<Option<T>> {
+    fn from_residual(residual: Nondet<Option<Infallible>>) -> Self {
+        match residual.0 {
+            Some(x) => match x {},
+            None => Nondet(None)
+        }
+    }
+}
