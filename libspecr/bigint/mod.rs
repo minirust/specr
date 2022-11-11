@@ -4,7 +4,7 @@ mod func;
 use num_bigint::BigInt as ExtBigInt;
 use num_bigint::ToBigInt as ToExtBigInt;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct BigInt(pub(crate) ExtBigInt);
 
 impl<T: ToExtBigInt> From<T> for BigInt {
