@@ -4,6 +4,12 @@ use std::cmp::Ordering;
 use crate::prelude::Size;
 use crate::specr::BigInt;
 
+impl Size {
+    pub fn is_zero(&self) -> bool {
+        self.bytes() == 0
+    }
+}
+
 impl Add for Size {
     type Output = Size;
     fn add(self, rhs: Size) -> Size {

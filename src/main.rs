@@ -73,6 +73,7 @@ fn create_lib(mods: &[Module]) {
                 #![feature(iterator_try_collect)]\n\
                 #![feature(never_type)]\n\
                 #![feature(decl_macro)]\n\
+                #![feature(map_try_insert)]\n\
                 #![allow(unused)]\n\
                 \n\
                 #[macro_use] pub mod specr;\n\

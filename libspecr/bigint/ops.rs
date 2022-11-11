@@ -23,6 +23,12 @@ impl<T: Into<BigInt>> Add<T> for BigInt {
     }
 }
 
+impl<T: Into<BigInt>> AddAssign<T> for BigInt {
+    fn add_assign(&mut self, other: T) {
+        self.0 += other.into().0;
+    }
+}
+
 impl<T: Into<BigInt>> Sub<T> for BigInt {
     type Output = Self;
     fn sub(self, other: T) -> Self {
@@ -58,15 +64,16 @@ impl<T: Into<BigInt>> Shl<T> for BigInt {
     }
 }
 
-impl<T: Into<BigInt>> Shr<T> for BigInt {
-    type Output = Self;
-    fn shr(self, _other: T) -> Self {
+
+impl<T: Into<BigInt>> ShlAssign<T> for BigInt {
+    fn shl_assign(&mut self, _other: T) {
         todo!()
     }
 }
 
-impl<T: Into<BigInt>> ShlAssign<T> for BigInt {
-    fn shl_assign(&mut self, _other: T) {
+impl<T: Into<BigInt>> Shr<T> for BigInt {
+    type Output = Self;
+    fn shr(self, _other: T) -> Self {
         todo!()
     }
 }
