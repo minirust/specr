@@ -1,6 +1,14 @@
 use super::*;
 
 impl BigInt {
+    pub fn zero() -> BigInt {
+        BigInt::from(0)
+    }
+
+    pub fn one() -> BigInt {
+        BigInt::from(1)
+    }
+
     pub fn is_power_of_two(&self) -> bool {
         if let Some(uint) = self.0.to_biguint() {
             uint.count_ones() == 1
