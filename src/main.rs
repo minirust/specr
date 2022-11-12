@@ -60,6 +60,7 @@ fn create_cargo_toml() {
                 \n\
                 [dependencies]\n\
                 num-bigint = \"0.4\"\n\
+                num-traits = \"0.2.15\"\n\
                ";
     fs::write("generated/Cargo.toml", &toml).unwrap();
 }

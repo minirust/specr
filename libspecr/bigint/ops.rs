@@ -91,6 +91,13 @@ impl<T: Into<BigInt>> BitAnd<T> for BigInt {
     }
 }
 
+impl<T: Into<BigInt>> BitOr<T> for BigInt {
+    type Output = Self;
+    fn bitor(self, other: T) -> Self {
+        Self(self.0 | other.into().0)
+    }
+}
+
 // Ord
 impl<T: Into<BigInt> + Clone> PartialOrd<T> for BigInt {
     fn partial_cmp(&self, other: &T) -> Option<Ordering> {
