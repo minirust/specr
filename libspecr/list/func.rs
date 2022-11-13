@@ -39,5 +39,12 @@ impl<T> List<T> {
         let i = bigint_to_usize(chunk_size);
         self.0.chunks(i)
     }
+
+    pub fn subslice_with_length(&self, start: BigInt, length: BigInt) -> &[T] {
+        let start = bigint_to_usize(start);
+        let length = bigint_to_usize(length);
+
+        &self.0[start..][..length]
+    }
 }
 
