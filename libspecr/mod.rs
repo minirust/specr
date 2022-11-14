@@ -27,6 +27,9 @@ pub use intrinsics::*;
 // implements some operators for Size.
 mod impls;
 
+// implements a small clone-on-write garbage collector.
+mod gccow;
+
 pub mod prelude {
     pub use crate::specr::BigInt;
     pub use crate::specr::env::*;
