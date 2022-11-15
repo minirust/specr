@@ -2,8 +2,6 @@ use syn::*;
 use quote::*;
 use proc_macro2::*;
 
-// TODO support generics.
-
 pub fn gccompat_impl(mut ast: syn::File) -> syn::File {
     let mut i = 0;
     while i < ast.items.len() {
@@ -26,7 +24,7 @@ pub fn gccompat_impl(mut ast: syn::File) -> syn::File {
 
 fn impl_for_struct(s: &ItemStruct) -> Item {
     let mut named: Vec<&Ident> = Vec::new();
-    let mut unnamed: Vec<TokenStream> = Vec::new();
+    let mut unnamed: Vec<Index> = Vec::new();
     match &s.fields {
         Fields::Named(n) => {
             named = n.named.iter()
@@ -34,16 +32,19 @@ fn impl_for_struct(s: &ItemStruct) -> Item {
                            .collect();
         }
         Fields::Unnamed(u) => {
-            unnamed = (0..u.unnamed.len()).map(|i| {
-                            TokenTree::Literal(Literal::usize_unsuffixed(i)).into()
-                        }).collect();
+            unnamed = (0..u.unnamed.len())
+                        .map(syn::Index::from)
+                        .collect()
         }
         Fields::Unit => {},
     };
 
     let name = &s.ident;
+    let g = &s.generics;
+    let tg = trimmed_generics(g);
+
     let ts = quote! {
-        impl #name {
+        impl #g #name #tg {
             fn as_any(&self) -> &dyn std::any::Any { self }
             fn points_to(&self, s: &mut std::collections::HashSet<usize>) {
                 #(
@@ -59,8 +60,6 @@ fn impl_for_struct(s: &ItemStruct) -> Item {
 }
 
 fn impl_for_enum(e: &ItemEnum) -> Item {
-    let enum_ident = &e.ident;
-
     // contains the correct match-arm for each variant.
     let var_arms: Vec<TokenStream> = e.variants.iter().map(|v| {
         let ident = &v.ident;
@@ -68,7 +67,7 @@ fn impl_for_enum(e: &ItemEnum) -> Item {
             Fields::Named(n) => {
                 let names: Vec<&Ident> = n.named.iter().map(|x| x.ident.as_ref().unwrap()).collect();
                 quote! {
-                    #enum_ident::#ident { #( #names ),* } => {
+                    Self::#ident { #( #names ),* } => {
                         #( #names.points_to(s); )*
                     }
                 }
@@ -76,19 +75,23 @@ fn impl_for_enum(e: &ItemEnum) -> Item {
             Fields::Unnamed(u) => {
                 let names: Vec<Ident> = (0..u.unnamed.len()).map(|i| format_ident!("a{}", i)).collect();
                 quote! {
-                    #enum_ident::#ident(#( #names ),*) => {
+                    Self::#ident(#( #names ),*) => {
                         #( #names.points_to(s); )*
                     }
                 }
             }
             Fields::Unit => {
-                quote! { #enum_ident::#ident => {} }
+                quote! { Self::#ident => {} }
             }
         }
     }).collect();
 
+    let enum_ident = &e.ident;
+    let g = &e.generics;
+    let tg = trimmed_generics(g);
+
     let ts = quote! {
-        impl #enum_ident {
+        impl #g #enum_ident #tg {
             fn as_any(&self) -> &dyn std::any::Any { self }
             fn points_to(&self, s: &mut std::collections::HashSet<usize>) {
                 match self {
@@ -99,4 +102,23 @@ fn impl_for_enum(e: &ItemEnum) -> Item {
         
     };
     syn::parse2(ts).unwrap()
+}
+
+fn trimmed_generics(g: &Generics) -> Generics {
+    let mut g = g.clone();
+    g.where_clause = None;
+    g.params = g.params.iter().map(|p| {
+        match p {
+            GenericParam::Type(t) => {
+                let mut t = t.clone();
+                t.colon_token = None;
+                t.bounds = Default::default();
+
+                GenericParam::Type(t)
+            },
+            x => x.clone(),
+        }
+    }).collect();
+
+    g
 }
