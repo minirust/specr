@@ -4,7 +4,7 @@
 mod cp;
 mod imports;
 mod argmatch;
-mod autoclone;
+mod autocopy;
 mod merge_impls;
 mod source;
 mod typerec;
@@ -96,7 +96,7 @@ fn compile(mods: Vec<Module>) {
         // apply all other compilation stages.
         let ast = merge_impls::merge(m.ast);
         let ast = ret::add_ret(ast);
-        let ast = autoclone::autoclone(ast);
+        let ast = autocopy::autocopy(ast);
 
         // write AST back to Rust file.
         let code = ast.into_token_stream().to_string();
