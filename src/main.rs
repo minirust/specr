@@ -4,11 +4,12 @@
 mod cp;
 mod imports;
 mod argmatch;
-mod autocopy;
 mod merge_impls;
 mod source;
 mod typerec;
 mod ret;
+mod autocopy;
+mod gccompat_impl;
 
 use std::fs;
 use std::path::PathBuf;
@@ -97,6 +98,7 @@ fn compile(mods: Vec<Module>) {
         let ast = merge_impls::merge(m.ast);
         let ast = ret::add_ret(ast);
         let ast = autocopy::autocopy(ast);
+        let ast = gccompat_impl::gccompat_impl(ast);
 
         // write AST back to Rust file.
         let code = ast.into_token_stream().to_string();
