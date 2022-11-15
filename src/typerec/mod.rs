@@ -4,8 +4,6 @@ use syn::*;
 use quote::ToTokens;
 use crate::Module;
 
-mod inf_enums;
-
 mod wrap;
 use wrap::wrap_variant_elements;
 

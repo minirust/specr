@@ -14,7 +14,7 @@ struct Visitor<'a> {
 }
 
 impl VisitMut for Visitor<'_> {
-    // `Variant { x: 2 }` ==> `Variant { x: Rc::new(2) }`
+    // `Variant { x: 2 }` ==> `Variant { x: specr::hidden::gccow_new(2) }`
     fn visit_expr_struct_mut(&mut self, i: &mut ExprStruct) {
         for e in self.elements {
             let ElementIdx::Named(name) = &e.idx else { continue };
@@ -36,7 +36,7 @@ impl VisitMut for Visitor<'_> {
         visit_expr_struct_mut(self, i);
     }
 
-    // `Some(2)` ==> `Some(Rc::new(2))`
+    // `Some(2)` ==> `Some(specr::hidden::gccow_new(2))`
     fn visit_expr_call_mut(&mut self, i: &mut ExprCall) {
         for e in self.elements {
             let ElementIdx::Unnamed(idx) = &e.idx else { continue };
@@ -52,7 +52,7 @@ impl VisitMut for Visitor<'_> {
         visit_expr_call_mut(self, i);
     }
 
-    // `Foo { x } => { ... }` ==> `Foo { x } => { let x = *x; ... }`
+    // `Foo { x } => { ... }` ==> `Foo { x } => { let x = specr::hidden::gccow_get(&x); ... }`
     fn visit_arm_mut(&mut self, i: &mut Arm) {
         let idents = pat_idents::pat_idents(&i.pat, self.elements);
 
@@ -60,7 +60,7 @@ impl VisitMut for Visitor<'_> {
         let mut s = String::from("{");
         for id in idents {
             // TODO write my own deref function to prevent referencing of being in the way.
-            s.push_str(&format!("let {id} = specr::hidden::deref_rc(&{id});"));
+            s.push_str(&format!("let {id} = specr::hidden::gccow_get(&{id});"));
         }
         s.push_str(&format!("{}", i.body.to_token_stream()));
         s.push_str("}");
@@ -72,9 +72,9 @@ impl VisitMut for Visitor<'_> {
     }
 }
 
-// wraps an Expr in Rc::new(_)
+// wraps an Expr in specr::hidden::gccow_new(_)
 fn wrap_expr(expr: &mut Expr) {
-    let e = format!("std::rc::Rc::new({})", expr.to_token_stream());
+    let e = format!("specr::hidden::gccow_new({})", expr.to_token_stream());
     let e = parse_str::<Expr>(&e).unwrap();
     *expr = e;
 }

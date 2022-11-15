@@ -2,7 +2,7 @@ use syn::visit::*;
 
 use crate::typerec::*;
 
-/// finds identifiers within a pattern that need to be Rc-dereferenced before being used.
+/// finds identifiers within a pattern that need to be gccow_get'ed before being used.
 pub(in crate::typerec) fn pat_idents(pat: &Pat, elements: &HashSet<VariantElement>) -> HashSet<String> {
     let mut v = Visitor {
         elements,

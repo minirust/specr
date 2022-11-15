@@ -11,7 +11,7 @@ use internal::*;
 // this trait shall be implemented for each type of minirust.
 // It is required in order to contain `GcCow`, and to be the generic param to `GcCow`.
 pub trait GcCompat: Send + Sync + 'static {
-    // writes the things `self` points to into `buffer`.
+    // writes the gc'd objs, that `self` points to, into `buffer`.
     fn points_to(&self, buffer: &mut HashSet<usize>);
     fn as_any(&self) -> &dyn Any;
 }
@@ -22,29 +22,28 @@ pub struct GcCow<T: GcCompat> {
     phantom: PhantomData<T>,
 }
 
-impl<T: GcCompat> GcCow<T> {
-    pub fn new(t: T) -> GcCow<T> {
-        GC_STATE.with(|st| {
-            st.borrow_mut().alloc(t)
-        })
-    }
+// those are free functions instead of GcCow methods, so that they can be individually included in the hidden module.
+pub fn gccow_new<T>(t: T) -> GcCow<T> where T: GcCompat {
+    GC_STATE.with(|st| {
+        st.borrow_mut().alloc(t)
+    })
+}
 
-    pub fn get(&self) -> T where T: Copy {
-        GC_STATE.with(|st| {
-            let st: &GcState = &*st.borrow();
-            let x: &dyn Any = st.objs.get(self.idx).as_any();
-            let r = x.downcast_ref::<T>().unwrap();
+pub fn gccow_get<T>(gc: &GcCow<T>) -> T where T: GcCompat + Copy {
+    GC_STATE.with(|st| {
+        let st: &GcState = &*st.borrow();
+        let x: &dyn Any = st.objs.get(gc.idx).as_any();
+        let r = x.downcast_ref::<T>().unwrap();
 
-            r.clone()
-        })
-    }
+        r.clone()
+    })
+}
 
-    // this does the copy-on-write
-    pub fn mutate(&mut self, f: impl Fn(&mut T)) where T: Copy {
-        let mut val = self.get();
-        f(&mut val);
-        *self = GcCow::new(val);
-    }
+// this does the copy-on-write
+pub fn gccow_mutate<T>(gc: &mut GcCow<T>, f: impl Fn(&mut T)) where T: GcCompat + Copy {
+    let mut val = gccow_get(gc);
+    f(&mut val);
+    *gc = gccow_new(val);
 }
 
 pub fn mark_and_sweep(roots: HashSet<usize>) {

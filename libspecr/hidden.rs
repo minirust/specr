@@ -1,9 +1,6 @@
-use std::rc::Rc;
 use crate::specr::{Nondet, BigInt, list::List};
 
-pub fn deref_rc<T: Clone>(rc: &Rc<T>) -> T {
-    (**rc).clone()
-}
+pub use crate::specr::gccow::{GcCow, GcCompat, gccow_new, gccow_get};
 
 pub trait MonadicReturn<T> {
 	fn monadic_return(t: T) -> Self;

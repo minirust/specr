@@ -1,15 +1,15 @@
 use crate::typerec::*;
 
-/// Finds potentially recursive variant elements, and wraps them behind an Rc.
-pub(in crate::typerec) fn wrap_variant_elements(mods: &mut [Module]) -> HashSet<VariantElement> {
-    let infs = inf_enums::inf_size_enums(mods);
+// TODO warn whenever two variant-elements could be confused.
 
+/// Wraps enum variant elements marked with `#[specr::indirection]`.
+pub(in crate::typerec) fn wrap_variant_elements(mods: &mut [Module]) -> HashSet<VariantElement> {
     let mut elements = HashSet::new();
 
     for m in mods {
         for item in &mut m.ast.items {
             if let Item::Enum(it_enum) = item {
-                elements.extend(wrap_enum(it_enum, &infs));
+                elements.extend(wrap_enum(it_enum));
             }
         }
     }
@@ -17,7 +17,12 @@ pub(in crate::typerec) fn wrap_variant_elements(mods: &mut [Module]) -> HashSet<
     elements
 }
 
-fn wrap_enum(it_enum: &mut ItemEnum, infs: &HashSet<String>) -> HashSet<VariantElement> {
+fn is_indirection_attr(attr: &Attribute) -> bool {
+    let s = format!("{}", attr.path.to_token_stream()).replace(" ", "");
+    s == "specr::indirection"
+}
+
+fn wrap_enum(it_enum: &mut ItemEnum) -> HashSet<VariantElement> {
     let mut elements = HashSet::new();
 
     for variant in &mut it_enum.variants {
@@ -28,11 +33,10 @@ fn wrap_enum(it_enum: &mut ItemEnum, infs: &HashSet<String>) -> HashSet<VariantE
         };
 
         for (i, f) in fields.into_iter().enumerate() {
-            let Type::Path(tp) = &f.ty else { continue };
-            let last_ident = &tp.path.segments.last().unwrap().ident;
-            let ty_name_str = format!("{}", last_ident);
-            if infs.contains(&ty_name_str) {
-                let wrapped_ty = format!("std::rc::Rc<{}>", f.ty.to_token_stream());
+            if let Some(j) = f.attrs.iter().position(is_indirection_attr) {
+                f.attrs.remove(j);
+
+                let wrapped_ty = format!("specr::hidden::GcCow<{}>", f.ty.to_token_stream());
                 let wrapped_ty = parse_str::<Type>(&wrapped_ty).unwrap();
                 f.ty = wrapped_ty;
 
