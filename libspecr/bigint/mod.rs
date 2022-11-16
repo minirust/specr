@@ -1,14 +1,16 @@
 mod ops;
 mod func;
 
+use crate::specr::gccow::*;
+
 use num_bigint::BigInt as ExtBigInt;
 use num_bigint::ToBigInt as ToExtBigInt;
 
-#[derive(Clone, Debug)]
-pub struct BigInt(pub(crate) ExtBigInt);
+#[derive(Copy, Clone, Debug)]
+pub struct BigInt(pub(crate) GcCow<ExtBigInt>);
 
 impl<T: ToExtBigInt> From<T> for BigInt {
     fn from(t: T) -> BigInt {
-        BigInt(t.to_bigint().unwrap())
+        BigInt(gccow_new(t.to_bigint().unwrap()))
     }
 }

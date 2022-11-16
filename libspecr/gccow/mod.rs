@@ -16,11 +16,13 @@ pub trait GcCompat: Send + Sync + 'static {
     fn as_any(&self) -> &dyn Any;
 }
 
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub struct GcCow<T: GcCompat> {
     idx: usize,
     phantom: PhantomData<T>,
 }
+
+impl<T> Copy for GcCow<T> {}
 
 // those are free functions instead of GcCow methods, so that they can be individually included in the hidden module.
 pub fn gccow_new<T>(t: T) -> GcCow<T> where T: GcCompat {

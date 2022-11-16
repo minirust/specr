@@ -1,9 +1,11 @@
 use std::ops::{Try, FromResidual, ControlFlow, Residual, Yeet};
 use std::convert::Infallible;
 
-#[derive(Clone, Hash, PartialEq, Eq, Debug)]
-pub struct Name(pub String);
-pub struct Nondet<T>(pub T);
+#[derive(Copy, Clone, Hash, PartialEq, Eq, Debug)]
+pub struct Name(pub(in crate::specr) crate::specr::env::String);
+
+#[derive(Copy, Clone)]
+pub struct Nondet<T>(pub(in crate::specr) T);
 
 pub macro yeet {
     ($x:expr) => {
