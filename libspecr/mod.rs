@@ -33,6 +33,9 @@ pub use endianness::*;
 // no other modules are allowed to use things defined in MiniRust.
 mod inject;
 
+mod ret;
+pub use ret::*;
+
 mod gccow;
 pub use gccow::*;
 
