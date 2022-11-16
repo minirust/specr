@@ -1,8 +1,17 @@
 use crate::specr::*;
 use crate::specr::gccow::GcCow;
+use im::hashset::HashSet;
+use im::hashmap::HashMap;
 
-pub type Set<T> = HashSet<T>;
-pub type Map<K, V> = HashMap<K, V>;
+#[derive(Clone)]
+pub struct Set<T>(GcCow<HashSet<T>>);
+
+impl<T> Copy for Set<T> {}
+
+#[derive(Clone)]
+pub struct Map<K, V>(GcCow<HashMap<K, V>>);
+
+impl<K, V> Copy for Map<K, V> {}
 
 #[derive(Copy, Clone, Debug, Hash)]
 pub struct String(pub(in crate::specr) GcCow<std::string::String>);
