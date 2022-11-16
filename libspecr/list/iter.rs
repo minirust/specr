@@ -36,6 +36,6 @@ impl<T: GcCompat + Clone> IntoIterator for List<T> where Self: Copy {
 impl<A: GcCompat + Clone> FromIterator<A> for List<A> {
     fn from_iter<T>(iter: T) -> Self where T: IntoIterator<Item = A> {
         let v: IMVector<A> = iter.into_iter().collect();
-        List(gccow_new(v))
+        List(GcCow::new(v))
     }
 }

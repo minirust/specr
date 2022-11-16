@@ -2,14 +2,6 @@ use crate::libspecr::*;
 
 pub use crate::libspecr::{GcCompat, GcCow};
 
-pub fn gccow_new<T>(t: T) -> GcCow<T> where T: GcCompat {
-    GcCow::new(t)
-}
-
-pub fn gccow_get<T>(gc: &GcCow<T>) -> T where T: GcCompat + Clone {
-    gc.call_ref(|o| o.clone())
-}
-
 pub trait MonadicReturn<T> {
 	fn monadic_return(t: T) -> Self;
 }
@@ -50,5 +42,5 @@ pub fn list_from_elem<T: GcCompat + Clone>(elem: T, n: BigInt) -> List<T> {
     let n = bigint_to_usize(n);
     let v: im::vector::Vector<T> = std::iter::repeat(elem).take(n).collect();
 
-    List(gccow_new(v))
+    List(GcCow::new(v))
 }

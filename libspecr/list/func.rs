@@ -5,7 +5,7 @@ use std::ops::*;
 
 impl<T: Clone + GcCompat> List<T> {
     pub fn new() -> List<T> {
-        List(gccow_new(IMVector::new()))
+        List(GcCow::new(IMVector::new()))
     }
 
     pub fn len(&self) -> BigInt {
@@ -59,7 +59,7 @@ impl<T: Clone + GcCompat> List<T> {
         let end = start+length;
 
         self.0.call_ref(|v|
-            List(gccow_new(v.clone().slice(start..end)))
+            List(GcCow::new(v.clone().slice(start..end)))
         )
     }
 }

@@ -9,9 +9,13 @@ pub use num_bigint::ToBigInt as ToExtBigInt;
 #[derive(Copy, Clone, Debug)]
 pub struct BigInt(pub GcCow<ExtBigInt>);
 
+fn mk_bigint(b: ExtBigInt) -> BigInt {
+    BigInt(GcCow::new(b))
+}
+
 impl<T: ToExtBigInt> From<T> for BigInt {
     fn from(t: T) -> BigInt {
-        BigInt(gccow_new(t.to_bigint().unwrap()))
+        mk_bigint(t.to_bigint().unwrap())
     }
 }
 

@@ -49,6 +49,10 @@ impl<T> GcCow<T> {
         })
     }
 
+    pub fn get(self) -> T where T: GcCompat + Clone {
+        self.call_ref(|o| o.clone())
+    }
+
     pub fn call_ref<O>(self, f: impl Fn(&T) -> O) -> O {
         GC_STATE.with(|st| {
             let st: &GcState = &*st.borrow();
@@ -61,9 +65,9 @@ impl<T> GcCow<T> {
 
     // this does the copy-on-write
     pub fn call_mut<O>(&mut self, f: impl Fn(&mut T) -> O) -> O where T: GcCompat + Clone {
-        let mut val = gccow_get(self);
+        let mut val = self.get();
         let out = f(&mut val);
-        *self = gccow_new(val);
+        *self = GcCow::new(val);
 
         out
     }
@@ -83,7 +87,7 @@ impl<T> GcCow<T> {
     }
 
     pub fn call_mut1<U, O>(&mut self, arg: GcCow<U>, f: impl Fn(&mut T, &U) -> O) -> O where T: GcCompat + Clone, U: GcCompat {
-        let mut val = gccow_get(self);
+        let mut val = self.get();
         let out = GC_STATE.with(|st| {
             let st: &GcState = &*st.borrow();
 
@@ -92,7 +96,8 @@ impl<T> GcCow<T> {
 
             f(&mut val, arg)
         });
-        *self = gccow_new(val);
+
+        *self = GcCow::new(val);
 
         out
     }

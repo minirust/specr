@@ -1,4 +1,5 @@
 use crate::libspecr::*;
+use crate::libspecr::bigint::mk_bigint;
 
 use std::ops::*;
 use std::fmt::{Formatter, Display, Error};
@@ -8,10 +9,6 @@ impl Display for BigInt {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
         self.0.call_ref(|b| write!(f, "{}", b))
     }
-}
-
-fn mk_bigint(b: ExtBigInt) -> BigInt {
-    BigInt(gccow_new(b))
 }
 
 // Arithmetics
