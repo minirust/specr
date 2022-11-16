@@ -42,7 +42,7 @@ fn impl_for_struct(s: &ItemStruct) -> Item {
     let tg = trimmed_generics(g);
 
     let ts = quote! {
-        impl #g #name #tg {
+        impl #g crate::specr::hidden::GcCompat for #name #tg {
             fn as_any(&self) -> &dyn std::any::Any { self }
             fn points_to(&self, s: &mut std::collections::HashSet<usize>) {
                 #(
@@ -89,7 +89,7 @@ fn impl_for_enum(e: &ItemEnum) -> Item {
     let tg = trimmed_generics(g);
 
     let ts = quote! {
-        impl #g #enum_ident #tg {
+        impl #g crate::specr::hidden::GcCompat for #enum_ident #tg {
             fn as_any(&self) -> &dyn std::any::Any { self }
             fn points_to(&self, s: &mut std::collections::HashSet<usize>) {
                 match self {

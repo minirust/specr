@@ -45,10 +45,26 @@ impl<T: Into<BigInt>> Sub<T> for BigInt {
     }
 }
 
+impl<T: Into<BigInt>> SubAssign<T> for BigInt {
+    fn sub_assign(&mut self, other: T) {
+        self.0.call_mut1(other.into().0, |b, o| {
+            *b -= o;
+        });
+    }
+}
+
 impl<T: Into<BigInt>> Mul<T> for BigInt {
     type Output = Self;
     fn mul(self, other: T) -> Self {
         self.0.call_ref1(other.into().0, |b, o| mk_bigint(b * o))
+    }
+}
+
+impl<T: Into<BigInt>> MulAssign<T> for BigInt {
+    fn mul_assign(&mut self, other: T) {
+        self.0.call_mut1(other.into().0, |b, o| {
+            *b *= o;
+        });
     }
 }
 
@@ -59,10 +75,26 @@ impl<T: Into<BigInt>> Div<T> for BigInt {
     }
 }
 
+impl<T: Into<BigInt>> DivAssign<T> for BigInt {
+    fn div_assign(&mut self, other: T) {
+        self.0.call_mut1(other.into().0, |b, o| {
+            *b /= o;
+        });
+    }
+}
+
 impl<T: Into<BigInt>> Rem<T> for BigInt {
     type Output = Self;
     fn rem(self, other: T) -> Self {
         self.0.call_ref1(other.into().0, |b, o| mk_bigint(b % o))
+    }
+}
+
+impl<T: Into<BigInt>> RemAssign<T> for BigInt {
+    fn rem_assign(&mut self, other: T) {
+        self.0.call_mut1(other.into().0, |b, o| {
+            *b %= o;
+        });
     }
 }
 

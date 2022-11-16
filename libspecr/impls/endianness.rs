@@ -3,6 +3,11 @@ use crate::specr::env::Endianness;
 use crate::specr::list::{List, list};
 
 use num_traits::cast::ToPrimitive;
+use crate::specr::hidden::bigint_to_usize;
+
+fn to_u8(b: BigInt) -> u8 {
+    bigint_to_usize(b) as u8
+}
 
 // TODO preliminary implementation:
 // when minirust compiles, #[test] this code against i32::from_be and similar fns.
@@ -15,12 +20,12 @@ impl Endianness {
         }
 
         let mut out = match signed {
-            Signed => BigInt::from(bytes[BigInt::zero()] as i8),
-            Unsigned => BigInt::from(bytes[BigInt::zero()] as u8),
+            Signed => BigInt::from(bytes.first().unwrap() as i8),
+            Unsigned => BigInt::from(bytes.first().unwrap() as u8),
         };
 
-        for b in &bytes[BigInt::one()..] {
-            out = (out << 8) | *b;
+        for b in bytes.iter().skip(1) {
+            out = (out << 8) | b;
         }
 
         out
@@ -40,19 +45,26 @@ impl Endianness {
             int += BigInt::from(2).pow(size.bits());
         }
 
-        let mut bytes = list![0u8; size.bytes()];
+        let mut bytes = List::new();
 
-        // range-based for loops don't yet work with BigInt.
-        let mut i = BigInt::zero();
-        while i < size.bytes() {
-            let byte = (int >> i) % 256;
-            bytes[i] = byte.0.to_u8().unwrap();
-
-            i += 1;
-        }
-
+        // first byte.
+        let j = size.bytes() - 1;
+        let byte = (int >> (j*8)) % 256;
+        let mut byte = to_u8(byte);
         if is_neg {
-            bytes[BigInt::zero()] |= 0b1000_0000;
+            byte |= 0b1000_0000;
+        }
+        bytes.push(byte);
+
+        // all other bytes.
+        // range-based for loops don't yet work with BigInt.
+        let mut j = size.bytes() - 2;
+        while j >= 0 {
+            let byte = (int >> (j*8)) % 256;
+            let byte = to_u8(byte);
+            bytes.push(byte);
+
+            j -= 1;
         }
 
         if matches!(self, LittleEndian) {

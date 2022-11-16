@@ -17,11 +17,15 @@ pub fn add_imports(mut mods: Vec<Module>) -> Vec<Module> {
 
     // add imports within module
     for m in mods.iter_mut() {
-        m.ast.items.extend(f.items.clone());
-
+        let mut items = f.items.clone();
         if m.name != "prelude" {
-            m.ast.items.push(prelude_item.clone());
+            items.push(prelude_item.clone());
         }
+
+        for (i, it) in items.into_iter().enumerate() {
+            m.ast.items.insert(i, it);
+        }
+
     }
 
     mods

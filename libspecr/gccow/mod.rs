@@ -39,7 +39,7 @@ pub fn gccow_new<T>(t: T) -> GcCow<T> where T: GcCompat {
     })
 }
 
-pub fn gccow_get<T>(gc: &GcCow<T>) -> T where T: GcCompat + Copy {
+pub fn gccow_get<T>(gc: &GcCow<T>) -> T where T: GcCompat + Clone {
     GC_STATE.with(|st| {
         let st: &GcState = &*st.borrow();
         let x: &dyn Any = st.objs.get(gc.idx).as_any();
@@ -75,7 +75,7 @@ impl<T> GcCow<T> {
 
 impl<T> GcCow<T> {
     // this does the copy-on-write
-    pub(in crate::specr) fn call_mut<O>(&mut self, f: impl Fn(&mut T) -> O) -> O where T: GcCompat {
+    pub(in crate::specr) fn call_mut<O>(&mut self, f: impl Fn(&mut T) -> O) -> O where T: GcCompat + Clone {
         let mut val = gccow_get(self);
         let out = f(&mut val);
         *self = gccow_new(val);
@@ -86,14 +86,14 @@ impl<T> GcCow<T> {
 
 // the same as above with an argument.
 impl<T> GcCow<T> {
-    pub(in crate::specr) fn call_ref1<U, O>(self, arg: GcCow<U>, f: impl Fn(&T, &U) -> O) -> O {
+    pub(in crate::specr) fn call_ref1<U, O>(self, arg: GcCow<U>, f: impl Fn(&T, &U) -> O) -> O where T: GcCompat, U: GcCompat {
         GC_STATE.with(|st| {
             let st: &GcState = &*st.borrow();
             let x: &dyn Any = st.objs.get(self.idx).as_any();
             let x = x.downcast_ref::<T>().unwrap();
 
             let arg: &dyn Any = st.objs.get(arg.idx).as_any();
-            let arg = x.downcast_ref::<T>().unwrap();
+            let arg = arg.downcast_ref::<U>().unwrap();
 
             f(x, arg)
         })
@@ -101,15 +101,15 @@ impl<T> GcCow<T> {
 }
 
 impl<T> GcCow<T> {
-    pub(in crate::specr) fn call_mut1<U, O>(&mut self, arg: GcCow<U>, f: impl Fn(&mut T, &U) -> O) -> O where T: GcCompat {
+    pub(in crate::specr) fn call_mut1<U, O>(&mut self, arg: GcCow<U>, f: impl Fn(&mut T, &U) -> O) -> O where T: GcCompat + Clone, U: GcCompat {
         let mut val = gccow_get(self);
         let out = GC_STATE.with(|st| {
             let st: &GcState = &*st.borrow();
 
-            let x: &dyn Any = st.objs.get(arg.idx).as_any();
-            let x = x.downcast_ref::<T>().unwrap();
+            let arg: &dyn Any = st.objs.get(arg.idx).as_any();
+            let arg = arg.downcast_ref::<U>().unwrap();
 
-            f(&mut val, x)
+            f(&mut val, arg)
         });
         *self = gccow_new(val);
 
@@ -129,10 +129,10 @@ impl<T> Hash for GcCow<T> where T: Hash {
     }
 }
 
-impl<T> PartialEq for GcCow<T> where T: PartialEq {
+impl<T> PartialEq for GcCow<T> where T: GcCompat + PartialEq {
     fn eq(&self, other: &Self) -> bool {
         self.call_ref1(*other, |s, o| s == o)
     }
 }
 
-impl<T> Eq for GcCow<T> where T: Eq {}
+impl<T> Eq for GcCow<T> where T: GcCompat + Eq {}
