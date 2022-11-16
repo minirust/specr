@@ -10,18 +10,24 @@ use internal::*;
 
 // this trait shall be implemented for each type of minirust.
 // It is required in order to contain `GcCow`, and to be the generic param to `GcCow`.
-pub trait GcCompat: Send + Sync + 'static {
+pub trait GcCompat {
     // writes the gc'd objs, that `self` points to, into `buffer`.
     fn points_to(&self, buffer: &mut HashSet<usize>);
     fn as_any(&self) -> &dyn Any;
 }
 
-#[derive(Clone)]
-pub struct GcCow<T: GcCompat> {
+pub struct GcCow<T> {
     idx: usize,
     phantom: PhantomData<T>,
 }
 
+impl<T> Clone for GcCow<T> {
+    fn clone(&self) -> Self {
+        let idx = self.idx;
+        let phantom = PhantomData;
+        GcCow { idx, phantom }
+    }
+}
 impl<T> Copy for GcCow<T> {}
 
 // those are free functions instead of GcCow methods, so that they can be individually included in the hidden module.

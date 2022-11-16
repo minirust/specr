@@ -1,4 +1,5 @@
-use crate::prelude::{Endianness, Signedness, BigInt, Size};
+use crate::prelude::{Signedness, BigInt, Size};
+use crate::specr::env::Endianness;
 use crate::specr::list::{List, list};
 
 use num_traits::cast::ToPrimitive;
