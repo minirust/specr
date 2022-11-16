@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use crate::libspecr::*;
 
 pub struct SparseVec<T> {
     data: Vec<Option<T>>,

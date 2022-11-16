@@ -1,4 +1,4 @@
-use super::*;
+use crate::libspecr::bigint::*;
 
 impl BigInt {
     pub fn zero() -> BigInt {

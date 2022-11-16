@@ -1,28 +1,15 @@
-use crate::specr::gccow::GcCompat;
+use crate::libspecr::*;
 
 use std::ops::{Try, FromResidual, ControlFlow, Residual, Yeet};
 use std::convert::Infallible;
 
-use std::collections::HashSet;
-use std::any::Any;
-
-#[derive(Copy, Clone, Hash, PartialEq, Eq, Debug)]
-pub struct Name(pub(in crate::specr) crate::specr::string::String);
-
 #[derive(Copy, Clone)]
-pub struct Nondet<T>(pub(in crate::specr) T);
+pub struct Nondet<T>(pub T);
 
 pub macro yeet {
     ($x:expr) => {
         do yeet $x
     },
-}
-
-impl GcCompat for Name {
-    fn points_to(&self, m: &mut HashSet<usize>) {
-        self.0.points_to(m);
-    }
-    fn as_any(&self) -> &dyn Any { self }
 }
 
 impl<T: GcCompat> GcCompat for Nondet<T> {

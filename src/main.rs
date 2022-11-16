@@ -52,7 +52,7 @@ fn main() {
     mkdir("generated");
     mkdir("generated/src");
 
-    cp::cp_dir("libspecr", "generated/src/specr").expect("Copying libspecr to generated failed!");
+    cp::cp_dir("libspecr", "generated/src/libspecr").expect("Copying libspecr to generated failed!");
 
     let mods = source::fetch("minirust");
     create_cargo_toml();
@@ -92,7 +92,8 @@ fn create_lib(mods: &[Module]) {
         #![feature(decl_macro)]
         #![feature(map_try_insert)]
         #![allow(unused)]
-        #[macro_use] pub mod specr;
+        #[macro_use] mod libspecr;
+        pub use libspecr::public as specr;
         #( #[macro_use] pub mod #mods; )*
     };
     let code = code.to_string();

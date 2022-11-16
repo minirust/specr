@@ -1,13 +1,7 @@
+use crate::libspecr::*;
+
 use std::iter::FromIterator;
-use std::slice::Chunks;
 use std::ops::*;
-
-use im::vector::Vector;
-
-use crate::specr::BigInt;
-use crate::specr::hidden::bigint_to_usize;
-use crate::specr::list::List;
-use crate::specr::gccow::{GcCompat, gccow_new};
 
 struct ListIter<T> {
     list: List<T>,
@@ -41,7 +35,7 @@ impl<T: GcCompat + Clone> IntoIterator for List<T> where Self: Copy {
 
 impl<A: GcCompat + Clone> FromIterator<A> for List<A> {
     fn from_iter<T>(iter: T) -> Self where T: IntoIterator<Item = A> {
-        let v: Vector<A> = iter.into_iter().collect();
+        let v: IMVector<A> = iter.into_iter().collect();
         List(gccow_new(v))
     }
 }

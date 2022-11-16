@@ -1,9 +1,7 @@
-use crate::prelude::{Signedness, BigInt, Size};
-use crate::specr::env::Endianness;
-use crate::specr::list::{List, list};
+use crate::libspecr::*;
 
+use crate::prelude::{Size, Signedness};
 use num_traits::cast::ToPrimitive;
-use crate::specr::hidden::bigint_to_usize;
 
 fn to_u8(b: BigInt) -> u8 {
     bigint_to_usize(b) as u8

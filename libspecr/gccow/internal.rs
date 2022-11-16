@@ -1,9 +1,7 @@
-use std::collections::HashSet;
+use crate::libspecr::{*, gccow::*};
+
 use std::cell::RefCell;
 use std::marker::PhantomData;
-use crate::specr::gccow::sparse_vec::SparseVec;
-
-use super::*;
 
 impl<T: GcCompat> GcCompat for GcCow<T> {
     fn points_to(&self, buffer: &mut HashSet<usize>) {
@@ -12,27 +10,27 @@ impl<T: GcCompat> GcCompat for GcCow<T> {
     fn as_any(&self) -> &dyn Any { self }
 }
 
-pub(super) struct GcState {
-    pub(super) objs: SparseVec<Box<dyn GcCompat>>,
+pub struct GcState {
+    pub objs: SparseVec<Box<dyn GcCompat>>,
 }
 
 thread_local! {
-    pub(super) static GC_STATE: RefCell<GcState> = RefCell::new(GcState::new());
+    pub static GC_STATE: RefCell<GcState> = RefCell::new(GcState::new());
 }
 
 impl GcState {
-    pub(super) const fn new() -> GcState {
+    pub const fn new() -> GcState {
         Self { objs: SparseVec::new() }
     }
 
-    pub(super) fn alloc<T: GcCompat>(&mut self, t: T) -> GcCow<T> {
+    pub fn alloc<T: GcCompat>(&mut self, t: T) -> GcCow<T> {
         let obj: Box<dyn GcCompat> = Box::new(t);
         let idx = self.objs.insert(obj);
         println!("alloc -> {}", idx);
         GcCow { idx, phantom: PhantomData }
     }
 
-    pub(super) fn mark_and_sweep(&mut self, roots: HashSet<usize>) {
+    pub fn mark_and_sweep(&mut self, roots: HashSet<usize>) {
         // `objs` which are found to be reachable from `roots`, but they're children were not yet added.
         let mut open = roots;
 

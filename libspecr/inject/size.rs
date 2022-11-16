@@ -1,8 +1,9 @@
+use crate::libspecr::*;
+
 use std::ops::*;
 use std::cmp::Ordering;
 
 use crate::prelude::Size;
-use crate::specr::BigInt;
 
 impl Size {
     pub fn is_zero(&self) -> bool {

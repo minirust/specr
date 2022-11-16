@@ -1,9 +1,8 @@
-use super::*;
+use crate::libspecr::*;
 
 use std::ops::*;
 use std::fmt::{Formatter, Display, Error};
 use std::cmp::Ordering;
-use crate::specr::gccow::gccow_new;
 
 impl Display for BigInt {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {

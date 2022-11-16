@@ -1,46 +1,66 @@
 use std::collections::{HashSet, HashMap};
+use std::any::Any;
 
-// contains the BigInt implemenation.
-// accessed using `BigInt`.
+use im::HashSet as IMHashSet;
+use im::HashMap as IMHashMap;
+use im::Vector as IMVector;
+
 mod bigint;
-pub use bigint::BigInt;
+pub use bigint::*;
 
 mod list;
+pub use list::*;
+
 mod set;
+pub use set::*;
+
 mod map;
+pub use map::*;
+
 mod string;
+pub use string::*;
 
-// contains hidden functions that are called only due to generated code.
-// accessed using `specr::hidden::_`.
-pub mod hidden;
+mod name;
+pub use name::*;
 
-// contains items to be exposed to the user without importing.
-// like List, Set etc.
-// accessed using `_`.
-#[macro_use]
-mod env;
-pub use env::*;
+mod nondet;
+pub use nondet::*;
 
-// contains implementation for opaque items from MiniRust, which are not already defined in mirror.
-// accessed using `specr::_`.
-#[macro_use]
-mod intrinsics;
-pub use intrinsics::*;
+mod endianness;
+pub use endianness::*;
 
-// implements some operators for Size.
-mod impls;
+// code that belongs to minirust, but is to verbose there.
+// no other modules are allowed to use things defined in MiniRust.
+mod inject;
 
-// implements a small clone-on-write garbage collector.
 mod gccow;
+pub use gccow::*;
 
-pub mod prelude {
-    pub use crate::specr::BigInt;
-    pub use crate::specr::env::*;
-    pub use crate::specr::list::*;
-    pub use crate::specr::set::*;
-    pub use crate::specr::map::*;
-    pub use crate::specr::string::*;
-    pub use std::hash::Hash;
-    pub use std::fmt::Debug;
-    pub use crate::specr::gccow::GcCompat;
+pub mod hidden;
+pub use hidden::*;
+
+// publicly accessible items from libspecr.
+pub mod public {
+    pub use crate::libspecr::name::*;
+    pub use crate::libspecr::bigint::*;
+    pub use crate::libspecr::nondet::*;
+
+    pub use crate::libspecr::hidden;
+
+    // auto-included items from libspecr.
+    pub mod prelude {
+        pub use crate::libspecr::BigInt;
+        pub use std::hash::Hash;
+        pub use std::fmt::Debug;
+        pub use crate::libspecr::GcCompat;
+        pub use crate::libspecr::list::*;
+        pub use crate::libspecr::set::*;
+        pub use crate::libspecr::map::*;
+        pub use crate::libspecr::endianness::*;
+        pub use crate::libspecr::string::*;
+
+        pub fn default<T: Default>() -> T { T::default() }
+        pub fn pick<T>(_f: impl Fn(T) -> bool) -> crate::libspecr::Nondet<T> { todo!() }
+        pub fn predict<T>(_f: impl Fn(T) -> bool) -> crate::libspecr::Nondet<T> { todo!() }
+    }
 }

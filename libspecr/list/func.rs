@@ -1,17 +1,11 @@
+use crate::libspecr::*;
+
 use std::iter::FromIterator;
-use std::slice::Chunks;
 use std::ops::*;
-
-use im::vector::Vector;
-
-use crate::specr::BigInt;
-use crate::specr::hidden::bigint_to_usize;
-use crate::specr::list::List;
-use crate::specr::gccow::{GcCompat, gccow_new};
 
 impl<T: Clone + GcCompat> List<T> {
     pub fn new() -> List<T> {
-        List(gccow_new(Vector::new()))
+        List(gccow_new(IMVector::new()))
     }
 
     pub fn len(&self) -> BigInt {
