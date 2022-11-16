@@ -7,7 +7,7 @@ use std::any::Any;
 
 use im::vector::Vector;
 
-mod trait_impls;
+mod iter;
 mod func;
 
 #[derive(Copy, Clone)]

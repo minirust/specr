@@ -14,18 +14,6 @@ impl<T: Clone + GcCompat> List<T> {
         List(gccow_new(Vector::new()))
     }
 
-    pub fn iter(&self) -> impl Iterator<Item=T> where Self: Copy {
-        let s = *self;
-        let mut i = BigInt::zero();
-        std::iter::from_fn(move || {
-            let val = s.get(i);
-            if val.is_some() {
-                i += 1;
-            }
-            val
-        })
-    }
-
     pub fn len(&self) -> BigInt {
         self.0.call_ref(|v| BigInt::from(v.len()))
     }
