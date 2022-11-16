@@ -10,7 +10,7 @@ pub use num_bigint::BigInt as ExtBigInt;
 pub use num_bigint::ToBigInt as ToExtBigInt;
 
 #[derive(Copy, Clone, Debug)]
-pub struct BigInt(pub(crate) GcCow<ExtBigInt>);
+pub struct BigInt(pub(in crate::specr) GcCow<ExtBigInt>);
 
 impl<T: ToExtBigInt> From<T> for BigInt {
     fn from(t: T) -> BigInt {

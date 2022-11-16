@@ -3,57 +3,66 @@ use super::*;
 use std::ops::*;
 use std::fmt::{Formatter, Display, Error};
 use std::cmp::Ordering;
+use crate::specr::gccow::gccow_new;
 
 impl Display for BigInt {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
-        write!(f, "{}", &self.0)
+        self.0.call_ref(|b| write!(f, "{}", b))
     }
+}
+
+fn mk_bigint(b: ExtBigInt) -> BigInt {
+    BigInt(gccow_new(b))
 }
 
 // Arithmetics
 impl Neg for BigInt {
     type Output = Self;
-    fn neg(self) -> Self { Self(-self.0) }
+    fn neg(self) -> Self {
+        self.0.call_ref(|b| mk_bigint(-b))
+    }
 }
 
 impl<T: Into<BigInt>> Add<T> for BigInt {
     type Output = Self;
     fn add(self, other: T) -> Self {
-        Self(self.0 + other.into().0)
+        self.0.call_ref1(other.into().0, |b, o| mk_bigint(b + o))
     }
 }
 
 impl<T: Into<BigInt>> AddAssign<T> for BigInt {
     fn add_assign(&mut self, other: T) {
-        self.0 += other.into().0;
+        self.0.call_mut1(other.into().0, |b, o| {
+            *b += o;
+        });
     }
 }
 
 impl<T: Into<BigInt>> Sub<T> for BigInt {
     type Output = Self;
     fn sub(self, other: T) -> Self {
-        Self(self.0 - other.into().0)
+        self.0.call_ref1(other.into().0, |b, o| mk_bigint(b - o))
     }
 }
 
 impl<T: Into<BigInt>> Mul<T> for BigInt {
     type Output = Self;
     fn mul(self, other: T) -> Self {
-        Self(self.0 * other.into().0)
+        self.0.call_ref1(other.into().0, |b, o| mk_bigint(b * o))
     }
 }
 
 impl<T: Into<BigInt>> Div<T> for BigInt {
     type Output = Self;
     fn div(self, other: T) -> Self {
-        Self(self.0 / other.into().0)
+        self.0.call_ref1(other.into().0, |b, o| mk_bigint(b / o))
     }
 }
 
 impl<T: Into<BigInt>> Rem<T> for BigInt {
     type Output = Self;
     fn rem(self, other: T) -> Self {
-        Self(self.0 - other.into().0)
+        self.0.call_ref1(other.into().0, |b, o| mk_bigint(b % o))
     }
 }
 
@@ -87,36 +96,34 @@ impl<T: Into<BigInt>> ShrAssign<T> for BigInt {
 impl<T: Into<BigInt>> BitAnd<T> for BigInt {
     type Output = Self;
     fn bitand(self, other: T) -> Self {
-        Self(self.0 & other.into().0)
+        self.0.call_ref1(other.into().0, |b, o| mk_bigint(b & o))
     }
 }
 
 impl<T: Into<BigInt>> BitOr<T> for BigInt {
     type Output = Self;
     fn bitor(self, other: T) -> Self {
-        Self(self.0 | other.into().0)
+        self.0.call_ref1(other.into().0, |b, o| mk_bigint(b | o))
     }
 }
 
 // Ord
 impl<T: Into<BigInt> + Clone> PartialOrd<T> for BigInt {
     fn partial_cmp(&self, other: &T) -> Option<Ordering> {
-        let other: BigInt = other.clone().into();
-        self.0.partial_cmp(&other.0)
+        self.0.call_ref1(other.clone().into().0, |b, o| b.partial_cmp(&o))
     }
 }
 
 impl Ord for BigInt {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.0.cmp(&other.0)
+        self.0.call_ref1(other.0, |b, o| b.cmp(&o))
     }
 }
 
 // Eq
 impl<T: Into<BigInt> + Clone> PartialEq<T> for BigInt {
     fn eq(&self, other: &T) -> bool {
-        let other: BigInt = other.clone().into();
-        self == &other
+        self.0.call_ref1(other.clone().into().0, |b, o| b == o)
     }
 }
 

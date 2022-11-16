@@ -5,6 +5,8 @@ mod impls;
 use std::collections::HashSet;
 use std::any::Any;
 use std::marker::PhantomData;
+use std::fmt::{Formatter, Debug, Error};
+use std::hash::{Hash, Hasher};
 
 use internal::*;
 
@@ -47,11 +49,8 @@ pub fn gccow_get<T>(gc: &GcCow<T>) -> T where T: GcCompat + Copy {
     })
 }
 
-// this does the copy-on-write
 pub fn gccow_mutate<T>(gc: &mut GcCow<T>, f: impl Fn(&mut T)) where T: GcCompat + Copy {
-    let mut val = gccow_get(gc);
-    f(&mut val);
-    *gc = gccow_new(val);
+    gc.call_mut(f);
 }
 
 pub fn mark_and_sweep(roots: HashSet<usize>) {
@@ -59,4 +58,69 @@ pub fn mark_and_sweep(roots: HashSet<usize>) {
         let mut st = st.borrow_mut();
         st.mark_and_sweep(roots);
     });
+}
+
+// methods for specr-internal use:
+impl<T> GcCow<T> {
+    pub(in crate::specr) fn call_ref<O>(self, f: impl Fn(&T) -> O) -> O {
+        GC_STATE.with(|st| {
+            let st: &GcState = &*st.borrow();
+            let x: &dyn Any = st.objs.get(self.idx).as_any();
+            let x = x.downcast_ref::<T>().unwrap();
+
+            f(x)
+        })
+    }
+}
+
+impl<T> GcCow<T> {
+    // this does the copy-on-write
+    pub(in crate::specr) fn call_mut(&mut self, f: impl Fn(&mut T)) where T: GcCompat {
+        let mut val = gccow_get(self);
+        f(&mut val);
+        *self = gccow_new(val);
+    }
+}
+
+// the same as above with an argument.
+impl<T> GcCow<T> {
+    pub(in crate::specr) fn call_ref1<U, O>(self, arg: GcCow<U>, f: impl Fn(&T, &U) -> O) -> O {
+        GC_STATE.with(|st| {
+            let st: &GcState = &*st.borrow();
+            let x: &dyn Any = st.objs.get(self.idx).as_any();
+            let x = x.downcast_ref::<T>().unwrap();
+
+            let arg: &dyn Any = st.objs.get(arg.idx).as_any();
+            let arg = x.downcast_ref::<T>().unwrap();
+
+            f(x, arg)
+        })
+    }
+}
+
+impl<T> GcCow<T> {
+    pub(in crate::specr) fn call_mut1<U>(&mut self, arg: GcCow<U>, f: impl Fn(&mut T, &U)) where T: GcCompat {
+        let mut val = gccow_get(self);
+        GC_STATE.with(|st| {
+            let st: &GcState = &*st.borrow();
+
+            let x: &dyn Any = st.objs.get(arg.idx).as_any();
+            let x = x.downcast_ref::<T>().unwrap();
+
+            f(&mut val, x);
+        });
+        *self = gccow_new(val);
+    }
+}
+
+impl<T> Debug for GcCow<T> where T: Debug {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+        self.call_ref(|t| t.debug(f))
+    }
+}
+
+impl<T> Hash for GcCow<T> where T: Hash {
+    fn hash<H>(&self, state: &mut H) where H: Hasher {
+        self.call_ref(|t| t.hash(state))
+    }
 }
