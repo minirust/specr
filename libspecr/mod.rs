@@ -6,6 +6,9 @@ mod bigint;
 pub use bigint::BigInt;
 
 mod list;
+mod set;
+mod map;
+mod string;
 
 // contains hidden functions that are called only due to generated code.
 // accessed using `specr::hidden::_`.
@@ -34,6 +37,9 @@ pub mod prelude {
     pub use crate::specr::BigInt;
     pub use crate::specr::env::*;
     pub use crate::specr::list::*;
+    pub use crate::specr::set::*;
+    pub use crate::specr::map::*;
+    pub use crate::specr::string::*;
     pub use std::hash::Hash;
     pub use std::fmt::Debug;
     pub use crate::specr::gccow::GcCompat;

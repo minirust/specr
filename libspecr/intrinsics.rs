@@ -7,7 +7,7 @@ use std::collections::HashSet;
 use std::any::Any;
 
 #[derive(Copy, Clone, Hash, PartialEq, Eq, Debug)]
-pub struct Name(pub(in crate::specr) crate::specr::env::String);
+pub struct Name(pub(in crate::specr) crate::specr::string::String);
 
 #[derive(Copy, Clone)]
 pub struct Nondet<T>(pub(in crate::specr) T);
