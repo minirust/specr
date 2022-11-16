@@ -41,7 +41,7 @@ impl<K, V> GcCompat for Map<K, V> {
     fn as_any(&self) -> &dyn Any { self }
 }
 
-#[derive(Copy, Clone, Debug, Hash)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Hash)]
 pub struct String(pub(in crate::specr) GcCow<std::string::String>);
 
 impl GcCompat for String {

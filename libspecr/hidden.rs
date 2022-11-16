@@ -27,7 +27,7 @@ fn monadic_return_test() {
 
 // TODO this function panics in some cases. I should handle those cases.
 pub fn bigint_to_usize(b: BigInt) -> usize {
-    let (sign, digits) = b.0.to_u64_digits();
+    let (sign, digits) = b.0.call_ref(|b| b.to_u64_digits());
     if sign == num_bigint::Sign::Minus {
         panic!("cannot convert negative number to usize");
     }
@@ -38,7 +38,7 @@ pub fn bigint_to_usize(b: BigInt) -> usize {
     *digits.get(0).unwrap_or(&0) as usize
 }
 
-pub fn list_from_elem<T: Clone>(elem: T, n: BigInt) -> List<T> {
+pub fn list_from_elem<T: GcCompat + Clone>(elem: T, n: BigInt) -> List<T> {
     let n = bigint_to_usize(n);
     let v: im::vector::Vector<T> = std::iter::repeat(elem).take(n).collect();
 

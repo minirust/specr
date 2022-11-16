@@ -14,18 +14,29 @@ impl<T: Clone + GcCompat> List<T> {
         List(gccow_new(Vector::new()))
     }
 
-    pub fn iter(&self) -> List<T> {
-        // TODO reference problem
-        // self.0.call_ref(|v| v.iter())
-        *self
+    pub fn iter(&self) -> impl Iterator<Item=T> where Self: Copy {
+        let s = *self;
+        let mut i = BigInt::zero();
+        std::iter::from_fn(move || {
+            let val = s.get(i);
+            if val.is_some() {
+                i += 1;
+            }
+            val
+        })
     }
 
     pub fn len(&self) -> BigInt {
         self.0.call_ref(|v| BigInt::from(v.len()))
     }
 
-    pub fn last(&self) -> Option<&T> {
-        self.0.call_ref(|v| v.last())
+    pub fn last(&self) -> Option<T> {
+        self.0.call_ref(|v| v.last().cloned())
+    }
+
+    pub fn get(&self, i: BigInt) -> Option<T> {
+        let i = bigint_to_usize(i);
+        self.0.call_ref(|v| v.get(i).cloned())
     }
 
     pub fn push(&mut self, t: T) {

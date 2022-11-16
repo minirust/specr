@@ -40,7 +40,7 @@ impl Endianness {
             int += BigInt::from(2).pow(size.bits());
         }
 
-        let mut bytes = list![0; size.bytes()];
+        let mut bytes = list![0u8; size.bytes()];
 
         // range-based for loops don't yet work with BigInt.
         let mut i = BigInt::zero();

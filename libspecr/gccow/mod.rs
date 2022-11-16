@@ -119,7 +119,7 @@ impl<T> GcCow<T> {
 
 impl<T> Debug for GcCow<T> where T: Debug {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
-        self.call_ref(|t| t.debug(f))
+        self.call_ref(|t| t.fmt(f))
     }
 }
 
@@ -128,3 +128,11 @@ impl<T> Hash for GcCow<T> where T: Hash {
         self.call_ref(|t| t.hash(state))
     }
 }
+
+impl<T> PartialEq for GcCow<T> where T: PartialEq {
+    fn eq(&self, other: &Self) -> bool {
+        self.call_ref1(*other, |s, o| s == o)
+    }
+}
+
+impl<T> Eq for GcCow<T> where T: Eq {}

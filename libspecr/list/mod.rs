@@ -7,7 +7,6 @@ use std::any::Any;
 
 use im::vector::Vector;
 
-mod index;
 mod trait_impls;
 mod func;
 
@@ -20,7 +19,7 @@ pub macro list {
 	($a:expr ; $b:expr) => { list_from_elem($a, BigInt::from($b)) },
 }
 
-impl<T> GcCompat for Vector<T> where T: GcCompat {
+impl<T: Clone> GcCompat for Vector<T> where T: GcCompat {
     fn points_to(&self, m: &mut HashSet<usize>) {
         for i in self.iter() {
             i.points_to(m);
@@ -29,7 +28,7 @@ impl<T> GcCompat for Vector<T> where T: GcCompat {
     fn as_any(&self) -> &dyn Any { self}
 }
 
-impl<T> GcCompat for List<T> {
+impl<T> GcCompat for List<T> where T: GcCompat + Clone {
     fn points_to(&self, m: &mut HashSet<usize>) {
         self.0.points_to(m);
     }
