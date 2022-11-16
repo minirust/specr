@@ -75,10 +75,12 @@ impl<T> GcCow<T> {
 
 impl<T> GcCow<T> {
     // this does the copy-on-write
-    pub(in crate::specr) fn call_mut(&mut self, f: impl Fn(&mut T)) where T: GcCompat {
+    pub(in crate::specr) fn call_mut<O>(&mut self, f: impl Fn(&mut T) -> O) -> O where T: GcCompat {
         let mut val = gccow_get(self);
-        f(&mut val);
+        let out = f(&mut val);
         *self = gccow_new(val);
+
+        out
     }
 }
 
@@ -99,17 +101,19 @@ impl<T> GcCow<T> {
 }
 
 impl<T> GcCow<T> {
-    pub(in crate::specr) fn call_mut1<U>(&mut self, arg: GcCow<U>, f: impl Fn(&mut T, &U)) where T: GcCompat {
+    pub(in crate::specr) fn call_mut1<U, O>(&mut self, arg: GcCow<U>, f: impl Fn(&mut T, &U) -> O) -> O where T: GcCompat {
         let mut val = gccow_get(self);
-        GC_STATE.with(|st| {
+        let out = GC_STATE.with(|st| {
             let st: &GcState = &*st.borrow();
 
             let x: &dyn Any = st.objs.get(arg.idx).as_any();
             let x = x.downcast_ref::<T>().unwrap();
 
-            f(&mut val, x);
+            f(&mut val, x)
         });
         *self = gccow_new(val);
+
+        out
     }
 }
 

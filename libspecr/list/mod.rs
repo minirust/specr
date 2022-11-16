@@ -1,5 +1,5 @@
 use crate::specr::BigInt;
-use crate::specr::hidden::{bigint_to_usize, vec_to_list};
+use crate::specr::hidden::{bigint_to_usize, list_from_elem};
 use crate::specr::gccow::{GcCow, GcCompat};
 
 use std::collections::HashSet;
@@ -16,18 +16,16 @@ pub struct List<T>(pub(in crate::specr) GcCow<Vector<T>>);
 
 pub macro list {
 	() => { List::new() },
-	($start:expr $(,$a:expr)*) => { vec_to_list(vec![$start $(,$a)* ]) },
-	($a:expr ; $b:expr) => {
-        vec_to_list(
-            vec![$a;
-                bigint_to_usize(BigInt::from($b))
-            ]
-        )
-    },
+	($start:expr $(,$a:expr)*) => { [$start $(,$a)* ].into_iter().collect::<List<_>>() },
+	($a:expr ; $b:expr) => { list_from_elem($a, BigInt::from($b)) },
 }
 
-impl<T> GcCompat for Vector<T> {
-    fn points_to(&self, _m: &mut HashSet<usize>) {}
+impl<T> GcCompat for Vector<T> where T: GcCompat {
+    fn points_to(&self, m: &mut HashSet<usize>) {
+        for i in self.iter() {
+            i.points_to(m);
+        }
+    }
     fn as_any(&self) -> &dyn Any { self}
 }
 

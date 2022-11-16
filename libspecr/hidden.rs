@@ -38,7 +38,9 @@ pub fn bigint_to_usize(b: BigInt) -> usize {
     *digits.get(0).unwrap_or(&0) as usize
 }
 
-pub fn vec_to_list<T>(v: Vec<T>) -> List<T> {
-    List(v)
-}
+pub fn list_from_elem<T: Clone>(elem: T, n: BigInt) -> List<T> {
+    let n = bigint_to_usize(n);
+    let v: im::vector::Vector<T> = std::iter::repeat(elem).take(n).collect();
 
+    List(gccow_new(v))
+}
