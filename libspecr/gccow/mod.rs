@@ -43,7 +43,7 @@ pub fn mark_and_sweep(roots: HashSet<usize>) {
 
 // methods for specr-internal use:
 impl<T> GcCow<T> {
-    pub fn new(t: T) -> Self {
+    pub fn new(t: T) -> Self where T: GcCompat {
         GC_STATE.with(|st| {
             st.borrow_mut().alloc(t)
         })
