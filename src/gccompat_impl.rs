@@ -1,6 +1,4 @@
-use syn::*;
-use quote::*;
-use proc_macro2::*;
+use crate::prelude::*;
 
 pub fn gccompat_impl(mut ast: syn::File) -> syn::File {
     let mut i = 0;

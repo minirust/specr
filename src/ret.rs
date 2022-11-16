@@ -1,7 +1,4 @@
-use syn::*;
-use syn::parse::Parse;
-use syn::visit_mut::*;
-use quote::ToTokens;
+use crate::prelude::*;
 
 pub fn add_ret(mut ast: syn::File) -> syn::File {
     let mut v = Visitor;
@@ -12,17 +9,18 @@ pub fn add_ret(mut ast: syn::File) -> syn::File {
 
 struct Visitor;
 
-fn parse<T: Parse>(s: &str) -> T {
-    syn::parse_str::<T>(s).unwrap()
-}
-
 fn empty_ret() -> Expr {
-    parse::<Expr>("specr::hidden::ret(())")
+    let code = quote! {
+        specr::hidden::ret(())
+    };
+    parse2(code).unwrap()
 }
 
 fn wrap_ret_expr(expr: &mut Expr) {
-    let s = format!("specr::hidden::ret({})", expr.to_token_stream());
-    *expr = parse::<Expr>(&s);
+    let code = quote! {
+        specr::hidden::ret(#expr)
+    };
+    *expr = parse2(code).unwrap();
 }
 
 fn visit_block(b: &mut Block) {

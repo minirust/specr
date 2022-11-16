@@ -12,14 +12,26 @@ mod autocopy;
 mod gccompat_impl;
 
 use std::fs;
-use std::path::PathBuf;
-use quote::ToTokens;
+use std::path::{PathBuf, Path};
 use std::process::Command;
 
 use source::Module;
 
+pub mod prelude {
+    pub use crate::source::Module;
+    pub use quote::{quote, format_ident, ToTokens};
+    pub use syn::*;
+    pub use syn::token::{Brace, Match};
+    pub use syn::visit_mut::*;
+    pub use syn::visit::*;
+    pub use proc_macro2::{TokenStream, TokenTree, Span};
+    pub use syn::punctuated::Punctuated;
+
+}
+use prelude::*;
+
 fn exists(s: &str) -> bool {
-    std::path::Path::new(s).exists()
+    Path::new(s).exists()
 }
 
 fn mkdir(name: &str) {
@@ -62,28 +74,28 @@ fn create_cargo_toml() {
                 [dependencies]\n\
                 num-bigint = \"0.4\"\n\
                 num-traits = \"0.2.15\"\n\
+                im = \"15.1.0\"\n\
                ";
     fs::write("generated/Cargo.toml", &toml).unwrap();
 }
 
 fn create_lib(mods: &[Module]) {
-    let code = "#![feature(let_else)]\n\
-                #![feature(try_trait_v2)]\n\
-                #![feature(try_trait_v2_yeet)]\n\
-                #![feature(try_trait_v2_residual)]\n\
-                #![feature(yeet_expr)]\n\
-                #![feature(iterator_try_collect)]\n\
-                #![feature(never_type)]\n\
-                #![feature(decl_macro)]\n\
-                #![feature(map_try_insert)]\n\
-                #![allow(unused)]\n\
-                \n\
-                #[macro_use] pub mod specr;\n\
-               ";
-    let mut code = String::from(code);
-    for m in mods {
-        code.push_str(&format!("#[macro_use] pub mod {};", m.name));
-    }
+    let mods: Vec<Ident> = mods.iter().map(|x| format_ident!("{}", x.name)).collect();
+    let code = quote! {
+        #![feature(let_else)]
+        #![feature(try_trait_v2)]
+        #![feature(try_trait_v2_yeet)]
+        #![feature(try_trait_v2_residual)]
+        #![feature(yeet_expr)]
+        #![feature(iterator_try_collect)]
+        #![feature(never_type)]
+        #![feature(decl_macro)]
+        #![feature(map_try_insert)]
+        #![allow(unused)]
+        #[macro_use] pub mod specr;
+        #( #[macro_use] pub mod #mods; )*
+    };
+    let code = code.to_string();
     fs::write("generated/src/lib.rs", &code).unwrap();
 }
 

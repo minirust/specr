@@ -1,7 +1,4 @@
-use syn::*;
-
-use quote::ToTokens;
-use proc_macro2::TokenTree;
+use crate::prelude::*;
 
 pub fn autocopy(mut ast: syn::File) -> syn::File {
     for i in ast.items.iter_mut() {

@@ -1,26 +1,27 @@
-use crate::Module;
+use crate::prelude::*;
 
 pub fn add_imports(mut mods: Vec<Module>) -> Vec<Module> {
-    let names: Vec<&str> = mods.iter().map(|m| &*m.name).collect();
-    let modimport_str = names.join(", ");
-    let modimport_str = format!("use crate::{{{modimport_str}}};\n");
+    let imports: Vec<Ident> = mods.iter()
+                                  .map(|m| format_ident!("{}", &m.name))
+                                  .collect();
+
+    let code = quote! {
+        use crate::{ #(#imports),* };
+        use crate::specr::prelude::*;
+        use crate::specr;
+    };
+    let f: syn::File = parse2(code).unwrap();
+
+    let prelude_code = quote! { use crate::prelude::*; };
+    let prelude_item: Item = parse2(prelude_code).unwrap();
 
     // add imports within module
     for m in mods.iter_mut() {
-        let mut imports = vec![
-            "use crate::specr::prelude::*;\n",
-            "use crate::specr;\n",
-            &modimport_str,
-        ];
+        m.ast.items.extend(f.items.clone());
+
         if m.name != "prelude" {
-            imports.push("use crate::prelude::*;\n");
+            m.ast.items.push(prelude_item.clone());
         }
-
-        for (i, import) in imports.iter().enumerate() {
-            let item = syn::parse_str::<syn::Item>(import).unwrap();
-            m.ast.items.insert(i, item);
-        }
-
     }
 
     mods

@@ -1,10 +1,5 @@
+use crate::prelude::*;
 use std::mem;
-use syn::{*, token::{Brace, Match}, punctuated::Punctuated};
-use proc_macro2::{Ident, Span};
-use quote::ToTokens;
-use proc_macro2::TokenTree;
-
-use crate::Module;
 
 struct FwdDeclaration {
     // stores all generic parameters etc. of the surrounding impl block
