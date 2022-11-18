@@ -13,6 +13,12 @@ pub macro list {
 	($a:expr ; $b:expr) => { list_from_elem($a, BigInt::from($b)) },
 }
 
+impl<T> Default for List<T> where T: GcCompat + Clone {
+    fn default() -> Self {
+        Self(GcCow::new(IMVector::new()))
+    }
+}
+
 impl<T> Clone for List<T> {
     fn clone(&self) -> Self { List(self.0) }
 }

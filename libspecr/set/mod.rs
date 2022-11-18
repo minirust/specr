@@ -6,6 +6,12 @@ use std::fmt::{Formatter, Debug, Error};
 
 pub struct Set<T>(GcCow<IMHashSet<T>>);
 
+impl<T> Default for Set<T> where T: GcCompat {
+    fn default() -> Self {
+        Self(GcCow::new(IMHashSet::new()))
+    }
+}
+
 impl<T> Clone for Set<T> {
     fn clone(&self) -> Self { Set(self.0) }
 }

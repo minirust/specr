@@ -6,6 +6,12 @@ use std::fmt::{Formatter, Debug, Error};
 
 pub struct Map<K, V>(GcCow<IMHashMap<K, V>>);
 
+impl<K, V> Default for Map<K, V> where K: GcCompat, V: GcCompat {
+    fn default() -> Self {
+        Self(GcCow::new(IMHashMap::new()))
+    }
+}
+
 impl<K, V> Clone for Map<K, V> {
     fn clone(&self) -> Self { Map(self.0) }
 }
