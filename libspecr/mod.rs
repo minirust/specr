@@ -22,6 +22,7 @@ pub use set::*;
 mod map;
 pub use map::*;
 
+#[macro_use]
 mod string;
 pub use string::*;
 

@@ -14,3 +14,13 @@ impl GcCompat for std::string::String {
     fn points_to(&self, m: &mut HashSet<usize>) {}
     fn as_any(&self) -> &dyn Any { self }
 }
+
+macro_rules! format {
+    ($($thing:expr),*) => {
+        specr::hidden::mk_string(
+            std::format!(
+                $($thing),*
+            )
+        )
+    };
+}

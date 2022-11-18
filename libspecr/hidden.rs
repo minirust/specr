@@ -23,3 +23,7 @@ pub fn list_from_elem<T: GcCompat + Clone>(elem: T, n: BigInt) -> List<T> {
 
     List(GcCow::new(v))
 }
+
+pub fn mk_string(s: std::string::String) -> String {
+    String(GcCow::new(s))
+}
