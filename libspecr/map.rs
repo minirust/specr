@@ -1,11 +1,19 @@
 use crate::libspecr::*;
 
+use std::fmt::{Formatter, Debug, Error};
+
 pub struct Map<K, V>(GcCow<IMHashMap<K, V>>);
 
 impl<K, V> Clone for Map<K, V> {
     fn clone(&self) -> Self { Map(self.0) }
 }
 impl<K, V> Copy for Map<K, V> {}
+
+impl<K, V> Debug for Map<K, V> where K: Hash + Eq + Ord + Debug, V: Debug {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+        self.0.fmt(f)
+    }
+}
 
 impl<K, V> GcCompat for Map<K, V> where K: GcCompat, V: GcCompat {
     fn points_to(&self, m: &mut HashSet<usize>) {

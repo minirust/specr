@@ -8,7 +8,7 @@ mod merge_impls;
 mod source;
 mod typerec;
 mod ret;
-mod autocopy;
+mod autoattr;
 mod gccompat_impl;
 
 use std::fs;
@@ -110,7 +110,7 @@ fn compile(mods: Vec<Module>) {
         // apply all other compilation stages.
         let ast = merge_impls::merge(m.ast);
         let ast = ret::add_ret(ast);
-        let ast = autocopy::autocopy(ast);
+        let ast = autoattr::autoattr(ast);
         let ast = gccompat_impl::gccompat_impl(ast);
 
         // write AST back to Rust file.

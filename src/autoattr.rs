@@ -1,15 +1,17 @@
 use crate::prelude::*;
 
-pub fn autocopy(mut ast: syn::File) -> syn::File {
+pub fn autoattr(mut ast: syn::File) -> syn::File {
     for i in ast.items.iter_mut() {
         match i {
             Item::Struct(s) => {
                 add_attr("Clone", &mut s.attrs);
                 add_attr("Copy", &mut s.attrs);
+                add_attr("Debug", &mut s.attrs);
             },
             Item::Enum(e) => {
                 add_attr("Clone", &mut e.attrs);
                 add_attr("Copy", &mut e.attrs);
+                add_attr("Debug", &mut e.attrs);
             },
             _ => {},
         }
