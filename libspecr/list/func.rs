@@ -12,6 +12,10 @@ impl<T: Clone + GcCompat> List<T> {
         BigInt::from(self.0.call_ref_unchecked(|v| v.len()))
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     pub fn first(&self) -> Option<T> {
         self.0.call_ref_unchecked(|v| v.front().cloned())
     }
@@ -20,11 +24,9 @@ impl<T: Clone + GcCompat> List<T> {
         self.0.call_ref_unchecked(|v| v.last().cloned())
     }
 
-    pub fn mutate_at(&mut self, i: BigInt, f: impl FnOnce(&mut T)) {
+    pub fn mutate_at<O>(&mut self, i: BigInt, f: impl FnOnce(&mut T) -> O) -> O {
         let i = bigint_to_usize(i);
-        self.0.mutate(|v| {
-            f(&mut v[i]);
-        });
+        self.0.mutate(|v| f(&mut v[i]))
     }
 
     pub fn get(&self, i: BigInt) -> Option<T> {
