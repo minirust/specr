@@ -9,7 +9,7 @@ impl<K, V> Clone for Map<K, V> {
 }
 impl<K, V> Copy for Map<K, V> {}
 
-impl<K, V> Debug for Map<K, V> where K: Hash + Eq + Ord + Debug, V: Debug {
+impl<K, V> Debug for Map<K, V> where K: Hash + Eq + Debug, V: Debug {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
         self.0.fmt(f)
     }

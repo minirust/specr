@@ -9,7 +9,7 @@ impl<T> Clone for Set<T> {
 }
 impl<T> Copy for Set<T> {}
 
-impl<T> Debug for Set<T> where T: Hash + Debug + Ord + Eq {
+impl<T> Debug for Set<T> where T: Hash + Debug + Eq {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
         self.0.fmt(f)
     }
