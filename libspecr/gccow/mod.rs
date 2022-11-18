@@ -53,6 +53,7 @@ impl<T> GcCow<T> {
         self.call_ref(|o| o.clone())
     }
 
+    // TODO this fn and it's variants might cause RefCell problems, if `f` does eg. GcCow::new().
     pub fn call_ref<O>(self, f: impl Fn(&T) -> O) -> O {
         GC_STATE.with(|st| {
             let st: &GcState = &*st.borrow();

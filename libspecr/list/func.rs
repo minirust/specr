@@ -20,6 +20,13 @@ impl<T: Clone + GcCompat> List<T> {
         self.0.call_ref(|v| v.last().cloned())
     }
 
+    pub fn mutate_at(&mut self, i: BigInt, f: impl FnOnce(&mut T)) {
+        let i = bigint_to_usize(i);
+        self.0.call_mut(|v| {
+            f(&mut v[i]);
+        });
+    }
+
     pub fn get(&self, i: BigInt) -> Option<T> {
         let i = bigint_to_usize(i);
         self.0.call_ref(|v| v.get(i).cloned())
