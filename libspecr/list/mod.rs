@@ -4,7 +4,7 @@ mod iter;
 mod func;
 
 #[derive(Copy, Clone)]
-pub struct List<T>(pub GcCow<IMVector<T>>);
+pub struct List<T>(pub(in crate::libspecr) GcCow<IMVector<T>>);
 
 pub macro list {
 	() => { List::new() },

@@ -7,7 +7,7 @@ pub use num_bigint::BigInt as ExtBigInt;
 pub use num_bigint::ToBigInt as ToExtBigInt;
 
 #[derive(Copy, Clone, Debug)]
-pub struct BigInt(pub GcCow<ExtBigInt>);
+pub struct BigInt(pub(in crate::libspecr) GcCow<ExtBigInt>);
 
 fn mk_bigint(b: ExtBigInt) -> BigInt {
     BigInt(GcCow::new(b))

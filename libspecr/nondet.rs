@@ -4,7 +4,7 @@ use std::ops::{Try, FromResidual, ControlFlow, Residual, Yeet};
 use std::convert::Infallible;
 
 #[derive(Copy, Clone)]
-pub struct Nondet<T>(pub T);
+pub struct Nondet<T>(pub(in crate::libspecr) T);
 
 pub macro yeet {
     ($x:expr) => {

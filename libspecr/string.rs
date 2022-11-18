@@ -1,7 +1,7 @@
 use crate::libspecr::*;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Hash)]
-pub struct String(pub GcCow<std::string::String>);
+pub struct String(pub(in crate::libspecr) GcCow<std::string::String>);
 
 impl GcCompat for String {
     fn points_to(&self, m: &mut HashSet<usize>) {
