@@ -9,6 +9,7 @@ mod source;
 mod typerec;
 mod ret;
 mod autoattr;
+mod index;
 mod gccompat_impl;
 
 use std::fs;
@@ -111,6 +112,7 @@ fn compile(mods: Vec<Module>) {
         let ast = merge_impls::merge(m.ast);
         let ast = ret::add_ret(ast);
         let ast = autoattr::autoattr(ast);
+        let ast = index::index(ast);
         let ast = gccompat_impl::gccompat_impl(ast);
 
         // write AST back to Rust file.
