@@ -64,11 +64,33 @@ impl<T: Clone + GcCompat> List<T> {
     pub fn subslice_with_length(&self, start: BigInt, length: BigInt) -> List<T> {
         let start = bigint_to_usize(start);
         let length = bigint_to_usize(length);
-        let end = start+length;
+
+        // exclusive end
+        let end = start + length;
 
         let v: IMVector<T> = self.0.call_ref_unchecked(|v| v.clone().slice(start..end));
 
         List(GcCow::new(v))
+    }
+
+    pub fn write_subslice_with_length(&mut self, start: BigInt, length: BigInt, src: List<T>) {
+        if length != src.len() {
+            panic!("slice lengths do not match in `write_subslice_with_length`");
+        }
+
+        let start = bigint_to_usize(start);
+        let length = bigint_to_usize(length);
+
+        // exclusive end
+        let end = start + length;
+
+        self.0.call_mut1_unchecked(src.0, |s, o| {
+            let a = s.clone().slice(0..start);
+            let b = o.clone();
+            let c = s.clone().slice(end..);
+
+            *s = a + b + c;
+        });
     }
 }
 
