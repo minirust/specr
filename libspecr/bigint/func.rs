@@ -10,7 +10,7 @@ impl BigInt {
     }
 
     pub fn is_power_of_two(self) -> bool {
-        self.0.call_ref(|b| {
+        self.0.call_ref_unchecked(|b| {
             if let Some(uint) = b.to_biguint() {
                 uint.count_ones() == 1
             } else { false }

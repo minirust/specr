@@ -50,11 +50,11 @@ impl<T> GcCow<T> {
     }
 
     pub fn get(self) -> T where T: GcCompat + Clone {
-        self.call_ref(|o| o.clone())
+        self.call_ref_unchecked(|o| o.clone())
     }
 
-    // TODO this fn and it's variants might cause RefCell problems, if `f` does eg. GcCow::new().
-    pub fn call_ref<O>(self, f: impl Fn(&T) -> O) -> O {
+    // will fail, if `f` manipulates GC_STATE.
+    pub fn call_ref_unchecked<O>(self, f: impl Fn(&T) -> O) -> O {
         GC_STATE.with(|st| {
             let st: &GcState = &*st.borrow();
             let x: &dyn Any = st.objs.get(self.idx).as_any();
@@ -65,7 +65,7 @@ impl<T> GcCow<T> {
     }
 
     // this does the copy-on-write
-    pub fn call_mut<O>(&mut self, f: impl Fn(&mut T) -> O) -> O where T: GcCompat + Clone {
+    pub fn mutate<O>(&mut self, f: impl Fn(&mut T) -> O) -> O where T: GcCompat + Clone {
         let mut val = self.get();
         let out = f(&mut val);
         *self = GcCow::new(val);
@@ -74,7 +74,8 @@ impl<T> GcCow<T> {
     }
 
     // the same as above with an argument.
-    pub fn call_ref1<U, O>(self, arg: GcCow<U>, f: impl Fn(&T, &U) -> O) -> O where T: GcCompat, U: GcCompat {
+    // will fail, if `f` manipulates GC_STATE.
+    pub fn call_ref1_unchecked<U, O>(self, arg: GcCow<U>, f: impl Fn(&T, &U) -> O) -> O where T: GcCompat, U: GcCompat {
         GC_STATE.with(|st| {
             let st: &GcState = &*st.borrow();
             let x: &dyn Any = st.objs.get(self.idx).as_any();
@@ -87,7 +88,8 @@ impl<T> GcCow<T> {
         })
     }
 
-    pub fn call_mut1<U, O>(&mut self, arg: GcCow<U>, f: impl Fn(&mut T, &U) -> O) -> O where T: GcCompat + Clone, U: GcCompat {
+    // will fail, if `f` manipulates GC_STATE.
+    pub fn call_mut1_unchecked<U, O>(&mut self, arg: GcCow<U>, f: impl Fn(&mut T, &U) -> O) -> O where T: GcCompat + Clone, U: GcCompat {
         let mut val = self.get();
         let out = GC_STATE.with(|st| {
             let st: &GcState = &*st.borrow();
@@ -106,19 +108,19 @@ impl<T> GcCow<T> {
 
 impl<T> Debug for GcCow<T> where T: Debug {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
-        self.call_ref(|t| t.fmt(f))
+        self.call_ref_unchecked(|t| t.fmt(f))
     }
 }
 
 impl<T> Hash for GcCow<T> where T: Hash {
     fn hash<H>(&self, state: &mut H) where H: Hasher {
-        self.call_ref(|t| t.hash(state))
+        self.call_ref_unchecked(|t| t.hash(state))
     }
 }
 
 impl<T> PartialEq for GcCow<T> where T: GcCompat + PartialEq {
     fn eq(&self, other: &Self) -> bool {
-        self.call_ref1(*other, |s, o| s == o)
+        self.call_ref1_unchecked(*other, |s, o| s == o)
     }
 }
 
