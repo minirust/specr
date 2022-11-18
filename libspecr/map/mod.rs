@@ -1,5 +1,7 @@
 use crate::libspecr::*;
 
+mod func;
+
 use std::fmt::{Formatter, Debug, Error};
 
 pub struct Map<K, V>(GcCow<IMHashMap<K, V>>);
