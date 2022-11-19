@@ -75,16 +75,16 @@ impl<T: Clone + GcCompat> List<T> {
         List(GcCow::new(v))
     }
 
-    pub fn write_subslice_with_length(&mut self, start: BigInt, length: BigInt, src: List<T>) {
-        if length != src.len() {
-            panic!("slice lengths do not match in `write_subslice_with_length`");
+    pub fn write_subslice_at_offset(&mut self, start: BigInt, src: List<T>) {
+        // exclusive end
+        let end = start + src.len();
+
+        if end > self.len() {
+            panic!("`write_at_offset`: trying to write out of range!");
         }
 
         let start = bigint_to_usize(start);
-        let length = bigint_to_usize(length);
-
-        // exclusive end
-        let end = start + length;
+        let end = bigint_to_usize(end);
 
         self.0.call_mut1_unchecked(src.0, |s, o| {
             let a = s.clone().slice(0..start);
