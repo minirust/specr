@@ -75,12 +75,12 @@ impl<T: Clone + GcCompat> List<T> {
         List(GcCow::new(v))
     }
 
-    pub fn write_subslice_at_offset(&mut self, start: BigInt, src: List<T>) {
+    pub fn write_subslice_at_index(&mut self, start: BigInt, src: List<T>) {
         // exclusive end
         let end = start + src.len();
 
         if end > self.len() {
-            panic!("`write_at_offset`: trying to write out of range!");
+            panic!("`write_at_index`: trying to write out of range!");
         }
 
         let start = bigint_to_usize(start);
