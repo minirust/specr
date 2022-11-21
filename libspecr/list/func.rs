@@ -80,7 +80,7 @@ impl<T: Clone + GcCompat> List<T> {
         let end = start + src.len();
 
         if end > self.len() {
-            panic!("`write_at_index`: trying to write out of range!");
+            panic!("`write_subslice_at_index`: trying to write out of range!");
         }
 
         let start = bigint_to_usize(start);
@@ -93,6 +93,16 @@ impl<T: Clone + GcCompat> List<T> {
 
             *s = a + b + c;
         });
+    }
+
+    // note that `f` could modify the GC_STATE.
+    pub fn sort_by_key<K: Ord>(&mut self, f: impl FnMut(T) -> K) {
+        // I think we don't lose too much performance by going to a Vec here, as
+        // (1.) it's only used once at all, for tuple types to order their fields.
+        // (2.) At least in the case of doing actual notable amounts of sorting `im` needs to fully re-create the vec anyways.
+        let mut vec: Vec<T> = self.iter().collect();
+        vec.sort_by_key(|t| f(*t));
+        *self = vec.into_iter().collect();
     }
 }
 
