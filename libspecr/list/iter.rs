@@ -3,33 +3,20 @@ use crate::libspecr::*;
 use std::iter::FromIterator;
 use std::ops::*;
 
-struct ListIter<T> {
-    list: List<T>,
-    idx: BigInt,
-}
+use im::vector::ConsumingIter;
 
-impl<T: GcCompat + Clone> Iterator for ListIter<T> {
-    type Item = T;
-
-    fn next(&mut self) -> Option<T> {
-        let out = self.list.get(self.idx);
-        if out.is_some() { self.idx += 1; }
-        out
+impl<T> List<T> where T: GcCompat + Clone {
+    pub fn iter(&self) -> ConsumingIter<T> {
+        self.into_iter()
     }
 }
 
-impl<T> List<T> {
-    pub fn iter(&self) -> ListIter<T> where Self: Copy {
-        ListIter { list: *self, idx: BigInt::zero() }
-    }
-}
-
-impl<T: GcCompat + Clone> IntoIterator for List<T> where Self: Copy {
+impl<T> IntoIterator for List<T> where T: GcCompat + Clone {
     type Item = T;
-    type IntoIter = ListIter<T>;
+    type IntoIter = ConsumingIter<T>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.iter()
+        self.0.call_ref_unchecked(|v| v.clone().into_iter())
     }
 }
 
