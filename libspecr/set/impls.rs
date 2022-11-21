@@ -1,5 +1,6 @@
 use crate::libspecr::*;
 
+use std::hash::Hasher;
 use std::fmt::{Formatter, Debug, Error};
 
 impl<T> Default for Set<T> where T: GcCompat {
@@ -34,3 +35,10 @@ impl<T: GcCompat> GcCompat for IMHashSet<T> where T: GcCompat {
     }
     fn as_any(&self) -> &dyn Any { self }
 }
+
+impl<T> Hash for Set<T> where T: GcCompat + Clone + Hash + Eq {
+    fn hash<H>(&self, state: &mut H) where H: Hasher {
+        self.0.call_ref_unchecked(|s| s.hash(state))
+    }
+}
+

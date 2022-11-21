@@ -1,5 +1,6 @@
 use crate::libspecr::*;
 
+use std::hash::Hasher;
 use std::fmt::{Formatter, Debug, Error};
 
 impl<K, V> Default for Map<K, V> where K: GcCompat, V: GcCompat {
@@ -43,3 +44,9 @@ impl<K, V> PartialEq for Map<K, V> where K: Eq + GcCompat + Clone + Hash, V: Par
 }
 
 impl<K, V> Eq for Map<K, V> where K: Eq + GcCompat + Clone + Hash, V: Eq + GcCompat + Clone {}
+
+impl<K, V> Hash for Map<K, V> where K: Eq + GcCompat + Clone + Hash, V: PartialEq + GcCompat + Clone + Hash {
+    fn hash<H>(&self, state: &mut H) where H: Hasher {
+        self.0.call_ref_unchecked(|m| m.hash(state))
+    }
+}

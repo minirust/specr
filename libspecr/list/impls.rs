@@ -1,5 +1,6 @@
 use crate::libspecr::*;
 
+use std::hash::Hasher;
 use std::fmt::{Formatter, Debug, Error};
 
 impl<T> Default for List<T> where T: GcCompat + Clone {
@@ -42,3 +43,9 @@ impl<T> PartialEq for List<T> where T: GcCompat + Clone + PartialEq {
 }
 
 impl<T> Eq for List<T> where T: GcCompat + Clone + Eq {}
+
+impl<T> Hash for List<T> where T: GcCompat + Clone + Hash {
+    fn hash<H>(&self, state: &mut H) where H: Hasher {
+        self.0.call_ref_unchecked(|v| v.hash(state))
+    }
+}
