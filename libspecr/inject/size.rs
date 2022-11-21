@@ -35,19 +35,12 @@ impl Mul<Size> for BigInt {
     }
 }
 
-impl PartialEq for Size {
-    fn eq(&self, rhs: &Size) -> bool {
-        self.bytes() == rhs.bytes()
-    }
-}
-
 impl PartialOrd for Size {
     fn partial_cmp(&self, rhs: &Size) -> Option<Ordering> {
         self.bytes().partial_cmp(&rhs.bytes())
     }
 }
 
-impl Eq for Size {}
 impl Ord for Size {
     fn cmp(&self, other: &Self) -> Ordering {
         self.bytes().cmp(&other.bytes())

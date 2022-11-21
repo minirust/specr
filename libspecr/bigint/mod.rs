@@ -6,7 +6,7 @@ mod func;
 pub use num_bigint::BigInt as ExtBigInt;
 pub use num_bigint::ToBigInt as ToExtBigInt;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Hash)]
 pub struct BigInt(pub(in crate::libspecr) GcCow<ExtBigInt>);
 
 fn mk_bigint(b: ExtBigInt) -> BigInt {
