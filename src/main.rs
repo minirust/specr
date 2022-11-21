@@ -113,9 +113,10 @@ fn compile(mods: Vec<Module>) {
         let ast = merge_impls::merge(m.ast);
         let ast = ret::add_ret(ast);
         let ast = autoattr::autoattr(ast);
-        let ast = autobounds::autobounds(ast);
         let ast = index::index(ast);
         let ast = gccompat_impl::gccompat_impl(ast);
+        // autobounds needs to be after gccompat_impl so that the impls are generated with coorect bounds.
+        let ast = autobounds::autobounds(ast);
 
         // write AST back to Rust file.
         let code = ast.into_token_stream().to_string();
