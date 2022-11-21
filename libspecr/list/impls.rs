@@ -37,8 +37,7 @@ impl<T> GcCompat for List<T> where T: GcCompat + Clone {
 
 impl<T> PartialEq for List<T> where T: GcCompat + Clone + PartialEq {
     fn eq(&self, other: &List<T>) -> bool {
-        if self.len() != other.len() { return false; }
-        self.iter().zip(other.iter()).all(|(a, b)| a == b)
+        self.0.get() == other.0.get()
     }
 }
 

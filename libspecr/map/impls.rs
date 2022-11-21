@@ -35,3 +35,11 @@ impl<K, V> GcCompat for IMHashMap<K, V> where K: GcCompat, V: GcCompat {
     }
     fn as_any(&self) -> &dyn Any { self }
 }
+
+impl<K, V> PartialEq for Map<K, V> where K: Eq + GcCompat + Clone + Hash, V: PartialEq + GcCompat + Clone {
+    fn eq(&self, other: &Self) -> bool {
+        self.0.get() == other.0.get()
+    }
+}
+
+impl<K, V> Eq for Map<K, V> where K: Eq + GcCompat + Clone + Hash, V: Eq + GcCompat + Clone {}
