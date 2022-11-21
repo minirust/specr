@@ -36,4 +36,18 @@ impl<K: GcCompat + Clone + Hash + Eq, V: GcCompat + Clone> Map<K, V> {
 
         Ok(())
     }
+
+    // TODO not yet lazy!
+    pub fn keys(self) -> impl Iterator<Item=K> {
+        let map = self.0.get();
+        let keys: Vec<K> = map.iter().map(|(x, _)| x.clone()).collect();
+        keys.into_iter()
+    }
+
+    // TODO not yet lazy!
+    pub fn values(self) -> impl Iterator<Item=V> {
+        let map = self.0.get();
+        let values: Vec<V> = map.iter().map(|(_, x)| x.clone()).collect();
+        values.into_iter()
+    }
 }

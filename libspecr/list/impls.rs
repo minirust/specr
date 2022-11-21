@@ -34,3 +34,12 @@ impl<T> GcCompat for List<T> where T: GcCompat + Clone {
     }
     fn as_any(&self) -> &dyn Any { self}
 }
+
+impl<T> PartialEq for List<T> where T: GcCompat + Clone + PartialEq {
+    fn eq(&self, other: &List<T>) -> bool {
+        if self.len() != other.len() { return false; }
+        self.iter().zip(other.iter()).all(|(a, b)| a == b)
+    }
+}
+
+impl<T> Eq for List<T> where T: GcCompat + Clone + Eq {}

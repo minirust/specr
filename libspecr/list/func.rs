@@ -46,6 +46,10 @@ impl<T: Clone + GcCompat> List<T> {
         self.0.mutate(|v| v.pop_back())
     }
 
+    pub fn pop_front(&mut self) -> Option<T> {
+        self.0.mutate(|v| v.pop_front())
+    }
+
     pub fn chunks(&self, chunk_size: BigInt) -> impl Iterator<Item=List<T>> where Self: Copy {
         let s = *self;
         let mut i = BigInt::zero();
