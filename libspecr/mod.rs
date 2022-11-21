@@ -7,9 +7,6 @@ use im::HashSet as IMHashSet;
 use im::HashMap as IMHashMap;
 use im::Vector as IMVector;
 
-mod obj;
-pub use obj::*;
-
 mod bigint;
 pub use bigint::*;
 
@@ -53,7 +50,6 @@ pub mod public {
     pub use crate::libspecr::name::*;
     pub use crate::libspecr::bigint::*;
     pub use crate::libspecr::nondet::*;
-    pub use crate::libspecr::obj::*;
 
     pub use crate::libspecr::hidden;
 

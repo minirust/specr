@@ -21,3 +21,13 @@ impl<A, B> GcCompat for (A, B) where A: GcCompat, B: GcCompat {
     }
     fn as_any(&self) -> &dyn Any { self }
 }
+
+impl<T: GcCompat> GcCompat for Option<T> {
+    fn points_to(&self, m: &mut HashSet<usize>) {
+        match self {
+            Some(x) => x.points_to(m),
+            None => {},
+        }
+    }
+    fn as_any(&self) -> &dyn Any { self }
+}
