@@ -34,8 +34,8 @@ impl<T: Clone + GcCompat> List<T> {
         self.0.call_ref_unchecked(|v| v.get(i).cloned())
     }
 
-    pub fn index_at(&self, i: BigInt) -> T {
-        self.get(i).unwrap()
+    pub fn index_at(&self, i: impl Into<BigInt>) -> T {
+        self.get(i.into()).unwrap()
     }
 
     pub fn push(&mut self, t: T) {
