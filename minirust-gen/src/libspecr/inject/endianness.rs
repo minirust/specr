@@ -18,8 +18,8 @@ impl Endianness {
         }
 
         let mut out = match signed {
-            Signed => BigInt::from(bytes.first().unwrap() as i8),
-            Unsigned => BigInt::from(bytes.first().unwrap() as u8),
+            Signedness::Signed => BigInt::from(bytes.first().unwrap() as i8),
+            Signedness::Unsigned => BigInt::from(bytes.first().unwrap() as u8),
         };
 
         for b in bytes.iter().skip(1) {
