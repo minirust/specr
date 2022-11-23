@@ -15,7 +15,11 @@ mod mir {
 
 extern crate minirust_gen;
 use minirust_gen::lang as mini;
-use minirust_gen::specr as specr;
+
+mod specr {
+    pub use minirust_gen::specr::*;
+    pub use minirust_gen::specr::prelude::*;
+}
 
 
 mod translate;
