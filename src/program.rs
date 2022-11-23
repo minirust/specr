@@ -2,10 +2,10 @@ use crate::*;
 
 use std::collections::HashMap;
 
-pub fn translate_program<'tcx>(tyc: mir::TyCtxt<'tcx>) -> mini::Program {
+pub fn translate_program<'tcx>(tcx: mir::TyCtxt<'tcx>) -> mini::Program {
     let mut fname_map: HashMap<mir::DefId, mini::FnName> = HashMap::new();
 
-    for id in tyc.mir_keys(()) {
+    for id in tcx.mir_keys(()) {
         let id = id.to_def_id();
 
         let fname = fname_map.len(); // .len() is the next free index
@@ -13,7 +13,7 @@ pub fn translate_program<'tcx>(tyc: mir::TyCtxt<'tcx>) -> mini::Program {
         fname_map.insert(id, fname);
     }
 
-    let (entry, _ty) = tyc.entry_fn(()).unwrap();
+    let (entry, _ty) = tcx.entry_fn(()).unwrap();
     let start = fname_map[&entry];
 
     let mut program = mini::Program {
@@ -22,8 +22,8 @@ pub fn translate_program<'tcx>(tyc: mir::TyCtxt<'tcx>) -> mini::Program {
     };
 
     for (id, fname) in &fname_map {
-        let body = tyc.optimized_mir(id);
-        let f = translate_body(body);
+        let body = tcx.optimized_mir(id);
+        let f = translate_body(body, tcx);
         program.functions.insert(*fname, f);
     }
 
@@ -31,7 +31,7 @@ pub fn translate_program<'tcx>(tyc: mir::TyCtxt<'tcx>) -> mini::Program {
 
 }
 
-fn translate_body(body: &mir::Body) -> mini::Function {
+fn translate_body<'tcx>(body: &mir::Body<'tcx>, tcx: mir::TyCtxt<'tcx>) -> mini::Function {
     // associate names for each mir BB.
     let mut bbname_map: HashMap<mir::BasicBlock, mini::BbName> = HashMap::new();
     for bb_id in body.basic_blocks().indices() {
@@ -57,7 +57,7 @@ fn translate_body(body: &mir::Body) -> mini::Function {
     let mut locals = specr::Map::default();
     for (id, localname) in &localname_map {
         let local_decl = &body.local_decls[*id];
-        locals.insert(*localname, translate_local(local_decl));
+        locals.insert(*localname, translate_local(local_decl, tcx));
     }
 
     // convert mirs BBs to minirust.
@@ -87,8 +87,8 @@ fn translate_body(body: &mir::Body) -> mini::Function {
     }
 }
 
-fn translate_local(local: &mir::LocalDecl) -> mini::PlaceType {
-    let ty = translate_ty(&local.ty);
+fn translate_local<'tcx>(local: &mir::LocalDecl<'tcx>, tcx: mir::TyCtxt<'tcx>) -> mini::PlaceType {
+    let ty = translate_ty(&local.ty, tcx);
     let align = align();
 
     mini::PlaceType { ty, align }

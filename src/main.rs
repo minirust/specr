@@ -7,11 +7,13 @@ use rustc_smir::very_unstable::interface::Queries;
 use rustc_smir::very_unstable::interface::interface::Compiler;
 use rustc_smir::very_unstable::driver::{Callbacks, RunCompiler, Compilation};
 
+extern crate rustc_target;
 mod mir {
     pub use rustc_smir::very_unstable::hir::def_id::DefId;
     pub use rustc_smir::very_unstable::middle::ty::TyCtxt;
     pub use rustc_smir::mir::*;
     pub use rustc_smir::ty::*;
+    pub use rustc_target::abi::Size;
 }
 
 extern crate minirust_gen;
