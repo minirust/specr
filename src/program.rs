@@ -2,7 +2,7 @@ use crate::*;
 
 use std::collections::HashMap;
 
-pub fn translate<'tcx>(tyc: mir::TyCtxt<'tcx>) -> mini::Program {
+pub fn translate_program<'tcx>(tyc: mir::TyCtxt<'tcx>) -> mini::Program {
     let mut fname_map: HashMap<mir::DefId, mini::FnName> = HashMap::new();
 
     for id in tyc.mir_keys(()) {
@@ -87,14 +87,17 @@ fn translate_body(body: &mir::Body) -> mini::Function {
     }
 }
 
-fn translate_bb(_bb: &mir::BasicBlockData) -> mini::BasicBlock {
-    todo!()
-}
+fn translate_local(local: &mir::LocalDecl) -> mini::PlaceType {
+    let ty = translate_ty(&local.ty);
+    let align = align();
 
-fn translate_local(_local: &mir::LocalDecl) -> mini::PlaceType {
-    todo!()
+    mini::PlaceType { ty, align }
 }
 
 fn arg_abi() -> mini::ArgAbi {
+    todo!()
+}
+
+fn align() -> mini::Align {
     todo!()
 }

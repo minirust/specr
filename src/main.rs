@@ -11,19 +11,29 @@ mod mir {
     pub use rustc_smir::very_unstable::hir::def_id::DefId;
     pub use rustc_smir::very_unstable::middle::ty::TyCtxt;
     pub use rustc_smir::mir::*;
+    pub use rustc_smir::ty::*;
 }
 
 extern crate minirust_gen;
-use minirust_gen::lang as mini;
+
+mod mini {
+    pub use minirust_gen::lang::*;
+    pub use minirust_gen::prelude::*;
+}
 
 mod specr {
     pub use minirust_gen::specr::*;
     pub use minirust_gen::specr::prelude::*;
 }
 
+mod program;
+use program::translate_program;
 
-mod translate;
-use translate::translate;
+mod ty;
+use ty::translate_ty;
+
+mod bb;
+use bb::translate_bb;
 
 mod dump;
 use dump::dump_program;
@@ -33,7 +43,7 @@ struct Cb;
 impl Callbacks for Cb {
     fn after_analysis<'tcx>(&mut self, _compiler: &Compiler, queries: &'tcx Queries<'tcx>) -> Compilation {
         queries.global_ctxt().unwrap().take().enter(|arg| {
-            let prog = translate(arg);
+            let prog = translate_program(arg);
             dump_program(&prog);
         });
 
