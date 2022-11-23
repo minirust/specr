@@ -89,15 +89,22 @@ fn translate_body<'tcx>(body: &mir::Body<'tcx>, tcx: mir::TyCtxt<'tcx>) -> mini:
 
 fn translate_local<'tcx>(local: &mir::LocalDecl<'tcx>, tcx: mir::TyCtxt<'tcx>) -> mini::PlaceType {
     let ty = translate_ty(&local.ty, tcx);
-    let align = align();
+
+    // TODO is this `empty` ParamEnv correct? probably not.
+    // The generic args of the function need to be in scope here.
+    let a = mir::ParamEnv::empty().and(local.ty);
+    let layout = tcx.layout_of(a).unwrap().layout;
+    let align = layout.align().pref;
+    let align = translate_align(align);
 
     mini::PlaceType { ty, align }
 }
 
+// TODO implement this when mini::ArgAbi is somewhat complete.
 fn arg_abi() -> mini::ArgAbi {
-    todo!()
+    mini::ArgAbi::Register
 }
 
-fn align() -> mini::Align {
-    todo!()
+fn translate_align(align: mir::Align) -> mini::Align {
+    mini::Align::from_bytes(align.bytes())
 }

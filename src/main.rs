@@ -13,7 +13,7 @@ mod mir {
     pub use rustc_smir::very_unstable::middle::ty::TyCtxt;
     pub use rustc_smir::mir::*;
     pub use rustc_smir::ty::*;
-    pub use rustc_target::abi::Size;
+    pub use rustc_target::abi::{Size, Align};
 }
 
 extern crate minirust_gen;
