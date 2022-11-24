@@ -42,3 +42,11 @@ impl<T> Hash for Set<T> where T: GcCompat + Clone + Hash + Eq {
     }
 }
 
+impl<T> PartialEq for Set<T> where T: Eq + GcCompat + Clone + Hash {
+    fn eq(&self, other: &Self) -> bool {
+        self.0.get() == other.0.get()
+    }
+}
+
+impl<T> Eq for Set<T> where T: Eq + GcCompat + Clone + Hash {}
+
