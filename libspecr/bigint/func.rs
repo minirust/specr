@@ -67,4 +67,9 @@ impl BigInt {
             a * a * self
         }
     }
+
+    pub fn trailing_zeros(self) -> Option<BigInt> {
+        let ext = self.0.call_ref_unchecked(|b| b.trailing_zeros());
+        ext.map(|x| x.into())
+    }
 }
