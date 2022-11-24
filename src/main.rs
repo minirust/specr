@@ -1,7 +1,9 @@
 #![feature(let_chains)]
 
-// TODO consistent module naming scheme for module and entry function.
 mod cp;
+
+// TODO consistent module naming scheme for module and entry function.
+mod let_else;
 mod imports;
 mod argmatch;
 mod merge_impls;
@@ -12,6 +14,7 @@ mod autoattr;
 mod autobounds;
 mod index;
 mod gccompat_impl;
+
 
 use std::fs;
 use std::path::{PathBuf, Path};
@@ -109,7 +112,8 @@ fn compile(mods: Vec<Module>) {
 
     for m in mods.into_iter() {
         // apply all other compilation stages.
-        let ast = merge_impls::merge(m.ast);
+        let ast = let_else::let_else(m.ast);
+        let ast = merge_impls::merge(ast);
         let ast = ret::add_ret(ast);
         let ast = autoattr::autoattr(ast);
         let ast = index::index(ast);
