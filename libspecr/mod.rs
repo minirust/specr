@@ -67,9 +67,8 @@ pub mod public {
         pub use crate::libspecr::map::*;
         pub use crate::libspecr::endianness::*;
         pub use crate::libspecr::string::*;
+        pub use crate::libspecr::inject::ndresult::*;
 
         pub fn default<T: Default>() -> T { T::default() }
-        pub fn pick<T>(_f: impl Fn(T) -> bool) -> crate::libspecr::Nondet<T> { todo!() }
-        pub fn predict<T>(_f: impl Fn(T) -> bool) -> crate::libspecr::Nondet<T> { todo!() }
     }
 }
