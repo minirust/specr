@@ -31,7 +31,7 @@ mod specr {
 }
 
 mod program;
-use program::translate_program;
+use program::{FnCtxt, translate_program};
 
 mod ty;
 use ty::translate_ty;

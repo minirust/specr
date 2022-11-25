@@ -29,6 +29,13 @@ pub fn translate_program<'tcx>(tcx: mir::TyCtxt<'tcx>) -> mini::Program {
 
 }
 
+/// contains read-only data regarding the current function.
+#[derive(Clone, Copy)]
+pub struct FnCtxt<'fcx> {
+    pub localname_map: &'fcx HashMap<mir::Local, mini::LocalName>,
+    pub bbname_map: &'fcx HashMap<mir::BasicBlock, mini::BbName>,
+}
+
 fn translate_body<'tcx>(body: &mir::Body<'tcx>, tcx: mir::TyCtxt<'tcx>) -> mini::Function {
     // associate names for each mir BB.
     let mut bbname_map: HashMap<mir::BasicBlock, mini::BbName> = HashMap::new();
@@ -41,7 +48,6 @@ fn translate_body<'tcx>(body: &mir::Body<'tcx>, tcx: mir::TyCtxt<'tcx>) -> mini:
     // bb with id 0 is the start block:
     // see https://doc.rust-lang.org/stable/nightly-rustc/src/rustc_middle/mir/mod.rs.html#1014-1042
     let start = mini::BbName(specr::Name(0));
-
 
     // associate names for each mir Local.
     let mut localname_map: HashMap<mir::Local, mini::LocalName> = HashMap::new();
@@ -58,11 +64,16 @@ fn translate_body<'tcx>(body: &mir::Body<'tcx>, tcx: mir::TyCtxt<'tcx>) -> mini:
         locals.insert(*localname, translate_local(local_decl, tcx));
     }
 
+    let fcx = FnCtxt {
+        localname_map: &localname_map,
+        bbname_map: &bbname_map,
+    };
+
     // convert mirs BBs to minirust.
     let mut blocks = specr::Map::default();
     for (id, bbname) in &bbname_map {
         let bb_data = &body.basic_blocks()[*id];
-        blocks.insert(*bbname, translate_bb(bb_data, &localname_map));
+        blocks.insert(*bbname, translate_bb(bb_data, fcx));
     }
 
     // "The first local is the return value pointer, followed by arg_count locals for the function arguments, followed by any user-declared variables and temporaries."

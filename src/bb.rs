@@ -1,17 +1,17 @@
 use crate::*;
 
-pub fn translate_bb(bb: &mir::BasicBlockData, localname_map: &HashMap<mir::Local, mini::LocalName>) -> mini::BasicBlock {
+pub fn translate_bb(bb: &mir::BasicBlockData, fcx: FnCtxt) -> mini::BasicBlock {
     mini::BasicBlock {
-        statements: bb.statements.iter().map(|x| translate_stmt(x, localname_map)).collect(),
-        terminator: translate_terminator(bb.terminator()),
+        statements: bb.statements.iter().map(|x| translate_stmt(x, fcx)).collect(),
+        terminator: translate_terminator(bb.terminator(), fcx),
     }
 }
 
-fn translate_stmt(stmt: &mir::Statement, localname_map: &HashMap<mir::Local, mini::LocalName>) -> mini::Statement {
+fn translate_stmt(stmt: &mir::Statement, fcx: FnCtxt) -> mini::Statement {
     match &stmt.kind {
         mir::StatementKind::Assign(box (place, rval)) => {
             mini::Statement::Assign {
-                destination: translate_place(place, localname_map),
+                destination: translate_place(place, fcx),
                 source: translate_rvalue(rval),
             }
         },
@@ -19,15 +19,16 @@ fn translate_stmt(stmt: &mir::Statement, localname_map: &HashMap<mir::Local, min
     }
 }
 
-fn translate_terminator(terminator: &mir::Terminator) -> mini::Terminator {
+fn translate_terminator(terminator: &mir::Terminator, fcx: FnCtxt) -> mini::Terminator {
     match terminator.kind {
         mir::TerminatorKind::Return => mini::Terminator::Return,
+        mir::TerminatorKind::Goto { target } => mini::Terminator::Goto(fcx.bbname_map[&target]),
         _ => todo!(),
     }
 }
 
-fn translate_place(place: &mir::Place, localname_map: &HashMap<mir::Local, mini::LocalName>) -> mini::PlaceExpr {
-    mini::PlaceExpr::Local(localname_map[&place.local])
+fn translate_place(place: &mir::Place, fcx: FnCtxt) -> mini::PlaceExpr {
+    mini::PlaceExpr::Local(fcx.localname_map[&place.local])
     // TODO apply projections
 }
 
