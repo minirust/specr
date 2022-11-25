@@ -1,28 +1,28 @@
 use crate::*;
 
 pub fn translate_program<'tcx>(tcx: mir::TyCtxt<'tcx>) -> mini::Program {
-    let mut fname_map: HashMap<mir::DefId, mini::FnName> = HashMap::new();
+    let mut fnname_map: HashMap<mir::DefId, mini::FnName> = HashMap::new();
 
     for id in tcx.mir_keys(()) {
         let id = id.to_def_id();
 
-        let fname = fname_map.len(); // .len() is the next free index
-        let fname = mini::FnName(specr::Name(fname as u32));
-        fname_map.insert(id, fname);
+        let fnname = fnname_map.len(); // .len() is the next free index
+        let fnname = mini::FnName(specr::Name(fnname as u32));
+        fnname_map.insert(id, fnname);
     }
 
     let (entry, _ty) = tcx.entry_fn(()).unwrap();
-    let start = fname_map[&entry];
+    let start = fnname_map[&entry];
 
     let mut program = mini::Program {
         start,
         functions: Default::default(),
     };
 
-    for (id, fname) in &fname_map {
+    for (id, fnname) in &fnname_map {
         let body = tcx.optimized_mir(id);
-        let f = translate_body(body, tcx);
-        program.functions.insert(*fname, f);
+        let f = translate_body(body, &fnname_map, tcx);
+        program.functions.insert(*fnname, f);
     }
 
     program
@@ -34,9 +34,10 @@ pub fn translate_program<'tcx>(tcx: mir::TyCtxt<'tcx>) -> mini::Program {
 pub struct FnCtxt<'fcx> {
     pub localname_map: &'fcx HashMap<mir::Local, mini::LocalName>,
     pub bbname_map: &'fcx HashMap<mir::BasicBlock, mini::BbName>,
+    pub fnname_map: &'fcx HashMap<mir::DefId, mini::FnName>,
 }
 
-fn translate_body<'tcx>(body: &mir::Body<'tcx>, tcx: mir::TyCtxt<'tcx>) -> mini::Function {
+fn translate_body<'tcx>(body: &mir::Body<'tcx>, fnname_map: &HashMap<mir::DefId, mini::FnName>, tcx: mir::TyCtxt<'tcx>) -> mini::Function {
     // associate names for each mir BB.
     let mut bbname_map: HashMap<mir::BasicBlock, mini::BbName> = HashMap::new();
     for bb_id in body.basic_blocks().indices() {
@@ -67,6 +68,7 @@ fn translate_body<'tcx>(body: &mir::Body<'tcx>, tcx: mir::TyCtxt<'tcx>) -> mini:
     let fcx = FnCtxt {
         localname_map: &localname_map,
         bbname_map: &bbname_map,
+        fnname_map,
     };
 
     // convert mirs BBs to minirust.
@@ -110,7 +112,7 @@ fn translate_local<'tcx>(local: &mir::LocalDecl<'tcx>, tcx: mir::TyCtxt<'tcx>) -
 }
 
 // TODO implement this when mini::ArgAbi is somewhat complete.
-fn arg_abi() -> mini::ArgAbi {
+pub fn arg_abi() -> mini::ArgAbi {
     mini::ArgAbi::Register
 }
 

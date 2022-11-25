@@ -20,9 +20,21 @@ fn translate_stmt(stmt: &mir::Statement, fcx: FnCtxt) -> mini::Statement {
 }
 
 fn translate_terminator(terminator: &mir::Terminator, fcx: FnCtxt) -> mini::Terminator {
-    match terminator.kind {
+    match &terminator.kind {
         mir::TerminatorKind::Return => mini::Terminator::Return,
         mir::TerminatorKind::Goto { target } => mini::Terminator::Goto(fcx.bbname_map[&target]),
+        // TODO support other call things like `args`
+        mir::TerminatorKind::Call { func, target, destination, .. } => {
+            let mir::Operand::Constant(box f) = func else { panic!() };
+            let mir::ConstantKind::Val(_, f) = f.literal else { panic!() };
+            let mir::TyKind::FnDef(f, _) = f.kind() else { panic!() };
+            mini::Terminator::Call {
+                callee: fcx.fnname_map[&f],
+                arguments: Default::default(), // TODO
+                ret: (translate_place(&destination, fcx), arg_abi()),
+                next_block: fcx.bbname_map[&target.unwrap()], // TODO handle `None`: it means that the call necessarily diverges, see the docs.
+            }
+        }
         _ => todo!(),
     }
 }

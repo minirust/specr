@@ -1,5 +1,6 @@
 #![feature(rustc_private)]
 #![feature(box_patterns)]
+#![feature(let_else)]
 
 // is this the rustc_smir from our dependencies, or from the rustc-dev component?
 // It's from the deps, as removing the dependency from Cargo.toml gives a compiler error.
@@ -31,7 +32,7 @@ mod specr {
 }
 
 mod program;
-use program::{FnCtxt, translate_program};
+use program::*;
 
 mod ty;
 use ty::translate_ty;
