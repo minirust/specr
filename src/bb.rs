@@ -1,21 +1,31 @@
 use crate::*;
 
 pub fn translate_bb(bb: &rs::BasicBlockData, fcx: FnCtxt) -> mini::BasicBlock {
+    let mut statements = specr::List::new();
+    for stmt in bb.statements.iter() {
+        translate_stmt(stmt, fcx, &mut statements);
+    }
     mini::BasicBlock {
-        statements: bb.statements.iter().map(|x| translate_stmt(x, fcx)).collect(),
+        statements,
         terminator: translate_terminator(bb.terminator(), fcx),
     }
 }
 
-fn translate_stmt(stmt: &rs::Statement, fcx: FnCtxt) -> mini::Statement {
+fn translate_stmt(stmt: &rs::Statement, fcx: FnCtxt, statements: &mut specr::List<mini::Statement>) {
     match &stmt.kind {
         rs::StatementKind::Assign(box (place, rval)) => {
-            mini::Statement::Assign {
-                destination: translate_place(place, fcx),
-                source: translate_rvalue(rval, fcx),
-            }
+            statements.push(
+                mini::Statement::Assign {
+                    destination: translate_place(place, fcx),
+                    source: translate_rvalue(rval, fcx),
+                }
+            );
         },
-        _ => todo!(),
+        rs::StatementKind::Deinit(_) => { /* this has no mini::_ equivalent. */ },
+        x => {
+            dbg!(x);
+            todo!()
+        }
     }
 }
 
