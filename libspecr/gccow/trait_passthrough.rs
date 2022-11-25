@@ -3,13 +3,13 @@ use crate::libspecr::*;
 use std::fmt::{Formatter, Debug, Error};
 use std::hash::{Hash, Hasher};
 
-impl<T> Debug for GcCow<T> where T: Debug {
+impl<T> Debug for GcCow<T> where T: Debug + GcCompat {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
         self.call_ref_unchecked(|t| t.fmt(f))
     }
 }
 
-impl<T> Hash for GcCow<T> where T: Hash {
+impl<T> Hash for GcCow<T> where T: Hash + GcCompat {
     fn hash<H>(&self, state: &mut H) where H: Hasher {
         self.call_ref_unchecked(|t| t.hash(state))
     }

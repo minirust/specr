@@ -5,5 +5,5 @@ use crate::libspecr::*;
 /// will implement this trait.
 ///
 /// A notable exception is closures.
-pub trait Obj: GcCompat + Copy + Debug + Eq + Hash + 'static {}
-impl<T> Obj for T where T: GcCompat + Copy + Debug + Eq + Hash + 'static {}
+pub trait Obj: GcCompat + Copy + Debug + Eq + Hash {}
+impl<T> Obj for T where T: GcCompat + Copy + Debug + Eq + Hash {}

@@ -13,7 +13,7 @@ use internal::*;
 
 // this trait shall be implemented for each type of minirust.
 // It is required in order to contain `GcCow`, and to be the generic param to `GcCow`.
-pub trait GcCompat {
+pub trait GcCompat: 'static {
     // writes the gc'd objs, that `self` points to, into `buffer`.
     fn points_to(&self, buffer: &mut HashSet<usize>);
     fn as_any(&self) -> &dyn Any;
@@ -41,7 +41,7 @@ pub fn mark_and_sweep(roots: HashSet<usize>) {
 }
 
 // methods for specr-internal use:
-impl<T> GcCow<T> {
+impl<T: 'static> GcCow<T> {
     pub fn new(t: T) -> Self where T: GcCompat {
         GC_STATE.with(|st| {
             st.borrow_mut().alloc(t)
