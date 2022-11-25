@@ -7,8 +7,8 @@ use im::HashSet as IMHashSet;
 use im::HashMap as IMHashMap;
 use im::Vector as IMVector;
 
-mod bigint;
-pub use bigint::*;
+mod int;
+pub use int::*;
 
 mod list;
 pub use list::*;
@@ -51,14 +51,14 @@ pub use hidden::*;
 // publicly accessible items from libspecr.
 pub mod public {
     pub use crate::libspecr::name::*;
-    pub use crate::libspecr::bigint::*;
+    pub use crate::libspecr::int::*;
     pub use crate::libspecr::nondet::*;
 
     pub use crate::libspecr::hidden;
 
     // auto-included items from libspecr.
     pub mod prelude {
-        pub use crate::libspecr::BigInt;
+        pub use crate::libspecr::Int;
         pub use std::hash::Hash;
         pub use std::fmt::Debug;
         pub use crate::libspecr::GcCompat;

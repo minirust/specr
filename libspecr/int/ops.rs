@@ -4,86 +4,86 @@ use std::ops::*;
 use std::fmt::{Formatter, Display, Error};
 use std::cmp::Ordering;
 
-impl Display for BigInt {
+impl Display for Int {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
         write!(f, "{}", self.ext())
     }
 }
 
 // Arithmetics
-impl Neg for BigInt {
+impl Neg for Int {
     type Output = Self;
     fn neg(self) -> Self {
         Self::wrap(-self.ext())
     }
 }
 
-impl<T: Into<BigInt>> Add<T> for BigInt {
+impl<T: Into<Int>> Add<T> for Int {
     type Output = Self;
     fn add(self, other: T) -> Self {
         Self::wrap(self.ext() + other.into().ext())
     }
 }
 
-impl<T: Into<BigInt>> AddAssign<T> for BigInt {
+impl<T: Into<Int>> AddAssign<T> for Int {
     fn add_assign(&mut self, other: T) {
         *self = *self + other;
     }
 }
 
-impl<T: Into<BigInt>> Sub<T> for BigInt {
+impl<T: Into<Int>> Sub<T> for Int {
     type Output = Self;
     fn sub(self, other: T) -> Self {
         Self::wrap(self.ext() - other.into().ext())
     }
 }
 
-impl<T: Into<BigInt>> SubAssign<T> for BigInt {
+impl<T: Into<Int>> SubAssign<T> for Int {
     fn sub_assign(&mut self, other: T) {
         *self = *self - other;
     }
 }
 
-impl<T: Into<BigInt>> Mul<T> for BigInt {
+impl<T: Into<Int>> Mul<T> for Int {
     type Output = Self;
     fn mul(self, other: T) -> Self {
         Self::wrap(self.ext() * other.into().ext())
     }
 }
 
-impl<T: Into<BigInt>> MulAssign<T> for BigInt {
+impl<T: Into<Int>> MulAssign<T> for Int {
     fn mul_assign(&mut self, other: T) {
         *self = *self * other;
     }
 }
 
-impl<T: Into<BigInt>> Div<T> for BigInt {
+impl<T: Into<Int>> Div<T> for Int {
     type Output = Self;
     fn div(self, other: T) -> Self {
         Self::wrap(self.ext() / other.into().ext())
     }
 }
 
-impl<T: Into<BigInt>> DivAssign<T> for BigInt {
+impl<T: Into<Int>> DivAssign<T> for Int {
     fn div_assign(&mut self, other: T) {
         *self /= *self * other;
     }
 }
 
-impl<T: Into<BigInt>> Rem<T> for BigInt {
+impl<T: Into<Int>> Rem<T> for Int {
     type Output = Self;
     fn rem(self, other: T) -> Self {
         Self::wrap(self.ext() % other.into().ext())
     }
 }
 
-impl<T: Into<BigInt>> RemAssign<T> for BigInt {
+impl<T: Into<Int>> RemAssign<T> for Int {
     fn rem_assign(&mut self, other: T) {
         *self %= *self * other;
     }
 }
 
-impl<T: Into<BigInt>> Shl<T> for BigInt {
+impl<T: Into<Int>> Shl<T> for Int {
     type Output = Self;
     fn shl(self, _other: T) -> Self {
         todo!()
@@ -91,33 +91,33 @@ impl<T: Into<BigInt>> Shl<T> for BigInt {
 }
 
 
-impl<T: Into<BigInt>> ShlAssign<T> for BigInt {
+impl<T: Into<Int>> ShlAssign<T> for Int {
     fn shl_assign(&mut self, _other: T) {
         todo!()
     }
 }
 
-impl<T: Into<BigInt>> Shr<T> for BigInt {
+impl<T: Into<Int>> Shr<T> for Int {
     type Output = Self;
     fn shr(self, _other: T) -> Self {
         todo!()
     }
 }
 
-impl<T: Into<BigInt>> ShrAssign<T> for BigInt {
+impl<T: Into<Int>> ShrAssign<T> for Int {
     fn shr_assign(&mut self, _other: T) {
         todo!()
     }
 }
 
-impl<T: Into<BigInt>> BitAnd<T> for BigInt {
+impl<T: Into<Int>> BitAnd<T> for Int {
     type Output = Self;
     fn bitand(self, other: T) -> Self {
         Self::wrap(self.ext() & other.into().ext())
     }
 }
 
-impl<T: Into<BigInt>> BitOr<T> for BigInt {
+impl<T: Into<Int>> BitOr<T> for Int {
     type Output = Self;
     fn bitor(self, other: T) -> Self {
         Self::wrap(self.ext() | other.into().ext())
@@ -125,24 +125,24 @@ impl<T: Into<BigInt>> BitOr<T> for BigInt {
 }
 
 // Ord
-impl<T: Into<BigInt> + Clone> PartialOrd<T> for BigInt {
+impl<T: Into<Int> + Clone> PartialOrd<T> for Int {
     fn partial_cmp(&self, other: &T) -> Option<Ordering> {
         self.ext().partial_cmp(&other.clone().into().ext())
     }
 }
 
-impl Ord for BigInt {
+impl Ord for Int {
     fn cmp(&self, other: &Self) -> Ordering {
         self.ext().cmp(&other.ext())
     }
 }
 
 // Eq
-impl<T: Into<BigInt> + Clone> PartialEq<T> for BigInt {
+impl<T: Into<Int> + Clone> PartialEq<T> for Int {
     fn eq(&self, other: &T) -> bool {
-        let other: BigInt = other.clone().into();
+        let other: Int = other.clone().into();
         self.ext() == other.ext()
     }
 }
 
-impl Eq for BigInt {}
+impl Eq for Int {}

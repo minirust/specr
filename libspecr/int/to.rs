@@ -1,16 +1,16 @@
 use crate::libspecr::*;
 
 #[const_trait]
-pub trait ToBigInt {
-    fn to_bigint(self) -> BigInt;
+pub trait ToInt {
+    fn to_int(self) -> Int;
 }
 
 macro_rules! setup {
     ( $( $t:ty ),* ) => {
         $(
-            impl const ToBigInt for $t {
-                fn to_bigint(self) -> BigInt {
-                    BigInt::Small(self as i128)
+            impl const ToInt for $t {
+                fn to_int(self) -> Int {
+                    Int::Small(self as i128)
                 }
             }
         )*

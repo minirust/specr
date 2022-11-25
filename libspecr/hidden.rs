@@ -6,7 +6,7 @@ pub use crate::libspecr::gccow::{GcCow, GcCompat};
 pub use crate::libspecr::obj::Obj;
 
 // TODO this function panics in some cases. I should handle those cases.
-pub fn bigint_to_usize(b: BigInt) -> usize {
+pub fn int_to_usize(b: Int) -> usize {
     let (sign, digits) = b.ext().to_u64_digits();
     if sign == num_bigint::Sign::Minus {
         panic!("cannot convert negative number to usize");
@@ -18,8 +18,8 @@ pub fn bigint_to_usize(b: BigInt) -> usize {
     *digits.get(0).unwrap_or(&0) as usize
 }
 
-pub fn list_from_elem<T: Obj>(elem: T, n: BigInt) -> List<T> {
-    let n = bigint_to_usize(n);
+pub fn list_from_elem<T: Obj>(elem: T, n: Int) -> List<T> {
+    let n = int_to_usize(n);
     let v: im::vector::Vector<T> = std::iter::repeat(elem).take(n).collect();
 
     List(GcCow::new(v))

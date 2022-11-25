@@ -3,23 +3,23 @@ use crate::libspecr::*;
 use crate::prelude::{Size, Signedness};
 use num_traits::cast::ToPrimitive;
 
-fn to_u8(b: BigInt) -> u8 {
-    bigint_to_usize(b) as u8
+fn to_u8(b: Int) -> u8 {
+    int_to_usize(b) as u8
 }
 
 // TODO preliminary implementation:
 // when minirust compiles, #[test] this code against i32::from_be and similar fns.
 impl Endianness {
     /// If `signed == Signed`, the data is interpreted as two's complement.
-    pub fn decode(self, signed: Signedness, bytes: List<u8>) -> BigInt {
+    pub fn decode(self, signed: Signedness, bytes: List<u8>) -> Int {
         let mut bytes = bytes;
         if matches!(self, LittleEndian) {
             bytes.reverse();
         }
 
         let mut out = match signed {
-            Signed => BigInt::from(bytes.first().unwrap() as i8),
-            Unsigned => BigInt::from(bytes.first().unwrap() as u8),
+            Signed => Int::from(bytes.first().unwrap() as i8),
+            Unsigned => Int::from(bytes.first().unwrap() as u8),
         };
 
         for b in bytes.iter().skip(1) {
@@ -31,7 +31,7 @@ impl Endianness {
 
     /// This can fail (return `None`) if the `int` does not fit into `size` bytes,
     /// or if it is negative and `signed == Unsigned`.
-    pub fn encode(self, signed: Signedness, size: Size, int: BigInt) -> Option<List<u8>> {
+    pub fn encode(self, signed: Signedness, size: Size, int: Int) -> Option<List<u8>> {
         if !int.in_bounds(signed, size) {
             return None;
         }
@@ -40,7 +40,7 @@ impl Endianness {
         let mut int = int;
 
         if is_neg {
-            int += BigInt::from(2).pow(size.bits());
+            int += Int::from(2).pow(size.bits());
         }
 
         let mut bytes = List::new();
@@ -55,7 +55,7 @@ impl Endianness {
         bytes.push(byte);
 
         // all other bytes.
-        // range-based for loops don't yet work with BigInt.
+        // range-based for loops don't yet work with Int.
         let mut j = size.bytes() - 2;
         while j >= 0 {
             let byte = (int >> (j*8)) % 256;

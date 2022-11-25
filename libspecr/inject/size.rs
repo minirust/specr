@@ -19,15 +19,15 @@ impl Add for Size {
     }
 }
 
-impl Mul<BigInt> for Size {
+impl Mul<Int> for Size {
     type Output = Size;
-    fn mul(self, rhs: BigInt) -> Size {
+    fn mul(self, rhs: Int) -> Size {
         let b = self.bytes() * rhs;
         Size::from_bytes(b)
     }
 }
 
-impl Mul<Size> for BigInt {
+impl Mul<Size> for Int {
     type Output = Size;
     fn mul(self, rhs: Size) -> Size {
         let b = self * rhs.bytes();

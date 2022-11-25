@@ -1,12 +1,12 @@
-use crate::libspecr::bigint::*;
+use crate::libspecr::int::*;
 
-impl BigInt {
-    const ZERO: BigInt = BigInt::Small(0);
-    const ONE: BigInt = BigInt::Small(1);
+impl Int {
+    pub const ZERO: Int = Int::Small(0);
+    pub const ONE: Int = Int::Small(1);
 
     // TODO deprecate
-    pub const fn zero() -> BigInt { Self::ZERO }
-    pub const fn one() -> BigInt { Self::ONE }
+    pub const fn zero() -> Int { Self::ZERO }
+    pub const fn one() -> Int { Self::ONE }
 
     pub fn is_power_of_two(self) -> bool {
         let ext = self.ext();
@@ -15,7 +15,7 @@ impl BigInt {
         } else { false }
     }
 
-    pub fn next_power_of_two(self) -> BigInt {
+    pub fn next_power_of_two(self) -> Int {
         // TODO improve implementation
 
         // better implementation idea:
@@ -37,7 +37,7 @@ impl BigInt {
         n
     }
 
-    pub fn abs(self) -> BigInt {
+    pub fn abs(self) -> Int {
         if self < 0 {
             self * -1i32
         } else {
@@ -45,16 +45,16 @@ impl BigInt {
         }
     }
 
-    pub fn checked_div(self, other: BigInt) -> Option<BigInt> {
+    pub fn checked_div(self, other: Int) -> Option<Int> {
         if other == 0 { return None; }
         Some(self / other)
     }
 
-    pub fn pow(self, other: BigInt) -> BigInt {
+    pub fn pow(self, other: Int) -> Int {
         assert!(self != 0);
 
         if other == 0 {
-            BigInt::one()
+            Int::one()
         } else if other == 1 {
             self
         } else if other % 2 == 0 {
@@ -66,7 +66,7 @@ impl BigInt {
         }
     }
 
-    pub fn trailing_zeros(self) -> Option<BigInt> {
+    pub fn trailing_zeros(self) -> Option<Int> {
         self.ext()
             .trailing_zeros()
             .map(|x| x.into())
