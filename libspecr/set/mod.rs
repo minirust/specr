@@ -3,7 +3,7 @@ use crate::libspecr::*;
 mod func;
 mod iter;
 
-#[derive(Clone, Copy, Hash, PartialEq, Eq, Default, Debug)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
 pub struct Set<T: Obj>(pub(in crate::libspecr) GcCow<IMHashSet<T>>);
 
 impl<T: Obj> GcCompat for Set<T> {
@@ -22,4 +22,9 @@ impl<T: Obj> GcCompat for IMHashSet<T> {
     fn as_any(&self) -> &dyn Any { self }
 }
 
-
+// This is not #[derive]d, as this would wrongly require T: Default.
+impl<T: Obj> Default for Set<T> {
+    fn default() -> Self {
+        Self(Default::default())
+    }
+}

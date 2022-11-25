@@ -3,7 +3,7 @@ use crate::libspecr::*;
 mod iter;
 mod func;
 
-#[derive(Clone, Copy, Hash, PartialEq, Eq, Default, Debug)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
 pub struct List<T: Obj>(pub(in crate::libspecr) GcCow<IMVector<T>>);
 
 pub macro list {
@@ -26,5 +26,12 @@ impl<T: Obj> GcCompat for List<T> {
         self.0.points_to(m);
     }
     fn as_any(&self) -> &dyn Any { self }
+}
+
+// This is not #[derive]d, as this would wrongly require T: Default.
+impl<T: Obj> Default for List<T> {
+    fn default() -> Self {
+        Self(Default::default())
+    }
 }
 
