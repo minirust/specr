@@ -18,13 +18,13 @@ impl<T: Obj> GcCompat for IMVector<T> {
             i.points_to(m);
         }
     }
-    fn as_any(&self) -> &dyn Any { self}
+    fn as_any(&self) -> &dyn Any { self }
 }
 
 impl<T: Obj> GcCompat for List<T> {
     fn points_to(&self, m: &mut HashSet<usize>) {
         self.0.points_to(m);
     }
-    fn as_any(&self) -> &dyn Any { self}
+    fn as_any(&self) -> &dyn Any { self }
 }
 
