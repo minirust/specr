@@ -23,3 +23,10 @@ impl<T> PartialEq for GcCow<T> where T: GcCompat + PartialEq {
 
 impl<T> Eq for GcCow<T> where T: GcCompat + Eq {}
 
+
+impl<T> Default for GcCow<T> where T: Default + GcCompat {
+    fn default() -> Self {
+        Self::new(T::default())
+    }
+}
+
