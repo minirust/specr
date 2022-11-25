@@ -1,6 +1,7 @@
 fn main() {
-    bar();
+    let x = bar(2);
 }
 
-fn bar() {
+fn bar(x: i32) -> i32 {
+    x
 }

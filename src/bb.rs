@@ -23,14 +23,13 @@ fn translate_terminator(terminator: &mir::Terminator, fcx: FnCtxt) -> mini::Term
     match &terminator.kind {
         mir::TerminatorKind::Return => mini::Terminator::Return,
         mir::TerminatorKind::Goto { target } => mini::Terminator::Goto(fcx.bbname_map[&target]),
-        // TODO support other call things like `args`
-        mir::TerminatorKind::Call { func, target, destination, .. } => {
+        mir::TerminatorKind::Call { func, target, destination, args, .. } => {
             let mir::Operand::Constant(box f) = func else { panic!() };
             let mir::ConstantKind::Val(_, f) = f.literal else { panic!() };
             let mir::TyKind::FnDef(f, _) = f.kind() else { panic!() };
             mini::Terminator::Call {
                 callee: fcx.fnname_map[&f],
-                arguments: Default::default(), // TODO
+                arguments: args.iter().map(|x| (translate_operand(x), arg_abi())).collect(),
                 ret: (translate_place(&destination, fcx), arg_abi()),
                 next_block: fcx.bbname_map[&target.unwrap()], // TODO handle `None`: it means that the call necessarily diverges, see the docs.
             }
@@ -46,7 +45,14 @@ fn translate_place(place: &mir::Place, fcx: FnCtxt) -> mini::PlaceExpr {
 
 fn translate_rvalue(place: &mir::Rvalue) -> mini::ValueExpr {
     match place {
-        mir::Rvalue::Use(mir::Operand::Constant(box c)) => {
+        mir::Rvalue::Use(operand) => translate_operand(operand),
+        _ => todo!(),
+    }
+}
+
+fn translate_operand(operand: &mir::Operand) -> mini::ValueExpr {
+    match operand {
+        mir::Operand::Constant(box c) => {
             match c.literal {
                 mir::ConstantKind::Val(mir::ConstValue::Scalar(mir::Scalar::Int(x)), _) => {
                     let x = x.try_to_i32().unwrap();
@@ -61,7 +67,7 @@ fn translate_rvalue(place: &mir::Rvalue) -> mini::ValueExpr {
                 },
                 _ => todo!(),
             }
-        },
+        }
         _ => todo!(),
     }
 }
