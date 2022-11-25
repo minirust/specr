@@ -1,5 +1,5 @@
 [package]
-name = "rust-to-minirust"
+name = "minimize"
 version = "0.1.0"
 edition = "2021"
 

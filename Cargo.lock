@@ -32,6 +32,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "minimize"
+version = "0.1.0"
+dependencies = [
+ "minirust-gen",
+ "rustc_smir",
+]
+
+[[package]]
 name = "minirust-gen"
 version = "0.1.0"
 dependencies = [
@@ -83,14 +91,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6f97cdb2a36ed4183de61b2f824cc45c9f1037f28afe0a322e9fff4c108b5aaa"
 dependencies = [
  "rand_core",
-]
-
-[[package]]
-name = "rust-to-minirust"
-version = "0.1.0"
-dependencies = [
- "minirust-gen",
- "rustc_smir",
 ]
 
 [[package]]

@@ -1,6 +1,6 @@
-rust-to-minirust
+minimize
 ================
 
-This project intends to compile Rust to MIR to Minirust.
+This project intends to compile Rust to Minirust.
 
 It's not usable yet.
