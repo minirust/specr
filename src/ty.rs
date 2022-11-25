@@ -1,13 +1,13 @@
 use crate::*;
 
-pub fn translate_ty<'tcx>(ty: &mir::Ty<'tcx>, tcx: mir::TyCtxt<'tcx>) -> mini::Type {
+pub fn translate_ty<'tcx>(ty: &rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> mini::Type {
     match ty.kind() {
-        mir::TyKind::Bool => mini::Type::Bool,
-        mir::TyKind::Int(int_ty) => mini::Type::Int(translate_int_ty(int_ty)),
-        mir::TyKind::Uint(uint_ty) => mini::Type::Int(translate_uint_ty(uint_ty)),
-        mir::TyKind::Tuple(ts) => {
+        rs::TyKind::Bool => mini::Type::Bool,
+        rs::TyKind::Int(int_ty) => mini::Type::Int(translate_int_ty(int_ty)),
+        rs::TyKind::Uint(uint_ty) => mini::Type::Int(translate_uint_ty(uint_ty)),
+        rs::TyKind::Tuple(ts) => {
             // TODO the ParamEnv might need to be an argument to `translate_ty` in the future.
-            let a = mir::ParamEnv::empty().and(*ty);
+            let a = rs::ParamEnv::empty().and(*ty);
             let layout = tcx.layout_of(a).unwrap().layout;
             let size = translate_size(layout.size());
 
@@ -30,8 +30,8 @@ pub fn translate_ty<'tcx>(ty: &mir::Ty<'tcx>, tcx: mir::TyCtxt<'tcx>) -> mini::T
     }
 }
 
-fn translate_int_ty(int_ty: &mir::IntTy) -> mini::IntType {
-    use mir::IntTy::*;
+fn translate_int_ty(int_ty: &rs::IntTy) -> mini::IntType {
+    use rs::IntTy::*;
 
     let size = match int_ty {
         // TODO look at TargetDataLayout for Isize.
@@ -48,8 +48,8 @@ fn translate_int_ty(int_ty: &mir::IntTy) -> mini::IntType {
     mini::IntType { signed, size }
 }
 
-fn translate_uint_ty(uint_ty: &mir::UintTy) -> mini::IntType {
-    use mir::UintTy::*;
+fn translate_uint_ty(uint_ty: &rs::UintTy) -> mini::IntType {
+    use rs::UintTy::*;
 
     let size = match uint_ty {
         Usize => 8, // TODO this is not generally 8.
@@ -65,6 +65,6 @@ fn translate_uint_ty(uint_ty: &mir::UintTy) -> mini::IntType {
     mini::IntType { signed, size }
 }
 
-fn translate_size(size: mir::Size) -> mini::Size {
+fn translate_size(size: rs::Size) -> mini::Size {
     mini::Size::from_bytes(size.bytes())
 }

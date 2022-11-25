@@ -10,7 +10,8 @@ use rustc_smir::very_unstable::interface::interface::Compiler;
 use rustc_smir::very_unstable::driver::{Callbacks, RunCompiler, Compilation};
 
 extern crate rustc_target;
-mod mir {
+
+mod rs {
     pub use rustc_smir::very_unstable::hir::def_id::DefId;
     pub use rustc_smir::very_unstable::middle::ty::TyCtxt;
     pub use rustc_smir::very_unstable::middle::mir::interpret::*;

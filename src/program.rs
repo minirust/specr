@@ -1,7 +1,7 @@
 use crate::*;
 
-pub fn translate_program<'tcx>(tcx: mir::TyCtxt<'tcx>) -> mini::Program {
-    let mut fnname_map: HashMap<mir::DefId, mini::FnName> = HashMap::new();
+pub fn translate_program<'tcx>(tcx: rs::TyCtxt<'tcx>) -> mini::Program {
+    let mut fnname_map: HashMap<rs::DefId, mini::FnName> = HashMap::new();
 
     for id in tcx.mir_keys(()) {
         let id = id.to_def_id();
@@ -32,14 +32,14 @@ pub fn translate_program<'tcx>(tcx: mir::TyCtxt<'tcx>) -> mini::Program {
 /// contains read-only data regarding the current function.
 #[derive(Clone, Copy)]
 pub struct FnCtxt<'fcx> {
-    pub localname_map: &'fcx HashMap<mir::Local, mini::LocalName>,
-    pub bbname_map: &'fcx HashMap<mir::BasicBlock, mini::BbName>,
-    pub fnname_map: &'fcx HashMap<mir::DefId, mini::FnName>,
+    pub localname_map: &'fcx HashMap<rs::Local, mini::LocalName>,
+    pub bbname_map: &'fcx HashMap<rs::BasicBlock, mini::BbName>,
+    pub fnname_map: &'fcx HashMap<rs::DefId, mini::FnName>,
 }
 
-fn translate_body<'tcx>(body: &mir::Body<'tcx>, fnname_map: &HashMap<mir::DefId, mini::FnName>, tcx: mir::TyCtxt<'tcx>) -> mini::Function {
+fn translate_body<'tcx>(body: &rs::Body<'tcx>, fnname_map: &HashMap<rs::DefId, mini::FnName>, tcx: rs::TyCtxt<'tcx>) -> mini::Function {
     // associate names for each mir BB.
-    let mut bbname_map: HashMap<mir::BasicBlock, mini::BbName> = HashMap::new();
+    let mut bbname_map: HashMap<rs::BasicBlock, mini::BbName> = HashMap::new();
     for bb_id in body.basic_blocks().indices() {
         let bbname = bbname_map.len(); // .len() is the next free index
         let bbname = mini::BbName(specr::Name(bbname as u32));
@@ -51,7 +51,7 @@ fn translate_body<'tcx>(body: &mir::Body<'tcx>, fnname_map: &HashMap<mir::DefId,
     let start = mini::BbName(specr::Name(0));
 
     // associate names for each mir Local.
-    let mut localname_map: HashMap<mir::Local, mini::LocalName> = HashMap::new();
+    let mut localname_map: HashMap<rs::Local, mini::LocalName> = HashMap::new();
     for local_id in body.local_decls.indices() {
         let localname = localname_map.len(); // .len() is the next free index
         let localname = mini::LocalName(specr::Name(localname as u32));
@@ -98,12 +98,12 @@ fn translate_body<'tcx>(body: &mir::Body<'tcx>, fnname_map: &HashMap<mir::DefId,
     }
 }
 
-fn translate_local<'tcx>(local: &mir::LocalDecl<'tcx>, tcx: mir::TyCtxt<'tcx>) -> mini::PlaceType {
+fn translate_local<'tcx>(local: &rs::LocalDecl<'tcx>, tcx: rs::TyCtxt<'tcx>) -> mini::PlaceType {
     let ty = translate_ty(&local.ty, tcx);
 
     // TODO is this `empty` ParamEnv correct? probably not.
     // The generic args of the function need to be in scope here.
-    let a = mir::ParamEnv::empty().and(local.ty);
+    let a = rs::ParamEnv::empty().and(local.ty);
     let layout = tcx.layout_of(a).unwrap().layout;
     let align = layout.align().pref;
     let align = translate_align(align);
@@ -116,6 +116,6 @@ pub fn arg_abi() -> mini::ArgAbi {
     mini::ArgAbi::Register
 }
 
-fn translate_align(align: mir::Align) -> mini::Align {
+fn translate_align(align: rs::Align) -> mini::Align {
     mini::Align::from_bytes(align.bytes())
 }
