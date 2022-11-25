@@ -3,6 +3,7 @@ use crate::libspecr::*;
 // `hidden` contents.
 pub use crate::libspecr::ret::*;
 pub use crate::libspecr::gccow::{GcCow, GcCompat};
+pub use crate::libspecr::obj::Obj;
 
 // TODO this function panics in some cases. I should handle those cases.
 pub fn bigint_to_usize(b: BigInt) -> usize {

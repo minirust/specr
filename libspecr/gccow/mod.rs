@@ -53,7 +53,7 @@ impl<T> GcCow<T> {
     }
 
     // will fail, if `f` manipulates GC_STATE.
-    pub fn call_ref_unchecked<O>(self, f: impl Fn(&T) -> O) -> O {
+    pub fn call_ref_unchecked<O>(self, f: impl FnOnce(&T) -> O) -> O {
         GC_STATE.with(|st| {
             let st: &GcState = &*st.borrow();
             let x: &dyn Any = st.objs.get(self.idx).as_any();
@@ -64,7 +64,7 @@ impl<T> GcCow<T> {
     }
 
     // this does the copy-on-write
-    pub fn mutate<O>(&mut self, f: impl Fn(&mut T) -> O) -> O where T: GcCompat + Clone {
+    pub fn mutate<O>(&mut self, f: impl FnOnce(&mut T) -> O) -> O where T: GcCompat + Clone {
         let mut val = self.get();
         let out = f(&mut val);
         *self = GcCow::new(val);
@@ -74,7 +74,7 @@ impl<T> GcCow<T> {
 
     // the same as above with an argument.
     // will fail, if `f` manipulates GC_STATE.
-    pub fn call_ref1_unchecked<U, O>(self, arg: GcCow<U>, f: impl Fn(&T, &U) -> O) -> O where T: GcCompat, U: GcCompat {
+    pub fn call_ref1_unchecked<U, O>(self, arg: GcCow<U>, f: impl FnOnce(&T, &U) -> O) -> O where T: GcCompat, U: GcCompat {
         GC_STATE.with(|st| {
             let st: &GcState = &*st.borrow();
             let x: &dyn Any = st.objs.get(self.idx).as_any();
@@ -88,7 +88,7 @@ impl<T> GcCow<T> {
     }
 
     // will fail, if `f` manipulates GC_STATE.
-    pub fn call_mut1_unchecked<U, O>(&mut self, arg: GcCow<U>, f: impl Fn(&mut T, &U) -> O) -> O where T: GcCompat + Clone, U: GcCompat {
+    pub fn call_mut1_unchecked<U, O>(&mut self, arg: GcCow<U>, f: impl FnOnce(&mut T, &U) -> O) -> O where T: GcCompat + Clone, U: GcCompat {
         let mut val = self.get();
         let out = GC_STATE.with(|st| {
             let st: &GcState = &*st.borrow();
