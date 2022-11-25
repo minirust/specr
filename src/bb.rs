@@ -12,7 +12,7 @@ fn translate_stmt(stmt: &mir::Statement, fcx: FnCtxt) -> mini::Statement {
         mir::StatementKind::Assign(box (place, rval)) => {
             mini::Statement::Assign {
                 destination: translate_place(place, fcx),
-                source: translate_rvalue(rval),
+                source: translate_rvalue(rval, fcx),
             }
         },
         _ => todo!(),
@@ -29,7 +29,7 @@ fn translate_terminator(terminator: &mir::Terminator, fcx: FnCtxt) -> mini::Term
             let mir::TyKind::FnDef(f, _) = f.kind() else { panic!() };
             mini::Terminator::Call {
                 callee: fcx.fnname_map[&f],
-                arguments: args.iter().map(|x| (translate_operand(x), arg_abi())).collect(),
+                arguments: args.iter().map(|x| (translate_operand(x, fcx), arg_abi())).collect(),
                 ret: (translate_place(&destination, fcx), arg_abi()),
                 next_block: fcx.bbname_map[&target.unwrap()], // TODO handle `None`: it means that the call necessarily diverges, see the docs.
             }
@@ -43,14 +43,14 @@ fn translate_place(place: &mir::Place, fcx: FnCtxt) -> mini::PlaceExpr {
     // TODO apply projections
 }
 
-fn translate_rvalue(place: &mir::Rvalue) -> mini::ValueExpr {
+fn translate_rvalue(place: &mir::Rvalue, fcx: FnCtxt) -> mini::ValueExpr {
     match place {
-        mir::Rvalue::Use(operand) => translate_operand(operand),
+        mir::Rvalue::Use(operand) => translate_operand(operand, fcx),
         _ => todo!(),
     }
 }
 
-fn translate_operand(operand: &mir::Operand) -> mini::ValueExpr {
+fn translate_operand(operand: &mir::Operand, fcx: FnCtxt) -> mini::ValueExpr {
     match operand {
         mir::Operand::Constant(box c) => {
             match c.literal {
@@ -67,7 +67,18 @@ fn translate_operand(operand: &mir::Operand) -> mini::ValueExpr {
                 },
                 _ => todo!(),
             }
-        }
-        _ => todo!(),
+        },
+        mir::Operand::Copy(place) => {
+            mini::ValueExpr::Load {
+                destructive: false,
+                source: specr::hidden::GcCow::new(translate_place(place, fcx)),
+            }
+        },
+        mir::Operand::Move(place) => {
+            mini::ValueExpr::Load {
+                destructive: true,
+                source: specr::hidden::GcCow::new(translate_place(place, fcx)),
+            }
+        },
     }
 }
