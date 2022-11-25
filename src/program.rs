@@ -1,7 +1,5 @@
 use crate::*;
 
-use std::collections::HashMap;
-
 pub fn translate_program<'tcx>(tcx: mir::TyCtxt<'tcx>) -> mini::Program {
     let mut fname_map: HashMap<mir::DefId, mini::FnName> = HashMap::new();
 
@@ -64,7 +62,7 @@ fn translate_body<'tcx>(body: &mir::Body<'tcx>, tcx: mir::TyCtxt<'tcx>) -> mini:
     let mut blocks = specr::Map::default();
     for (id, bbname) in &bbname_map {
         let bb_data = &body.basic_blocks()[*id];
-        blocks.insert(*bbname, translate_bb(bb_data));
+        blocks.insert(*bbname, translate_bb(bb_data, &localname_map));
     }
 
     // "The first local is the return value pointer, followed by arg_count locals for the function arguments, followed by any user-declared variables and temporaries."

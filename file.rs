@@ -1,3 +1,3 @@
 fn main() {
-    let x = 2;
+    let x: i32 = 2;
 }

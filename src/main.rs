@@ -1,4 +1,5 @@
 #![feature(rustc_private)]
+#![feature(box_patterns)]
 
 // is this the rustc_smir from our dependencies, or from the rustc-dev component?
 // It's from the deps, as removing the dependency from Cargo.toml gives a compiler error.
@@ -11,6 +12,7 @@ extern crate rustc_target;
 mod mir {
     pub use rustc_smir::very_unstable::hir::def_id::DefId;
     pub use rustc_smir::very_unstable::middle::ty::TyCtxt;
+    pub use rustc_smir::very_unstable::middle::mir::interpret::*;
     pub use rustc_smir::mir::*;
     pub use rustc_smir::ty::*;
     pub use rustc_target::abi::{Size, Align};
@@ -39,6 +41,8 @@ use bb::translate_bb;
 
 mod dump;
 use dump::dump_program;
+
+use std::collections::HashMap;
 
 struct Cb;
 
