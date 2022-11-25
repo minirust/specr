@@ -1,5 +1,7 @@
 use crate::libspecr::*;
 
+use std::convert::Infallible;
+
 macro_rules! empty_gccompat {
     ( $( $t:ty ),* ) => {
         $(
@@ -29,5 +31,20 @@ impl<T: GcCompat> GcCompat for Option<T> {
             None => {},
         }
     }
+    fn as_any(&self) -> &dyn Any { self }
+}
+
+impl<T: GcCompat, E: GcCompat> GcCompat for Result<T, E> {
+    fn points_to(&self, m: &mut HashSet<usize>) {
+        match self {
+            Ok(x) => x.points_to(m),
+            Err(x) => x.points_to(m),
+        }
+    }
+    fn as_any(&self) -> &dyn Any { self }
+}
+
+impl GcCompat for Infallible {
+    fn points_to(&self, m: &mut HashSet<usize>) {}
     fn as_any(&self) -> &dyn Any { self }
 }
