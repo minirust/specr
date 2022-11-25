@@ -3,7 +3,7 @@ use crate::libspecr::*;
 use std::iter::FromIterator;
 use std::ops::*;
 
-impl<T: Clone + GcCompat> List<T> {
+impl<T: Obj> List<T> {
     pub fn new() -> List<T> {
         List(GcCow::new(IMVector::new()))
     }
@@ -24,7 +24,7 @@ impl<T: Clone + GcCompat> List<T> {
         self.0.call_ref_unchecked(|v| v.last().cloned())
     }
 
-    pub fn mutate_at<O>(&mut self, i: BigInt, f: impl FnOnce(&mut T) -> O) -> O {
+    pub fn mutate_at<O: Obj>(&mut self, i: BigInt, f: impl FnOnce(&mut T) -> O) -> O {
         let i = bigint_to_usize(i);
         self.0.mutate(|v| f(&mut v[i]))
     }
@@ -50,7 +50,7 @@ impl<T: Clone + GcCompat> List<T> {
         self.0.mutate(|v| v.pop_front())
     }
 
-    pub fn chunks(&self, chunk_size: BigInt) -> impl Iterator<Item=List<T>> where Self: Copy {
+    pub fn chunks(&self, chunk_size: BigInt) -> impl Iterator<Item=List<T>> {
         let s = *self;
         let mut i = BigInt::zero();
         std::iter::from_fn(move || {
@@ -100,7 +100,7 @@ impl<T: Clone + GcCompat> List<T> {
     }
 
     // note that `f` could modify the GC_STATE.
-    pub fn sort_by_key<K: Ord>(&mut self, f: impl FnMut(T) -> K) {
+    pub fn sort_by_key<K: Obj + Ord>(&mut self, f: impl FnMut(T) -> K) {
         // I think we don't lose too much performance by going to a Vec here, as
         // (1.) it's only used once at all, for tuple types to order their fields.
         // (2.) At least in the case of doing actual notable amounts of sorting `im` needs to fully re-create the vec anyways.

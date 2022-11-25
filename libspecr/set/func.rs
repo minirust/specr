@@ -1,6 +1,6 @@
 use crate::libspecr::*;
 
-impl<T> Set<T> where T: GcCompat + Clone + Hash + Eq {
+impl<T: Obj> Set<T> {
     pub fn contains(&self, t: T) -> bool {
         self.0.call_ref_unchecked(|s| {
             s.contains(&t)

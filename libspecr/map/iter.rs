@@ -2,13 +2,13 @@ use crate::libspecr::*;
 
 use im::hashmap::ConsumingIter;
 
-impl<K, V> Map<K, V> where K: GcCompat + Clone + Hash + Eq, V: GcCompat + Clone {
+impl<K: Obj, V: Obj> Map<K, V> {
     pub fn iter(self) -> ConsumingIter<(K, V)> {
         self.into_iter()
     }
 }
 
-impl<K, V> IntoIterator for Map<K, V> where K: GcCompat + Clone + Hash + Eq, V: GcCompat + Clone {
+impl<K: Obj, V: Obj> IntoIterator for Map<K, V> {
     type Item = (K, V);
     type IntoIter = ConsumingIter<(K, V)>;
 

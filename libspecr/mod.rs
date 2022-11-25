@@ -42,6 +42,9 @@ pub use ret::*;
 mod gccow;
 pub use gccow::*;
 
+mod obj;
+pub use obj::*;
+
 pub mod hidden;
 pub use hidden::*;
 

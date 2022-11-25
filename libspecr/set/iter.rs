@@ -2,13 +2,13 @@ use crate::libspecr::*;
 
 use im::hashset::ConsumingIter;
 
-impl<T> Set<T> where T: GcCompat + Clone + Hash + Eq {
+impl<T: Obj> Set<T> {
     pub fn iter(self) -> ConsumingIter<T> {
         self.into_iter()
     }
 }
 
-impl<T> IntoIterator for Set<T> where T: GcCompat + Clone + Hash + Eq {
+impl<T: Obj> IntoIterator for Set<T> {
     type Item = T;
     type IntoIter = ConsumingIter<T>;
 

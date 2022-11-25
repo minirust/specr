@@ -1,6 +1,6 @@
 use crate::libspecr::*;
 
-impl<K: GcCompat + Clone + Hash + Eq, V: GcCompat + Clone> Map<K, V> {
+impl<K: Obj, V: Obj> Map<K, V> {
     pub fn get(&self, k: K) -> Option<V> {
         self.0.call_ref_unchecked(|m| m.get(&k).cloned())
     }

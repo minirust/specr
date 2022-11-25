@@ -4,4 +4,4 @@ mod func;
 mod impls;
 mod iter;
 
-pub struct Map<K, V>(pub(in crate::libspecr) GcCow<IMHashMap<K, V>>);
+pub struct Map<K: Obj, V: Obj>(pub(in crate::libspecr) GcCow<IMHashMap<K, V>>);

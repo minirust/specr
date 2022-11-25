@@ -5,13 +5,13 @@ use std::ops::*;
 
 use im::vector::ConsumingIter;
 
-impl<T> List<T> where T: GcCompat + Clone {
+impl<T: Obj> List<T> {
     pub fn iter(&self) -> ConsumingIter<T> {
         self.into_iter()
     }
 }
 
-impl<T> IntoIterator for List<T> where T: GcCompat + Clone {
+impl<T: Obj> IntoIterator for List<T> {
     type Item = T;
     type IntoIter = ConsumingIter<T>;
 
@@ -20,7 +20,7 @@ impl<T> IntoIterator for List<T> where T: GcCompat + Clone {
     }
 }
 
-impl<A: GcCompat + Clone> FromIterator<A> for List<A> {
+impl<A: Obj> FromIterator<A> for List<A> {
     fn from_iter<T>(iter: T) -> Self where T: IntoIterator<Item = A> {
         let v: IMVector<A> = iter.into_iter().collect();
         List(GcCow::new(v))

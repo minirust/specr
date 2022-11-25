@@ -4,7 +4,7 @@ mod iter;
 mod func;
 mod impls;
 
-pub struct List<T>(pub(in crate::libspecr) GcCow<IMVector<T>>);
+pub struct List<T: Obj>(pub(in crate::libspecr) GcCow<IMVector<T>>);
 
 pub macro list {
 	() => { List::new() },
