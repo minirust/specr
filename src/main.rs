@@ -87,6 +87,7 @@ fn create_cargo_toml() {
 fn create_lib(mods: &[Module]) {
     let mods: Vec<Ident> = mods.iter().map(|x| format_ident!("{}", x.name)).collect();
     let code = quote! {
+        #![feature(const_trait_impl)]
         #![feature(try_trait_v2)]
         #![feature(try_trait_v2_yeet)]
         #![feature(try_trait_v2_residual)]

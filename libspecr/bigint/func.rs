@@ -1,20 +1,18 @@
 use crate::libspecr::bigint::*;
 
 impl BigInt {
-    pub fn zero() -> BigInt {
-        BigInt::from(0)
-    }
+    const ZERO: BigInt = BigInt::Small(0);
+    const ONE: BigInt = BigInt::Small(1);
 
-    pub fn one() -> BigInt {
-        BigInt::from(1)
-    }
+    // TODO deprecate
+    pub const fn zero() -> BigInt { Self::ZERO }
+    pub const fn one() -> BigInt { Self::ONE }
 
     pub fn is_power_of_two(self) -> bool {
-        self.0.call_ref_unchecked(|b| {
-            if let Some(uint) = b.to_biguint() {
-                uint.count_ones() == 1
-            } else { false }
-        })
+        let ext = self.ext();
+        if let Some(uint) = ext.to_biguint() {
+            uint.count_ones() == 1
+        } else { false }
     }
 
     pub fn next_power_of_two(self) -> BigInt {
@@ -69,7 +67,8 @@ impl BigInt {
     }
 
     pub fn trailing_zeros(self) -> Option<BigInt> {
-        let ext = self.0.call_ref_unchecked(|b| b.trailing_zeros());
-        ext.map(|x| x.into())
+        self.ext()
+            .trailing_zeros()
+            .map(|x| x.into())
     }
 }

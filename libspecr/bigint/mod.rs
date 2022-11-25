@@ -2,26 +2,32 @@ use crate::libspecr::*;
 
 mod ops;
 mod func;
+mod to;
 
+pub use to::ToBigInt;
+
+/// The external Bigint Type, which we use under the hood.
 pub use num_bigint::BigInt as ExtBigInt;
-pub use num_bigint::ToBigInt as ToExtBigInt;
 
 #[derive(Copy, Clone, Debug, Hash)]
-pub struct BigInt(pub(in crate::libspecr) GcCow<ExtBigInt>);
-
-fn mk_bigint(b: ExtBigInt) -> BigInt {
-    BigInt(GcCow::new(b))
+pub enum BigInt {
+    Big(GcCow<ExtBigInt>),
+    /// i128 is used to contain u64 and i64.
+    Small(i128),
 }
 
-impl<T: ToExtBigInt> From<T> for BigInt {
+impl<T: ~const ToBigInt> const From<T> for BigInt {
     fn from(t: T) -> BigInt {
-        mk_bigint(t.to_bigint().unwrap())
+        t.to_bigint()
     }
 }
 
 impl GcCompat for BigInt {
     fn points_to(&self, m: &mut HashSet<usize>) {
-        self.0.points_to(m);
+        match self {
+            Self::Big(x) => x.points_to(m),
+            Self::Small(_) => {},
+        }
     }
     fn as_any(&self) -> &dyn Any { self }
 }
@@ -29,4 +35,21 @@ impl GcCompat for BigInt {
 impl GcCompat for ExtBigInt {
     fn points_to(&self, _m: &mut HashSet<usize>) {}
     fn as_any(&self) -> &dyn Any { self }
+}
+
+impl BigInt {
+    pub(in crate::libspecr) fn ext(self) -> ExtBigInt {
+        use num_bigint::ToBigInt;
+
+        match self {
+            Self::Big(x) => x.get(),
+            Self::Small(x) => x.into(),
+        }
+    }
+
+    pub(in crate::libspecr) fn wrap(ext: ExtBigInt) -> Self {
+        Self::Big(
+            GcCow::new(ext)
+        )
+    }
 }

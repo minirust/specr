@@ -7,7 +7,7 @@ pub use crate::libspecr::obj::Obj;
 
 // TODO this function panics in some cases. I should handle those cases.
 pub fn bigint_to_usize(b: BigInt) -> usize {
-    let (sign, digits) = b.0.call_ref_unchecked(|b| b.to_u64_digits());
+    let (sign, digits) = b.ext().to_u64_digits();
     if sign == num_bigint::Sign::Minus {
         panic!("cannot convert negative number to usize");
     }
