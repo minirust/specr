@@ -66,7 +66,7 @@ impl<T: Into<Int>> Div<T> for Int {
 
 impl<T: Into<Int>> DivAssign<T> for Int {
     fn div_assign(&mut self, other: T) {
-        *self /= *self * other;
+        *self = *self / other;
     }
 }
 
@@ -79,7 +79,7 @@ impl<T: Into<Int>> Rem<T> for Int {
 
 impl<T: Into<Int>> RemAssign<T> for Int {
     fn rem_assign(&mut self, other: T) {
-        *self %= *self * other;
+        *self = *self % other;
     }
 }
 
@@ -92,8 +92,8 @@ impl<T: Into<Int>> Shl<T> for Int {
 
 
 impl<T: Into<Int>> ShlAssign<T> for Int {
-    fn shl_assign(&mut self, _other: T) {
-        todo!()
+    fn shl_assign(&mut self, other: T) {
+        *self = *self << other;
     }
 }
 
@@ -105,8 +105,8 @@ impl<T: Into<Int>> Shr<T> for Int {
 }
 
 impl<T: Into<Int>> ShrAssign<T> for Int {
-    fn shr_assign(&mut self, _other: T) {
-        todo!()
+    fn shr_assign(&mut self, other: T) {
+        *self = *self >> other;
     }
 }
 
