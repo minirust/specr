@@ -92,7 +92,7 @@ fn impl_for_enum(e: &ItemEnum) -> Item {
         impl #g specr::hidden::GcCompat for #enum_ident #tg {
             fn as_any(&self) -> &dyn std::any::Any { self }
             fn points_to(&self, s: &mut std::collections::HashSet<usize>) {
-                match self {
+                match *self {
                     #( #var_arms )*
                 }
             }
