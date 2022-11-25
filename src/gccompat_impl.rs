@@ -38,8 +38,8 @@ fn impl_for_struct(s: &ItemStruct) -> Item {
     };
 
     let name = &s.ident;
-    let g = &s.generics;
-    let tg = trimmed_generics(g);
+    let g = generics_trim_default(&s.generics);
+    let tg = generics_trim(&g);
 
     let ts = quote! {
         impl #g specr::hidden::GcCompat for #name #tg {
@@ -85,8 +85,8 @@ fn impl_for_enum(e: &ItemEnum) -> Item {
     }).collect();
 
     let enum_ident = &e.ident;
-    let g = &e.generics;
-    let tg = trimmed_generics(g);
+    let g = generics_trim_default(&e.generics);
+    let tg = generics_trim(&g);
 
     let ts = quote! {
         impl #g specr::hidden::GcCompat for #enum_ident #tg {
@@ -102,7 +102,28 @@ fn impl_for_enum(e: &ItemEnum) -> Item {
     syn::parse2(ts).unwrap()
 }
 
-fn trimmed_generics(g: &Generics) -> Generics {
+// removes defaults from generics
+// <T : Clone = ()> -> <T : Clone>
+fn generics_trim_default(g: &Generics) -> Generics {
+    let mut g = g.clone();
+    g.params = g.params.iter().map(|p| {
+        match p {
+            GenericParam::Type(t) => {
+                let mut t = t.clone();
+                t.default = None;
+
+                GenericParam::Type(t)
+            },
+            x => x.clone(),
+        }
+    }).collect();
+
+    g
+}
+
+// removes defaults and bounds from generics
+// <T : Clone = ()> ==> <T>
+fn generics_trim(g: &Generics) -> Generics {
     let mut g = g.clone();
     g.where_clause = None;
     g.params = g.params.iter().map(|p| {
@@ -111,6 +132,7 @@ fn trimmed_generics(g: &Generics) -> Generics {
                 let mut t = t.clone();
                 t.colon_token = None;
                 t.bounds = Default::default();
+                t.default = None;
 
                 GenericParam::Type(t)
             },
