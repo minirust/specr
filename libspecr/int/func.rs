@@ -71,4 +71,10 @@ impl Int {
             .trailing_zeros()
             .map(|x| x.into())
     }
+
+    pub fn div_ceil(self, other: impl Into<Int>) -> Int {
+        use num_integer::Integer;
+
+        Self::wrap(self.ext().div_ceil(&other.into().ext()))
+    }
 }

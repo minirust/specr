@@ -79,6 +79,7 @@ fn create_cargo_toml() {
                 [dependencies]\n\
                 num-bigint = \"0.4\"\n\
                 num-traits = \"0.2.15\"\n\
+                num-integer = \"0.1.45\"\n\
                 im = \"15.1.0\"\n\
                ";
     fs::write("generated/Cargo.toml", &toml).unwrap();
@@ -87,6 +88,7 @@ fn create_cargo_toml() {
 fn create_lib(mods: &[Module]) {
     let mods: Vec<Ident> = mods.iter().map(|x| format_ident!("{}", x.name)).collect();
     let code = quote! {
+        #![feature(int_roundings)]
         #![feature(const_trait_impl)]
         #![feature(try_trait_v2)]
         #![feature(try_trait_v2_yeet)]
