@@ -1,9 +1,6 @@
 use crate::libspecr::int::*;
 
 impl Int {
-    pub const ZERO: Int = Int::Small(0);
-    pub const ONE: Int = Int::Small(1);
-
     // TODO deprecate
     pub const fn zero() -> Int { Self::ZERO }
     pub const fn one() -> Int { Self::ONE }
