@@ -73,6 +73,7 @@ pub mod public {
     pub use crate::nondet::*;
     pub use crate::int::*;
     pub use crate::name::*;
+    pub use crate::signedness::*;
 
     // auto-included items
     pub mod prelude {
@@ -84,7 +85,6 @@ pub mod public {
         pub use crate::set::*;
         pub use crate::map::*;
         pub use crate::endianness::*;
-        pub use crate::signedness::*;
         pub use crate::string::{String, format};
 
         pub use std::hash::Hash;
