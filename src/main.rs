@@ -1,7 +1,5 @@
 #![feature(let_chains)]
 
-mod cp;
-
 // TODO consistent module naming scheme for module and entry function.
 mod let_else;
 mod imports;
@@ -57,8 +55,6 @@ fn main() {
     mkdir("generated");
     mkdir("generated/src");
 
-    cp::cp_dir("libspecr", "generated/src/libspecr").expect("Copying libspecr to generated failed!");
-
     let mods = source::fetch("minirust");
     create_cargo_toml();
     create_lib(&mods);
@@ -77,10 +73,7 @@ fn create_cargo_toml() {
                 edition = \"2021\"\n\
                 \n\
                 [dependencies]\n\
-                num-bigint = \"0.4\"\n\
-                num-traits = \"0.2.15\"\n\
-                num-integer = \"0.1.45\"\n\
-                im = \"15.1.0\"\n\
+                libspecr = { path = \"../libspecr\" }
                ";
     fs::write("generated/Cargo.toml", &toml).unwrap();
 }
@@ -99,7 +92,7 @@ fn create_lib(mods: &[Module]) {
         #![feature(decl_macro)]
         #![feature(map_try_insert)]
         #![allow(unused)]
-        #[macro_use] mod libspecr;
+        #[macro_use] extern crate libspecr;
         pub use libspecr::public as specr;
         #( #[macro_use] pub mod #mods; )*
     };
