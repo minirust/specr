@@ -1,7 +1,6 @@
 use crate::libspecr::*;
 
 use std::ops::*;
-use std::cmp::Ordering;
 
 use crate::prelude::Size;
 
@@ -32,17 +31,5 @@ impl Mul<Size> for Int {
     fn mul(self, rhs: Size) -> Size {
         let b = self * rhs.bytes();
         Size::from_bytes(b)
-    }
-}
-
-impl PartialOrd for Size {
-    fn partial_cmp(&self, rhs: &Size) -> Option<Ordering> {
-        self.bytes().partial_cmp(&rhs.bytes())
-    }
-}
-
-impl Ord for Size {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.bytes().cmp(&other.bytes())
     }
 }
