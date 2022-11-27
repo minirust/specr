@@ -52,7 +52,7 @@ impl<T: Obj> List<T> {
 
     pub fn chunks(&self, chunk_size: Int) -> impl Iterator<Item=List<T>> {
         let s = *self;
-        let mut i = Int::zero();
+        let mut i = Int::from(0);
         std::iter::from_fn(move || {
             let size = chunk_size.min(s.len() - i);
             if size <= 0 { return None; }

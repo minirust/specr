@@ -1,10 +1,6 @@
 use crate::libspecr::int::*;
 
 impl Int {
-    // TODO deprecate
-    pub const fn zero() -> Int { Self::ZERO }
-    pub const fn one() -> Int { Self::ONE }
-
     pub fn is_power_of_two(self) -> bool {
         let ext = self.ext();
         if let Some(uint) = ext.to_biguint() {
@@ -51,7 +47,7 @@ impl Int {
         assert!(self != 0);
 
         if other == 0 {
-            Int::one()
+            Int::from(1)
         } else if other == 1 {
             self
         } else if other % 2 == 0 {
