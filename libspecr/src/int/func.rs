@@ -1,5 +1,4 @@
 use crate::int::*;
-use crate::*;
 
 impl Int {
     pub fn is_power_of_two(self) -> bool {

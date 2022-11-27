@@ -1,6 +1,5 @@
 use crate::*;
 
-use std::iter::FromIterator;
 use std::ops::*;
 
 impl<T: Obj> List<T> {

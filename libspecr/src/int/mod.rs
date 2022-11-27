@@ -42,8 +42,6 @@ impl Int {
     pub const ONE: Int = Int::from(1);
 
     pub fn ext(self) -> ExtInt {
-        use num_bigint::ToBigInt;
-
         match self {
             Self::Big(x) => x.get(),
             Self::Small(x) => x.into(),

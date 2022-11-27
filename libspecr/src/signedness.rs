@@ -9,6 +9,6 @@ pub enum Signedness {
 pub use Signedness::*;
 
 impl GcCompat for Signedness {
-    fn points_to(&self, m: &mut HashSet<usize>) {}
+    fn points_to(&self, _m: &mut HashSet<usize>) {}
     fn as_any(&self) -> &dyn Any { self }
 }

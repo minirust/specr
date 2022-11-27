@@ -1,7 +1,6 @@
 use crate::*;
 
 use crate::{Size, Signedness};
-use num_traits::cast::ToPrimitive;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 pub enum Endianness {

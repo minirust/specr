@@ -32,10 +32,6 @@ impl<T> SparseVec<T> {
         self.data[i].as_ref().expect("invalid get")
     }
 
-    pub fn get_mut(&mut self, i: usize) -> &mut T {
-        self.data[i].as_mut().expect("invalid get_mut")
-    }
-
     pub fn retain(&mut self, seen: HashSet<usize>) {
         for (i, opt) in self.data.iter_mut().enumerate() {
             if opt.is_some() && !seen.contains(&i) {

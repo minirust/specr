@@ -45,6 +45,6 @@ impl<T: GcCompat, E: GcCompat> GcCompat for Result<T, E> {
 }
 
 impl GcCompat for Infallible {
-    fn points_to(&self, m: &mut HashSet<usize>) {}
+    fn points_to(&self, _m: &mut HashSet<usize>) {}
     fn as_any(&self) -> &dyn Any { self }
 }

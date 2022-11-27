@@ -1,7 +1,6 @@
 use crate::*;
 
 use std::iter::FromIterator;
-use std::ops::*;
 
 use im::vector::ConsumingIter;
 

@@ -9,7 +9,7 @@
 #![feature(decl_macro)]
 #![feature(map_try_insert)]
 
-use std::collections::{HashSet, HashMap};
+use std::collections::HashSet;
 use std::any::Any;
 use std::fmt::Debug;
 use std::hash::Hash;
