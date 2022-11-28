@@ -91,8 +91,8 @@ pub mod public {
         pub use std::fmt::Debug;
 
         pub fn default<T: Default>() -> T { T::default() }
-        pub fn pick<T>(_f: impl Fn(T) -> bool) -> crate::MyNdResult<T> { todo!() }
-        pub fn predict<T>(_f: impl Fn(T) -> bool) -> crate::MyNdResult<T> { todo!() }
+        pub fn pick<T, E>(_f: impl Fn(T) -> bool) -> crate::Nondet<Result<T, E>> { todo!() }
+        pub fn predict<T, E>(_f: impl Fn(T) -> bool) -> crate::Nondet<Result<T, E>> { todo!() }
 
     }
 }
