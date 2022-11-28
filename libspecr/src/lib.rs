@@ -65,9 +65,7 @@ pub use hidden::*;
 
 pub mod public {
     pub use crate::hidden;
-    pub use crate::GcCompat;
     pub use crate::nondet::*;
-    pub use crate::int::*;
     pub use crate::name::*;
     pub use crate::signedness::*;
 
@@ -75,7 +73,6 @@ pub mod public {
     pub mod prelude {
         pub use crate::Align;
         pub use crate::Size;
-        pub use crate::GcCompat;
         pub use crate::Int;
         pub use crate::list::*;
         pub use crate::set::*;
