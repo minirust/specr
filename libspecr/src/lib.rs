@@ -3,11 +3,7 @@
 #![feature(try_trait_v2)]
 #![feature(try_trait_v2_yeet)]
 #![feature(try_trait_v2_residual)]
-#![feature(yeet_expr)]
-#![feature(iterator_try_collect)]
-#![feature(never_type)]
 #![feature(decl_macro)]
-#![feature(map_try_insert)]
 
 use std::collections::HashSet;
 use std::any::Any;
