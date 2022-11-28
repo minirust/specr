@@ -3,11 +3,12 @@ use crate::*;
 use crate::{Size, Signedness};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
+/// Either `LittleEndian` or `BigEndian`.
 pub enum Endianness {
     LittleEndian,
     BigEndian,
 }
-pub use Endianness::*;
+pub use Endianness::{LittleEndian, BigEndian};
 
 fn to_u8(b: Int) -> u8 {
     int_to_usize(b) as u8

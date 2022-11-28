@@ -14,78 +14,72 @@ use im::HashSet as IMHashSet;
 use im::HashMap as IMHashMap;
 use im::Vector as IMVector;
 
-pub mod int;
+mod int;
 pub use int::*;
 
-pub mod ndresult;
+mod ndresult;
 pub use ndresult::*;
 
-pub mod size;
+mod size;
 pub use size::*;
 
-pub mod align;
+mod align;
 pub use align::*;
 
-pub mod list;
+mod list;
 pub use list::*;
 
-pub mod set;
+mod set;
 pub use set::*;
 
-pub mod map;
+mod map;
 pub use map::*;
 
-#[macro_use]
-pub mod string;
+mod string;
 pub use string::*;
 
-pub mod name;
+mod name;
 pub use name::*;
 
-pub mod nondet;
+mod nondet;
 pub use nondet::*;
 
-pub mod endianness;
-pub use endianness::*;
+mod endianness;
+use endianness::*;
 
-pub mod ret;
-pub use ret::*;
-
-pub mod signedness;
+mod signedness;
 pub use signedness::*;
 
-pub mod gccow;
-pub use gccow::*;
+mod gccow;
+use gccow::*;
 
-pub mod obj;
-pub use obj::*;
-
+#[doc(hidden)]
 pub mod hidden;
-pub use hidden::*;
+use hidden::*;
 
-pub mod public {
-    pub use crate::hidden;
-    pub use crate::nondet::*;
-    pub use crate::name::*;
-    pub use crate::signedness::*;
+pub use crate::nondet::*;
+pub use crate::name::*;
 
-    // auto-included items
-    pub mod prelude {
-        pub use crate::Align;
-        pub use crate::Size;
-        pub use crate::Int;
-        pub use crate::list::*;
-        pub use crate::set::*;
-        pub use crate::map::*;
-        pub use crate::endianness::*;
-        pub use crate::string::{String, format};
+/// The items from this module are automatically imported into minirust.
+pub mod prelude {
+    pub use crate::Align;
+    pub use crate::Size;
+    pub use crate::Int;
+    pub use crate::list::*;
+    pub use crate::set::*;
+    pub use crate::map::*;
+    pub use crate::endianness::*;
+    pub use crate::string::{String, format};
 
-        pub use std::hash::Hash;
-        pub use std::fmt::Debug;
+    pub use std::hash::Hash;
+    pub use std::fmt::Debug;
 
-        pub fn default<T: Default>() -> T { T::default() }
-        pub fn pick<T, E>(_f: impl Fn(T) -> bool) -> crate::Nondet<Result<T, E>> { todo!() }
-        pub fn predict<T, E>(_f: impl Fn(T) -> bool) -> crate::Nondet<Result<T, E>> { todo!() }
+    // TODO remove?
+    /// Wrapper around `Default::default()`.
+    pub fn default<T: Default>() -> T { T::default() }
 
-    }
+    /// The `pick` function from the minirust spec. See [Non-determinism](https://github.com/RalfJung/minirust/blob/master/README.md#non-determinism).
+    pub fn pick<T, E>(_f: impl Fn(T) -> bool) -> crate::Nondet<Result<T, E>> { todo!() }
+    /// The `predict` function from the minirust spec. See [Non-determinism](https://github.com/RalfJung/minirust/blob/master/README.md#non-determinism).
+    pub fn predict<T, E>(_f: impl Fn(T) -> bool) -> crate::Nondet<Result<T, E>> { todo!() }
 }

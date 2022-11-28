@@ -7,9 +7,10 @@ mod to;
 pub use to::ToInt;
 
 /// The external Bigint Type, which we use under the hood.
-pub use num_bigint::BigInt as ExtInt;
+use num_bigint::BigInt as ExtInt;
 
 #[derive(Copy, Clone, Debug, Hash)]
+/// Garbage collected big integer that implements `Copy` and supports construction in `const` contexts.
 pub enum Int {
     Big(GcCow<ExtInt>),
     /// i128 is used to contain u64 and i64.

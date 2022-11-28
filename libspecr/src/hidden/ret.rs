@@ -24,3 +24,4 @@ fn monadic_return_test() {
 	let _: Nondet<Result<i32, ()>> = ret(5);
 }
 
+

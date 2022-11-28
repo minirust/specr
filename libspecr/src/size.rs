@@ -2,7 +2,13 @@ use crate::*;
 
 use std::ops::{Add, Mul};
 
-/// `raw` stores the size in bytes.
+/// `Size` represents a non-negative number of bytes or bits.
+///
+/// It is basically a copy of the `Size` type in the Rust compiler.
+/// See [Size](https://doc.rust-lang.org/nightly/nightly-rustc/rustc_target/abi/struct.Size.html).
+///
+/// Note that the `Size` type has no upper-bound.
+/// Users needs check whether a given `Size` is too large for their Machine themselves.
 #[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Debug, Hash)]
 pub struct Size { raw: Int }
 

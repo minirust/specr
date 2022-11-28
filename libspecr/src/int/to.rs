@@ -1,6 +1,9 @@
 use crate::*;
 
 #[const_trait]
+/// Conversion to `Int`.
+///
+/// This is implemented for primitive integer types, and usable in `const`-contexts.
 pub trait ToInt {
     fn to_int(self) -> Int;
 }

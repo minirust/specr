@@ -1,6 +1,7 @@
 use crate::*;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Hash)]
+/// Garbage-collected wrapper around `std::string::String` implementing `Copy`.
 pub struct String(pub GcCow<std::string::String>);
 
 impl GcCompat for String {
@@ -16,16 +17,13 @@ impl GcCompat for std::string::String {
 }
 
 
-pub fn mk_string(s: std::string::String) -> String {
-    String(GcCow::new(s))
-}
-
+/// Wrapper around the `std::format` macro, returning `libspecr::String` instead of `std::string::String`.
 pub macro format {
     ($($thing:expr),*) => {
-        mk_string(
+        String(GcCow::new(
             std::format!(
                 $($thing),*
             )
-        )
+        ))
     },
 }

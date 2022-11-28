@@ -1,8 +1,11 @@
 use crate::*;
 
 #[derive(Copy, Clone)]
+/// Non-determinism primitive. See [Non-determinism](https://github.com/RalfJung/minirust/blob/master/README.md#non-determinism).
 pub struct Nondet<T>(pub T);
 
+// TODO this is probably redundant.
+/// Wrapper around `do yeet` expressions.
 pub macro yeet {
     ($x:expr) => {
         do yeet $x

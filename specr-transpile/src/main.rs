@@ -83,8 +83,7 @@ fn create_lib(mods: &[Module]) {
     let code = quote! {
         #![feature(yeet_expr)]
         #![feature(iterator_try_collect)]
-        #[macro_use] extern crate libspecr;
-        pub use libspecr::public as specr;
+        #[macro_use] extern crate libspecr as specr;
         #( #[macro_use] pub mod #mods; )*
     };
     let code = code.to_string();

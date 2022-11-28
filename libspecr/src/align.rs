@@ -1,6 +1,7 @@
 use crate::*;
 
-/// `raw` stores the align in bytes.
+/// This type is basically a copy of the `Align` type in the Rust compiler.
+/// See [Align](https://doc.rust-lang.org/nightly/nightly-rustc/rustc_target/abi/struct.Align.html).
 #[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Debug, Hash)]
 pub struct Align { raw: Int }
 
