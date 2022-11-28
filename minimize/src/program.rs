@@ -116,6 +116,6 @@ pub fn arg_abi() -> mini::ArgAbi {
     mini::ArgAbi::Register
 }
 
-fn translate_align(align: rs::Align) -> mini::Align {
-    mini::Align::from_bytes(align.bytes())
+fn translate_align(align: rs::Align) -> specr::Align {
+    specr::Align::from_bytes(align.bytes())
 }

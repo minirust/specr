@@ -44,7 +44,7 @@ fn translate_int_ty(int_ty: &rs::IntTy) -> mini::IntType {
     };
 
     let signed = mini::Signedness::Signed;
-    let size = mini::Size::from_bytes(size);
+    let size = specr::Size::from_bytes(size);
     mini::IntType { signed, size }
 }
 
@@ -61,10 +61,10 @@ fn translate_uint_ty(uint_ty: &rs::UintTy) -> mini::IntType {
     };
 
     let signed = mini::Signedness::Unsigned;
-    let size = mini::Size::from_bytes(size);
+    let size = specr::Size::from_bytes(size);
     mini::IntType { signed, size }
 }
 
-fn translate_size(size: rs::Size) -> mini::Size {
-    mini::Size::from_bytes(size.bytes())
+fn translate_size(size: rs::Size) -> specr::Size {
+    specr::Size::from_bytes(size.bytes())
 }

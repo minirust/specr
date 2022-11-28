@@ -69,7 +69,7 @@ fn translate_operand(operand: &rs::Operand, fcx: FnCtxt) -> mini::ValueExpr {
                     let c = mini::Constant::Int(x.into());
                     let ty = mini::IntType {
                         signed: mini::Signedness::Signed,
-                        size: mini::Size::from_bytes(4),
+                        size: specr::Size::from_bytes(4),
                     };
                     let ty = mini::Type::Int(ty);
 

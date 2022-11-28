@@ -1,7 +1,7 @@
 use crate::*;
 
 #[derive(Copy, Clone, Hash, PartialEq, Eq, Debug)]
-pub struct Name(pub String);
+pub struct Name(pub u32);
 
 impl GcCompat for Name {
     fn points_to(&self, m: &mut HashSet<usize>) {
