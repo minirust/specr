@@ -7,4 +7,4 @@ edition = "2021"
 
 [dependencies]
 rustc_smir = { path = "./project-stable-mir" }
-minirust-gen = { path = "./minirust-gen" }
+gen-minirust = { path = "../gen-minirust" }

@@ -20,16 +20,16 @@ mod rs {
     pub use rustc_target::abi::{Size, Align};
 }
 
-extern crate minirust_gen;
+extern crate gen_minirust;
 
 mod mini {
-    pub use minirust_gen::lang::*;
-    pub use minirust_gen::prelude::*;
+    pub use gen_minirust::lang::*;
+    pub use gen_minirust::prelude::*;
 }
 
 mod specr {
-    pub use minirust_gen::specr::*;
-    pub use minirust_gen::specr::prelude::*;
+    pub use gen_minirust::specr::*;
+    pub use gen_minirust::specr::prelude::*;
 }
 
 mod program;

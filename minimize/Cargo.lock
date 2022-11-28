@@ -18,6 +18,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "gen-minirust"
+version = "0.1.0"
+dependencies = [
+ "libspecr",
+]
+
+[[package]]
 name = "im"
 version = "15.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -32,20 +39,21 @@ dependencies = [
 ]
 
 [[package]]
-name = "minimize"
-version = "0.1.0"
-dependencies = [
- "minirust-gen",
- "rustc_smir",
-]
-
-[[package]]
-name = "minirust-gen"
+name = "libspecr"
 version = "0.1.0"
 dependencies = [
  "im",
  "num-bigint",
+ "num-integer",
  "num-traits",
+]
+
+[[package]]
+name = "minimize"
+version = "0.1.0"
+dependencies = [
+ "gen-minirust",
+ "rustc_smir",
 ]
 
 [[package]]

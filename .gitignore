@@ -1,5 +1,3 @@
 **/target
-libspecr/target
-libspecr/Cargo.lock
-generated/
+gen-minirust/
 minirust/
