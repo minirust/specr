@@ -43,12 +43,22 @@ fn resolve_let_else(s: &str) -> Stmt {
 
     let idents = pat_idents(&pattern);
 
-    let expr = quote! {
-        let ( #(#idents),* ) = match #expr {
-            #pattern => ( #(#idents),* ),
-            _ => #blk,
+    let expr =
+        if let [ident] = &*idents {
+            quote! {
+                let #ident = match #expr {
+                    #pattern => #ident,
+                    _ => #blk,
+                };
+            }
+        } else {
+            quote! {
+                let ( #(#idents),* ) = match #expr {
+                    #pattern => ( #(#idents),* ),
+                    _ => #blk,
+                };
+            }
         };
-    };
 
     parse2(expr).unwrap()
 }
