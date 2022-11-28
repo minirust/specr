@@ -46,22 +46,22 @@ fn mkdir(name: &str) {
 
 fn main() {
     // setup "generated" directory.
-    if !exists("minirust") {
-        eprintln!("You need to be at the project root to run `specr-transpile`!");
-        eprintln!("Further `minirust` needs to be added (for example by using `./clone-minirust.sh`)");
+    if !exists("../minirust") {
+        eprintln!("You need to be in the `specr-transpile` folder in order to run it.!");
+        eprintln!("Further `minirust` needs to be added to the repository root (for example by using `./clone-minirust.sh`)");
         std::process::exit(1);
     }
 
-    mkdir("generated");
-    mkdir("generated/src");
+    mkdir("../generated");
+    mkdir("../generated/src");
 
-    let mods = source::fetch("minirust");
+    let mods = source::fetch("../minirust");
     create_cargo_toml();
     create_lib(&mods);
     compile(mods);
 
     Command::new("cargo")
-        .args(&["fmt", "--manifest-path", "generated/Cargo.toml"])
+        .args(&["fmt", "--manifest-path", "../generated/Cargo.toml"])
         .output()
         .unwrap();
 }
@@ -75,7 +75,7 @@ fn create_cargo_toml() {
                 [dependencies]\n\
                 libspecr = { path = \"../libspecr\" }
                ";
-    fs::write("generated/Cargo.toml", &toml).unwrap();
+    fs::write("../generated/Cargo.toml", &toml).unwrap();
 }
 
 fn create_lib(mods: &[Module]) {
@@ -88,7 +88,7 @@ fn create_lib(mods: &[Module]) {
         #( #[macro_use] pub mod #mods; )*
     };
     let code = code.to_string();
-    fs::write("generated/src/lib.rs", &code).unwrap();
+    fs::write("../generated/src/lib.rs", &code).unwrap();
 }
 
 fn compile(mods: Vec<Module>) {
@@ -111,7 +111,7 @@ fn compile(mods: Vec<Module>) {
         // write AST back to Rust file.
         let code = ast.into_token_stream().to_string();
         let filename = format!("{}.rs", m.name);
-        let p: PathBuf = ["generated", "src", &filename].iter().collect();
+        let p: PathBuf = ["..", "generated", "src", &filename].iter().collect();
         fs::write(&p, &code).unwrap();
     }
 }
