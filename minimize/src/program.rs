@@ -31,10 +31,11 @@ pub fn translate_program<'tcx>(tcx: rs::TyCtxt<'tcx>) -> mini::Program {
 
 /// contains read-only data regarding the current function.
 #[derive(Clone, Copy)]
-pub struct FnCtxt<'fcx> {
+pub struct FnCtxt<'fcx, 'tcx> {
     pub localname_map: &'fcx HashMap<rs::Local, mini::LocalName>,
     pub bbname_map: &'fcx HashMap<rs::BasicBlock, mini::BbName>,
     pub fnname_map: &'fcx HashMap<rs::DefId, mini::FnName>,
+    pub tcx: rs::TyCtxt<'tcx>,
 }
 
 fn translate_body<'tcx>(body: &rs::Body<'tcx>, fnname_map: &HashMap<rs::DefId, mini::FnName>, tcx: rs::TyCtxt<'tcx>) -> mini::Function {
@@ -69,6 +70,7 @@ fn translate_body<'tcx>(body: &rs::Body<'tcx>, fnname_map: &HashMap<rs::DefId, m
         localname_map: &localname_map,
         bbname_map: &bbname_map,
         fnname_map,
+        tcx,
     };
 
     // convert mirs BBs to minirust.

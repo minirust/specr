@@ -1,6 +1,6 @@
 use crate::*;
 
-pub fn translate_bb(bb: &rs::BasicBlockData, fcx: FnCtxt) -> mini::BasicBlock {
+pub fn translate_bb<'tcx>(bb: &rs::BasicBlockData<'tcx>, fcx: FnCtxt<'_, 'tcx>) -> mini::BasicBlock {
     let mut statements = specr::List::new();
     for stmt in bb.statements.iter() {
         translate_stmt(stmt, fcx, &mut statements);
@@ -11,7 +11,7 @@ pub fn translate_bb(bb: &rs::BasicBlockData, fcx: FnCtxt) -> mini::BasicBlock {
     }
 }
 
-fn translate_stmt(stmt: &rs::Statement, fcx: FnCtxt, statements: &mut specr::List<mini::Statement>) {
+fn translate_stmt<'tcx>(stmt: &rs::Statement<'tcx>, fcx: FnCtxt<'_, 'tcx>, statements: &mut specr::List<mini::Statement>) {
     match &stmt.kind {
         rs::StatementKind::Assign(box (place, rval)) => {
             statements.push(
@@ -29,7 +29,7 @@ fn translate_stmt(stmt: &rs::Statement, fcx: FnCtxt, statements: &mut specr::Lis
     }
 }
 
-fn translate_terminator(terminator: &rs::Terminator, fcx: FnCtxt) -> mini::Terminator {
+fn translate_terminator<'tcx>(terminator: &rs::Terminator<'tcx>, fcx: FnCtxt<'_, 'tcx>) -> mini::Terminator {
     match &terminator.kind {
         rs::TerminatorKind::Return => mini::Terminator::Return,
         rs::TerminatorKind::Goto { target } => mini::Terminator::Goto(fcx.bbname_map[&target]),
@@ -48,34 +48,62 @@ fn translate_terminator(terminator: &rs::Terminator, fcx: FnCtxt) -> mini::Termi
     }
 }
 
-fn translate_place(place: &rs::Place, fcx: FnCtxt) -> mini::PlaceExpr {
+fn translate_place<'tcx>(place: &rs::Place<'tcx>, fcx: FnCtxt<'_, 'tcx>) -> mini::PlaceExpr {
     mini::PlaceExpr::Local(fcx.localname_map[&place.local])
     // TODO apply projections
 }
 
-fn translate_rvalue(place: &rs::Rvalue, fcx: FnCtxt) -> mini::ValueExpr {
+fn translate_rvalue<'tcx>(place: &rs::Rvalue<'tcx>, fcx: FnCtxt<'_, 'tcx>) -> mini::ValueExpr {
     match place {
         rs::Rvalue::Use(operand) => translate_operand(operand, fcx),
         _ => todo!(),
     }
 }
 
-fn translate_operand(operand: &rs::Operand, fcx: FnCtxt) -> mini::ValueExpr {
+fn translate_operand<'tcx>(operand: &rs::Operand<'tcx>, fcx: FnCtxt<'_, 'tcx>) -> mini::ValueExpr {
     match operand {
         rs::Operand::Constant(box c) => {
             match c.literal {
-                rs::ConstantKind::Val(rs::ConstValue::Scalar(rs::Scalar::Int(x)), _) => {
-                    let x = x.try_to_i32().unwrap();
-                    let c = mini::Constant::Int(x.into());
-                    let ty = mini::IntType {
-                        signed: mini::Signedness::Signed,
-                        size: specr::Size::from_bytes(4),
-                    };
-                    let ty = mini::Type::Int(ty);
+                rs::ConstantKind::Val(val, ty) => {
+                    let ty = translate_ty(&ty, fcx.tcx);
+                    let constant = match ty {
+                        mini::Type::Int(int_ty) => {
+                            let val = val.try_to_scalar_int().unwrap();
 
-                    mini::ValueExpr::Constant(c, ty)
-                },
-                _ => todo!(),
+                            use mini::Signedness::*;
+                            let bits = specr::hidden::int_to_usize(int_ty.size.bits());
+                            // TODO is there no better way to get the value from a ScalarInt?
+                            let int: specr::Int = match (int_ty.signed, bits) {
+                                (Signed, 8) => val.try_to_i8().unwrap().into(),
+                                (Signed, 16) => val.try_to_i16().unwrap().into(),
+                                (Signed, 32) => val.try_to_i32().unwrap().into(),
+                                (Signed, 64) => val.try_to_i64().unwrap().into(),
+                                (Signed, 128) => val.try_to_i128().unwrap().into(),
+
+                                (Unsigned, 8) => val.try_to_u8().unwrap().into(),
+                                (Unsigned, 16) => val.try_to_u16().unwrap().into(),
+                                (Unsigned, 32) => val.try_to_u32().unwrap().into(),
+                                (Unsigned, 64) => val.try_to_u64().unwrap().into(),
+                                (Unsigned, 128) => val.try_to_u128().unwrap().into(),
+                                _ => panic!("unsupported integer type encountered!"),
+                            };
+                            mini::Constant::Int(int)
+                        },
+                        // unit type `()`
+                        mini::Type::Tuple { fields, .. } if fields.is_empty() => {
+                            mini::Constant::Tuple(specr::List::new())
+                        }
+                        x => {
+                            dbg!(x);
+                            todo!()
+                        }
+                    };
+                    mini::ValueExpr::Constant(constant, ty)
+                }
+                x => {
+                    dbg!(x);
+                    todo!()
+                }
             }
         },
         rs::Operand::Copy(place) => {
