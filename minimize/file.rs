@@ -1,11 +1,8 @@
-struct A {
-    x: i32,
-    y: i32,
+enum A {
+    Wow,
+    Nice,
 }
 
 fn main() {
-    let x = A {
-        x:2,
-        y:2,
-    };
+    let x = A::Wow;
 }
