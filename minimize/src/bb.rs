@@ -54,6 +54,10 @@ fn translate_terminator<'tcx>(terminator: &rs::Terminator<'tcx>, fcx: FnCtxt<'_,
                 next_block: fcx.bbname_map[&target.unwrap()], // TODO handle `None`: it means that the call necessarily diverges, see the docs.
             }
         }
+        // TODO Assert is unsupported!
+        rs::TerminatorKind::Assert { target, .. } => {
+            mini::Terminator::Goto(fcx.bbname_map[&target])
+        }
         x => {
             dbg!(x);
             todo!()
