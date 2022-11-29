@@ -1,3 +1,7 @@
 fn main() {
-    let a = 1+1;
+    let b = foo(20);
+}
+
+fn foo(x: i32) -> i32 {
+    x
 }
