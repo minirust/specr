@@ -78,6 +78,16 @@ fn main() {
         "file.rs".to_string(),
         "--sysroot".to_string(),
         sysroot(),
+
+        // flags taken from miŕi (see https://github.com/rust-lang/miri/blob/master/src/lib.rs#L116)
+        "-Zalways-encode-mir".to_string(),
+        "-Zmir-emit-retag".to_string(),
+        "-Zmir-opt-level=0".to_string(),
+        "--cfg=miri".to_string(),
+        "-Cdebug-assertions=on".to_string(),
+
+        // FIXME this one doesn't work as of now.
+        // "-Zextra-const-ub-checks".to_string(),
     ];
     RunCompiler::new(&args, &mut Cb).run().unwrap();
 }
