@@ -69,6 +69,44 @@ fn translate_place<'tcx>(place: &rs::Place<'tcx>, fcx: FnCtxt<'_, 'tcx>) -> mini
 fn translate_rvalue<'tcx>(place: &rs::Rvalue<'tcx>, fcx: FnCtxt<'_, 'tcx>) -> mini::ValueExpr {
     match place {
         rs::Rvalue::Use(operand) => translate_operand(operand, fcx),
+        rs::Rvalue::CheckedBinaryOp(bin_op, box (l, r)) => {
+            let l = translate_operand(l, fcx);
+            let r = translate_operand(r, fcx);
+
+            let l = specr::hidden::GcCow::new(l);
+            let r = specr::hidden::GcCow::new(r);
+
+            use rs::BinOp::*;
+            let op = if *bin_op == Offset {
+                mini::BinOp::PtrOffset {
+                    inbounds: true // FIXME where to find this bool `inbouds` in mir?
+                }
+            } else { // everything else right-now is a int op!
+                let op_int = match bin_op {
+                    Add => mini::BinOpInt::Add,
+                    Sub => mini::BinOpInt::Sub,
+                    Mul => mini::BinOpInt::Mul,
+                    Div => mini::BinOpInt::Div,
+                    x => {
+                        dbg!(x);
+                        todo!("unsupported BinOp")
+                    },
+                };
+                // FIXME how to detect int-type?
+                // fallback to i32.
+                let int_ty = mini::IntType {
+                    signed: mini::Signedness::Signed,
+                    size: specr::Size::from_bits(32),
+                };
+                mini::BinOp::Int(op_int, int_ty)
+            };
+
+            mini::ValueExpr::BinOp {
+                operator: op,
+                left: l,
+                right: r,
+            }
+        },
         x => {
             dbg!(x);
             todo!()
