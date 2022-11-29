@@ -119,7 +119,20 @@ pub fn translate_operand<'tcx>(operand: &rs::Operand<'tcx>, fcx: FnCtxt<'_, 'tcx
 }
 
 pub fn translate_place<'tcx>(place: &rs::Place<'tcx>, fcx: FnCtxt<'_, 'tcx>) -> mini::PlaceExpr {
-    mini::PlaceExpr::Local(fcx.localname_map[&place.local])
-    // TODO apply projections
+    let mut expr = mini::PlaceExpr::Local(fcx.localname_map[&place.local]);
+    for proj in place.projection {
+        match proj {
+            rs::ProjectionElem::Field(f, ty) => {
+                let f = f.index();
+                let indirected = specr::hidden::GcCow::new(expr);
+                expr = mini::PlaceExpr::Field {
+                    root: indirected,
+                    field: f.into(),
+                };
+            }
+            x => todo!("{:?}", x),
+        }
+    }
+    expr
 }
 
