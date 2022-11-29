@@ -42,6 +42,9 @@ use ty::*;
 mod bb;
 use bb::*;
 
+mod rvalue;
+use rvalue::*;
+
 mod dump;
 use dump::dump_program;
 
