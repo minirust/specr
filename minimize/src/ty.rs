@@ -15,6 +15,13 @@ pub fn layout_of<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> mini::Layout 
     }
 }
 
+pub fn size_of<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> specr::Size {
+    let a = rs::ParamEnv::empty().and(ty);
+    let layout = tcx.layout_of(a).unwrap().layout;
+
+    translate_size(layout.size())
+}
+
 pub fn translate_mutbl(mutbl: rs::Mutability) -> mini::Mutability {
     match mutbl {
         rs::Mutability::Mut => mini::Mutability::Mutable,
@@ -40,6 +47,29 @@ pub fn translate_ty<'tcx>(ty: &rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> mini::Typ
                                 let offset = translate_size(offset);
 
                                 (offset, t)
+                           }).collect();
+
+            mini::Type::Tuple {
+                fields,
+                size,
+            }
+        },
+
+        // TODO support generics
+        rs::TyKind::Adt(adt_def, sref) if adt_def.is_struct() => {
+            let a = rs::ParamEnv::empty().and(*ty);
+            let layout = tcx.layout_of(a).unwrap().layout;
+            let size = translate_size(layout.size());
+
+            let fields = adt_def.all_fields()
+                           .enumerate()
+                           .map(|(i, field)| {
+                                let ty = field.ty(tcx, sref);
+                                let ty = translate_ty(&ty, tcx);
+                                let offset = layout.fields().offset(i);
+                                let offset = translate_size(offset);
+
+                                (offset, ty)
                            }).collect();
 
             mini::Type::Tuple {

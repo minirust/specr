@@ -1,4 +1,11 @@
+struct A {
+    x: i32,
+    y: i32,
+}
+
 fn main() {
-    let x = 20;
-    let b = &x as *const _;
+    let x = A {
+        x:2,
+        y:2,
+    };
 }
