@@ -21,6 +21,16 @@ fn translate_stmt<'tcx>(stmt: &rs::Statement<'tcx>, fcx: FnCtxt<'_, 'tcx>, state
                 }
             );
         },
+        rs::StatementKind::StorageLive(local) => {
+            statements.push(
+                mini::Statement::StorageLive(fcx.localname_map[&local])
+            );
+        },
+        rs::StatementKind::StorageDead(local) => {
+            statements.push(
+                mini::Statement::StorageDead(fcx.localname_map[&local])
+            );
+        },
         rs::StatementKind::Deinit(_) => { /* this has no mini::_ equivalent. */ },
         x => {
             dbg!(x);
