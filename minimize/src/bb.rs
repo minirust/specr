@@ -111,6 +111,15 @@ fn translate_rvalue<'tcx>(place: &rs::Rvalue<'tcx>, fcx: FnCtxt<'_, 'tcx>) -> mi
                 right: r,
             }
         },
+        rs::Rvalue::Ref(_, bkind, place) => {
+            let place = translate_place(place, fcx);
+            let target = specr::hidden::GcCow::new(place);
+            let mutbl = translate_mutbl(bkind.to_mutbl_lossy());
+            let pointee = todo!(); // TODO how to get layout? Probably using the `place`.
+            let ptr_ty = mini::PtrType::Ref { mutbl, pointee };
+
+            mini::ValueExpr::AddrOf { target, ptr_ty }
+        },
         x => {
             dbg!(x);
             todo!()

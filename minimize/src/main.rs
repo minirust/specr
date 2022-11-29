@@ -37,10 +37,10 @@ mod program;
 use program::*;
 
 mod ty;
-use ty::translate_ty;
+use ty::*;
 
 mod bb;
-use bb::translate_bb;
+use bb::*;
 
 mod dump;
 use dump::dump_program;

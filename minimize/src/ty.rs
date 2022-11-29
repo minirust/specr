@@ -15,7 +15,7 @@ pub fn layout_of<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> mini::Layout 
     }
 }
 
-fn translate_mutbl(mutbl: rs::Mutability) -> mini::Mutability {
+pub fn translate_mutbl(mutbl: rs::Mutability) -> mini::Mutability {
     match mutbl {
         rs::Mutability::Mut => mini::Mutability::Mutable,
         rs::Mutability::Not => mini::Mutability::Immutable,

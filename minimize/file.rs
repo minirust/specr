@@ -1,3 +1,4 @@
 fn main() {
-    let b = &20;
+    let x = 20;
+    let b = &x as *const _;
 }
