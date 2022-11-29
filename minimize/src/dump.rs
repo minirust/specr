@@ -16,6 +16,10 @@ pub fn dump_program(prog: &mini::Program) {
                 println!("  bb b{}:", bbname.0.0);
             }
 
+            for (l, pt) in f.locals {
+                println!("    let {}: {};", local_to_string(l), type_to_string(pt.ty));
+            }
+
             for st in bb.statements.iter() {
                 dump_statement(st);
             }
@@ -67,4 +71,8 @@ fn local_to_string(l: mini::LocalName) -> String {
 
 fn value_expr_to_string(v: mini::ValueExpr) -> String {
     format!("{:?}", v)
+}
+
+fn type_to_string(t: mini::Type) -> String {
+    format!("{:?}", t)
 }
