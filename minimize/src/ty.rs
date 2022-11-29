@@ -1,12 +1,33 @@
 use crate::*;
 
+// TODO the ParamEnv might need to be an argument to `layout_of` in the future.
+pub fn layout_of<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> mini::Layout {
+    let a = rs::ParamEnv::empty().and(ty);
+    let layout = tcx.layout_of(a).unwrap().layout;
+    let size = translate_size(layout.size());
+    let align = translate_align(layout.align().pref);
+    let inhabited = !layout.abi().is_uninhabited();
+
+    mini::Layout {
+        size,
+        align,
+        inhabited,
+    }
+}
+
+fn translate_mutbl(mutbl: rs::Mutability) -> mini::Mutability {
+    match mutbl {
+        rs::Mutability::Mut => mini::Mutability::Mutable,
+        rs::Mutability::Not => mini::Mutability::Immutable,
+    }
+}
+
 pub fn translate_ty<'tcx>(ty: &rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> mini::Type {
     match ty.kind() {
         rs::TyKind::Bool => mini::Type::Bool,
         rs::TyKind::Int(int_ty) => mini::Type::Int(translate_int_ty(int_ty)),
         rs::TyKind::Uint(uint_ty) => mini::Type::Int(translate_uint_ty(uint_ty)),
         rs::TyKind::Tuple(ts) => {
-            // TODO the ParamEnv might need to be an argument to `translate_ty` in the future.
             let a = rs::ParamEnv::empty().and(*ty);
             let layout = tcx.layout_of(a).unwrap().layout;
             let size = translate_size(layout.size());
@@ -25,6 +46,15 @@ pub fn translate_ty<'tcx>(ty: &rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> mini::Typ
                 fields,
                 size,
             }
+        },
+        rs::TyKind::Ref(_, ty, mutbl) => {
+            let pointee = layout_of(*ty, tcx);
+            let mutbl = translate_mutbl(*mutbl);
+            mini::Type::Ptr(mini::PtrType::Ref { pointee, mutbl } )
+        },
+        rs::TyKind::RawPtr(rs::TypeAndMut { ty, mutbl: _ }) => {
+            let pointee = layout_of(*ty, tcx);
+            mini::Type::Ptr(mini::PtrType::Raw { pointee } )
         },
         x => {
             dbg!(x);

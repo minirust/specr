@@ -13,8 +13,9 @@ extern crate rustc_target;
 
 mod rs {
     pub use rustc_smir::very_unstable::hir::def_id::DefId;
-    pub use rustc_smir::very_unstable::middle::ty::TyCtxt;
+    pub use rustc_smir::very_unstable::middle::ty::*;
     pub use rustc_smir::very_unstable::middle::mir::interpret::*;
+    pub use rustc_smir::very_unstable::middle::mir::*;
     pub use rustc_smir::mir::*;
     pub use rustc_smir::ty::*;
     pub use rustc_target::abi::{Size, Align};
