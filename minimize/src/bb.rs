@@ -54,7 +54,10 @@ fn translate_terminator<'tcx>(terminator: &rs::Terminator<'tcx>, fcx: FnCtxt<'_,
                 next_block: fcx.bbname_map[&target.unwrap()], // TODO handle `None`: it means that the call necessarily diverges, see the docs.
             }
         }
-        _ => todo!(),
+        x => {
+            dbg!(x);
+            todo!()
+        }
     }
 }
 
@@ -66,7 +69,10 @@ fn translate_place<'tcx>(place: &rs::Place<'tcx>, fcx: FnCtxt<'_, 'tcx>) -> mini
 fn translate_rvalue<'tcx>(place: &rs::Rvalue<'tcx>, fcx: FnCtxt<'_, 'tcx>) -> mini::ValueExpr {
     match place {
         rs::Rvalue::Use(operand) => translate_operand(operand, fcx),
-        _ => todo!(),
+        x => {
+            dbg!(x);
+            todo!()
+        }
     }
 }
 

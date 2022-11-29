@@ -26,7 +26,10 @@ pub fn translate_ty<'tcx>(ty: &rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> mini::Typ
                 size,
             }
         },
-        _ => todo!(),
+        x => {
+            dbg!(x);
+            todo!()
+        }
     }
 }
 

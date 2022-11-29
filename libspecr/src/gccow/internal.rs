@@ -26,7 +26,6 @@ impl GcState {
     pub fn alloc<T: GcCompat>(&mut self, t: T) -> GcCow<T> {
         let obj: Box<dyn GcCompat> = Box::new(t);
         let idx = self.objs.insert(obj);
-        println!("alloc -> {}", idx);
         GcCow { idx, phantom: PhantomData }
     }
 
