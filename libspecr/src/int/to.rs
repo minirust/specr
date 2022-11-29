@@ -21,4 +21,11 @@ macro_rules! setup {
 }
 
 
-setup!(u8, i8, u16, i16, u32, i32, u64, i64, usize, isize);
+setup!(u8, i8, u16, i16, u32, i32, u64, i64, i128, usize, isize);
+
+/// u128 doesn't fit into i128, hence heap alloc required.
+impl ToInt for u128 {
+    fn to_int(self) -> Int {
+        Int::wrap(self.into())
+    }
+}
