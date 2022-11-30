@@ -77,6 +77,11 @@ pub fn translate_ty<'tcx>(ty: &rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> mini::Typ
                 size,
             }
         },
+        rs::TyKind::Adt(adt_def, sref) if adt_def.is_box() => {
+            let ty = sref[0].expect_ty();
+            let pointee = layout_of(ty, tcx);
+            mini::Type::Ptr(mini::PtrType::Box { pointee })
+        },
         rs::TyKind::Ref(_, ty, mutbl) => {
             let pointee = layout_of(*ty, tcx);
             let mutbl = translate_mutbl(*mutbl);
