@@ -11,21 +11,34 @@ pub fn dump_program(prog: &Program) {
 }
 
 fn dump_function(fname: FnName, f: Function, start: bool) {
-    if start {
-        println!("fn f{} [start]:", fname.0.0);
-    } else {
-        println!("fn f{}:", fname.0.0);
-    }
+    let start_str = if start {
+        "[start] "
+    } else { "" };
+    let fname = fnname_to_string(fname);
+    let args: Vec<_> = f.args.iter().map(|(x, _)| {
+            let ident = localname_to_string(x);
+            let ty = type_to_string(f.locals.index_at(x).ty);
+
+            format!("{ident}: {ty}")
+        }).collect();
+    let args = args.join(", ");
+    let ret_ty = type_to_string(f.locals.index_at(f.ret.0).ty);
+    println!("{start_str}fn {fname}({args}) -> {ret_ty} {{");
 
     // dump locals
-    for (l, pt) in f.locals {
-        println!("  let {}: {};", localname_to_string(l), type_to_string(pt.ty));
+    let mut locals: Vec<_> = f.locals.keys().collect();
+    locals.sort_by_key(|l| l.0.0);
+    for l in locals {
+        let ty = f.locals.index_at(l).ty;
+        println!("  let {}: {};", localname_to_string(l), type_to_string(ty));
     }
 
     for (bbname, bb) in f.blocks.iter() {
         let start = f.start == bbname;
         dump_bb(bbname, bb, start);
     }
+    println!("}}");
+    println!("");
 }
 
 fn dump_bb(bbname: BbName, bb: BasicBlock, start: bool) {
@@ -61,7 +74,7 @@ fn dump_statement(st: Statement) {
 fn dump_terminator(t: Terminator) {
     match t {
         Terminator::Goto(bb) => {
-            println!("    goto {};", bbname_to_string(bb));
+            println!("    goto -> {};", bbname_to_string(bb));
         },
         Terminator::If {
             condition,
@@ -69,9 +82,9 @@ fn dump_terminator(t: Terminator) {
             else_block,
         } => {
             println!("    if {} {{", value_expr_to_string(condition));
-            println!("      goto {};", bbname_to_string(then_block));
+            println!("      goto -> {};", bbname_to_string(then_block));
             println!("    }} else {{");
-            println!("      Goto {};", bbname_to_string(else_block));
+            println!("      goto -> {};", bbname_to_string(else_block));
             println!("    }}");
         },
         Terminator::Unreachable => {
