@@ -70,6 +70,7 @@ pub mod prelude {
     pub use crate::map::*;
     pub use crate::endianness::*;
     pub use crate::string::{String, format};
+    pub use crate::nondet::{pick, predict};
 
     pub use std::hash::Hash;
     pub use std::fmt::Debug;
@@ -77,9 +78,4 @@ pub mod prelude {
     // TODO remove?
     /// Wrapper around `Default::default()`.
     pub fn default<T: Default>() -> T { T::default() }
-
-    /// The `pick` function from the minirust spec. See [Non-determinism](https://github.com/RalfJung/minirust/blob/master/README.md#non-determinism).
-    pub fn pick<T, E>(_f: impl Fn(T) -> bool) -> crate::Nondet<Result<T, E>> { todo!() }
-    /// The `predict` function from the minirust spec. See [Non-determinism](https://github.com/RalfJung/minirust/blob/master/README.md#non-determinism).
-    pub fn predict<T, E>(_f: impl Fn(T) -> bool) -> crate::Nondet<Result<T, E>> { todo!() }
 }

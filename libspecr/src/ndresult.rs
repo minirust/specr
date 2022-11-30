@@ -3,49 +3,59 @@ use crate::*;
 use std::ops::{Try, FromResidual, ControlFlow, Residual, Yeet};
 use std::convert::Infallible;
 
-// Try impls
+pub struct NdResult<T, E>(pub(crate) Result<T, E>);
 
-impl<T, E> Try for Nondet<Result<T, E>> {
+impl<T, E> Try for NdResult<T, E> {
     type Output = T;
-    type Residual = Nondet<Result<Infallible, E>>;
+    type Residual = NdResult<Infallible, E>;
 
     fn from_output(output: Self::Output) -> Self {
-        Nondet(Ok(output))
+        NdResult(Ok(output))
     }
 
     fn branch(self) -> ControlFlow<Self::Residual, Self::Output> {
         match self.0 {
             Ok(x) => ControlFlow::Continue(x),
-            Err(e) => ControlFlow::Break(Nondet(Err(e))),
+            Err(e) => ControlFlow::Break(NdResult(Err(e))),
         }
     }
 }
 
-impl<T, E> FromResidual<Nondet<Result<Infallible, E>>> for Nondet<Result<T, E>> {
-    fn from_residual(residual: Nondet<Result<Infallible, E>>) -> Self {
+// in order to use `?`` on NdResults in an NdResult-returning fn.
+impl<T, E> FromResidual<NdResult<Infallible, E>> for NdResult<T, E> {
+    fn from_residual(residual: NdResult<Infallible, E>) -> Self {
         match residual.0 {
             Ok(x) => match x {},
-            Err(e) => Nondet(Err(e))
+            Err(e) => NdResult(Err(e))
         }
     }
 }
 
-impl<T, E> FromResidual<Result<Infallible, E>> for Nondet<Result<T, E>> {
+// in order to use `?` on Results in a NdResult-returning fn.
+impl<T, E> FromResidual<Result<Infallible, E>> for NdResult<T, E> {
     fn from_residual(residual: Result<Infallible, E>) -> Self {
         match residual {
             Ok(x) => match x {},
-            Err(e) => Nondet(Err(e))
+            Err(e) => NdResult(Err(e))
         }
     }
 }
 
-
-impl<T, E> Residual<T> for Nondet<Result<Infallible, E>> {
-    type TryType = Nondet<Result<T, E>>;
+// in order to use `?` on Nondet in a NdResult-returning fn.
+impl<T, E> FromResidual<Infallible> for NdResult<T, E> {
+    fn from_residual(residual: Infallible) -> Self {
+        match residual {}
+    }
 }
 
-impl<T, E> FromResidual<Yeet<E>> for Nondet<Result<T, E>> {
+// required by try_collect
+impl<T, E> Residual<T> for NdResult<Infallible, E> {
+    type TryType = NdResult<T, E>;
+}
+
+// in order to yeet in a NdResult-returning fn.
+impl<T, E> FromResidual<Yeet<E>> for NdResult<T, E> {
     fn from_residual(residual: Yeet<E>) -> Self {
-        Nondet(Err(residual.0))
+        NdResult(Err(residual.0))
     }
 }

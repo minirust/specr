@@ -13,7 +13,7 @@ impl<T> const MonadicReturn<T> for T { fn monadic_return(t: T) -> Self { t } }
 impl<T> const MonadicReturn<T> for Option<T> { fn monadic_return(t: T) -> Self { Some(t) } }
 impl<T, E> const MonadicReturn<T> for Result<T, E> { fn monadic_return(t: T) -> Self { Ok(t) } }
 impl<T> const MonadicReturn<T> for Nondet<T> { fn monadic_return(t: T) -> Self { Nondet(t) } }
-impl<T, E> const MonadicReturn<T> for Nondet<Result<T, E>> { fn monadic_return(t: T) -> Self { Nondet(Ok(t)) } }
+impl<T, E> const MonadicReturn<T> for NdResult<T, E> { fn monadic_return(t: T) -> Self { NdResult(Ok(t)) } }
 
 #[test]
 fn monadic_return_test() {
@@ -21,7 +21,7 @@ fn monadic_return_test() {
 	let _: Option<i32> = ret(5);
 	let _: Result<i32, ()> = ret(5);
 	let _: Nondet<i32> = ret(5);
-	let _: Nondet<Result<i32, ()>> = ret(5);
+	let _: NdResult<i32, ()> = ret(5);
 }
 
 
