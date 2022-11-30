@@ -101,7 +101,7 @@ fn translate_body<'tcx>(body: &rs::Body<'tcx>, fnname_map: &HashMap<rs::DefId, m
 }
 
 fn translate_local<'tcx>(local: &rs::LocalDecl<'tcx>, tcx: rs::TyCtxt<'tcx>) -> mini::PlaceType {
-    let ty = translate_ty(&local.ty, tcx);
+    let ty = translate_ty(local.ty, tcx);
 
     // TODO is this `empty` ParamEnv correct? probably not.
     // The generic args of the function need to be in scope here.

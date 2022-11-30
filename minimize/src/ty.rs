@@ -29,20 +29,20 @@ pub fn translate_mutbl(mutbl: rs::Mutability) -> mini::Mutability {
     }
 }
 
-pub fn translate_ty<'tcx>(ty: &rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> mini::Type {
+pub fn translate_ty<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> mini::Type {
     match ty.kind() {
         rs::TyKind::Bool => mini::Type::Bool,
         rs::TyKind::Int(int_ty) => mini::Type::Int(translate_int_ty(int_ty)),
         rs::TyKind::Uint(uint_ty) => mini::Type::Int(translate_uint_ty(uint_ty)),
         rs::TyKind::Tuple(ts) => {
-            let a = rs::ParamEnv::empty().and(*ty);
+            let a = rs::ParamEnv::empty().and(ty);
             let layout = tcx.layout_of(a).unwrap().layout;
             let size = translate_size(layout.size());
 
             let fields = ts.iter()
                            .enumerate()
                            .map(|(i, t)| {
-                                let t = translate_ty(&t, tcx);
+                                let t = translate_ty(t, tcx);
                                 let offset = layout.fields().offset(i);
                                 let offset = translate_size(offset);
 
@@ -57,7 +57,7 @@ pub fn translate_ty<'tcx>(ty: &rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> mini::Typ
 
         // TODO support generics
         rs::TyKind::Adt(adt_def, sref) if adt_def.is_struct() => {
-            let a = rs::ParamEnv::empty().and(*ty);
+            let a = rs::ParamEnv::empty().and(ty);
             let layout = tcx.layout_of(a).unwrap().layout;
             let size = translate_size(layout.size());
 
@@ -65,7 +65,7 @@ pub fn translate_ty<'tcx>(ty: &rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> mini::Typ
                            .enumerate()
                            .map(|(i, field)| {
                                 let ty = field.ty(tcx, sref);
-                                let ty = translate_ty(&ty, tcx);
+                                let ty = translate_ty(ty, tcx);
                                 let offset = layout.fields().offset(i);
                                 let offset = translate_size(offset);
 
@@ -77,8 +77,8 @@ pub fn translate_ty<'tcx>(ty: &rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> mini::Typ
                 size,
             }
         },
-        rs::TyKind::Adt(adt_def, sref) if adt_def.is_box() => {
-            let ty = sref[0].expect_ty();
+        rs::TyKind::Adt(adt_def, _) if adt_def.is_box() => {
+            let ty = ty.boxed_ty();
             let pointee = layout_of(ty, tcx);
             mini::Type::Ptr(mini::PtrType::Box { pointee })
         },

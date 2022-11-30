@@ -77,6 +77,11 @@ fn sysroot() -> String {
 }
 
 fn main() {
+    if !std::path::Path::new("file.rs").exists() {
+        eprintln!("You need to define some `file.rs` in order to run `minimize`.");
+        std::process::exit(1);
+    }
+
     let args = [
         ".".to_string(),
         "file.rs".to_string(),

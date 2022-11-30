@@ -62,7 +62,7 @@ pub fn translate_operand<'tcx>(operand: &rs::Operand<'tcx>, fcx: FnCtxt<'_, 'tcx
         rs::Operand::Constant(box c) => {
             match c.literal {
                 rs::ConstantKind::Val(val, ty) => {
-                    let ty = translate_ty(&ty, fcx.tcx);
+                    let ty = translate_ty(ty, fcx.tcx);
                     let constant = match ty {
                         mini::Type::Int(int_ty) => {
                             let val = val.try_to_scalar_int().unwrap();
