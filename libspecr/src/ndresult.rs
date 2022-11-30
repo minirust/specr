@@ -3,7 +3,10 @@ use crate::*;
 use std::ops::{Try, FromResidual, ControlFlow, Residual, Yeet};
 use std::convert::Infallible;
 
-pub struct NdResult<T, E>(pub(crate) Result<T, E>);
+/// Conceptually, this is a `Nondet<Result<T, E>>`.
+///
+/// This newtype is necessary so that applying `?` on a `NdResult<T, E>` yields `T` and not `Result<T, E>`.
+pub struct NdResult<T, E>(pub Result<T, E>);
 
 impl<T, E> Try for NdResult<T, E> {
     type Output = T;
