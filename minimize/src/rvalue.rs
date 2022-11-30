@@ -42,13 +42,27 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: FnCtxt<'_, 'tcx>) -> m
             }
         },
         rs::Rvalue::Ref(_, bkind, place) => {
+            let ty = place.ty(fcx.body, fcx.tcx).ty;
+            let pointee = layout_of(ty, fcx.tcx);
+
             let place = translate_place(place, fcx);
             let target = specr::hidden::GcCow::new(place);
             let mutbl = translate_mutbl(bkind.to_mutbl_lossy());
 
+            let ptr_ty = mini::PtrType::Ref { mutbl, pointee };
+
+            mini::ValueExpr::AddrOf { target, ptr_ty }
+        },
+        rs::Rvalue::AddressOf(_mutbl, place) => {
+            let ty = place.ty(fcx.body, fcx.tcx).ty;
+            let pointee = layout_of(ty, fcx.tcx);
+
+            let place = translate_place(place, fcx);
+            let target = specr::hidden::GcCow::new(place);
+
             let ty = rv.ty(fcx.body, fcx.tcx);
             let pointee = layout_of(ty, fcx.tcx);
-            let ptr_ty = mini::PtrType::Ref { mutbl, pointee };
+            let ptr_ty = mini::PtrType::Raw { pointee };
 
             mini::ValueExpr::AddrOf { target, ptr_ty }
         },
