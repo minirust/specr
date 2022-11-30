@@ -1,3 +1,4 @@
+use crate::*;
 use crate::mini::*;
 
 pub fn place_expr_to_string(p: PlaceExpr) -> String {
@@ -25,7 +26,29 @@ pub fn value_expr_to_string(v: ValueExpr) -> String {
 }
 
 pub fn type_to_string(t: Type) -> String {
-    format!("{:?}", t)
+    match t {
+        Type::Int(int_ty) => {
+            let signed = match int_ty.signed {
+                Signed => "i",
+                Unsigned => "u",
+            };
+            let bits = specr::hidden::int_to_usize(int_ty.size.bits());
+
+            format!("{signed}{bits}")
+        },
+        Type::Bool => String::from("bool"),
+        Type::Ptr(PtrType::Ref { mutbl: Mutability::Mutable, .. }) => String::from("&mut _"),
+        Type::Ptr(PtrType::Ref { mutbl: Mutability::Immutable, .. }) => String::from("&_"),
+        Type::Ptr(PtrType::Box { .. }) => String::from("Box<_>"),
+        Type::Ptr(PtrType::Raw { .. }) => String::from("*_"),
+        Type::Tuple { fields, .. } => {
+            let fields: Vec<_> = fields.iter().map(|(_, ty)| type_to_string(ty)).collect();
+            let fields = fields.join(", ");
+
+            format!("({fields})")
+        },
+        t => format!("{:?}", t),
+    }
 }
 
 pub fn bbname_to_string(bb: BbName) -> String {
