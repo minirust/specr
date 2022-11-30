@@ -1,7 +1,7 @@
 use crate::*;
 
-pub fn translate_rvalue<'tcx>(place: &rs::Rvalue<'tcx>, fcx: FnCtxt<'_, 'tcx>) -> mini::ValueExpr {
-    match place {
+pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: FnCtxt<'_, 'tcx>) -> mini::ValueExpr {
+    match rv {
         rs::Rvalue::Use(operand) => translate_operand(operand, fcx),
         rs::Rvalue::CheckedBinaryOp(bin_op, box (l, r)) => {
             let l = translate_operand(l, fcx);
@@ -45,7 +45,9 @@ pub fn translate_rvalue<'tcx>(place: &rs::Rvalue<'tcx>, fcx: FnCtxt<'_, 'tcx>) -
             let place = translate_place(place, fcx);
             let target = specr::hidden::GcCow::new(place);
             let mutbl = translate_mutbl(bkind.to_mutbl_lossy());
-            let pointee = todo!(); // TODO how to get layout? Probably using the `place`.
+
+            let ty = rv.ty(fcx.body, fcx.tcx);
+            let pointee = layout_of(ty, fcx.tcx);
             let ptr_ty = mini::PtrType::Ref { mutbl, pointee };
 
             mini::ValueExpr::AddrOf { target, ptr_ty }

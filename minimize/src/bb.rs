@@ -31,7 +31,8 @@ fn translate_stmt<'tcx>(stmt: &rs::Statement<'tcx>, fcx: FnCtxt<'_, 'tcx>, state
                 mini::Statement::StorageDead(fcx.localname_map[&local])
             );
         },
-        rs::StatementKind::Deinit(_) => { /* this has no mini::_ equivalent. */ },
+        rs::StatementKind::Deinit(..) => { /* this has no mini::_ equivalent. */ },
+        rs::StatementKind::Retag(..) => { /* this has no mini::_ equivalent. */ },
         x => {
             dbg!(x);
             todo!()

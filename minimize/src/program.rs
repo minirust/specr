@@ -36,9 +36,10 @@ pub struct FnCtxt<'fcx, 'tcx> {
     pub bbname_map: &'fcx HashMap<rs::BasicBlock, mini::BbName>,
     pub fnname_map: &'fcx HashMap<rs::DefId, mini::FnName>,
     pub tcx: rs::TyCtxt<'tcx>,
+    pub body: &'tcx rs::Body<'tcx>,
 }
 
-fn translate_body<'tcx>(body: &rs::Body<'tcx>, fnname_map: &HashMap<rs::DefId, mini::FnName>, tcx: rs::TyCtxt<'tcx>) -> mini::Function {
+fn translate_body<'tcx>(body: &'tcx rs::Body<'tcx>, fnname_map: &HashMap<rs::DefId, mini::FnName>, tcx: rs::TyCtxt<'tcx>) -> mini::Function {
     // associate names for each mir BB.
     let mut bbname_map: HashMap<rs::BasicBlock, mini::BbName> = HashMap::new();
     for bb_id in body.basic_blocks().indices() {
@@ -71,6 +72,7 @@ fn translate_body<'tcx>(body: &rs::Body<'tcx>, fnname_map: &HashMap<rs::DefId, m
         bbname_map: &bbname_map,
         fnname_map,
         tcx,
+        body,
     };
 
     // convert mirs BBs to minirust.
