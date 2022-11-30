@@ -1,6 +1,10 @@
 use crate::*;
 
 impl<T: Obj> Set<T> {
+    pub fn new() -> Self {
+        Self(Default::default())
+    }
+
     pub fn contains(&self, t: T) -> bool {
         self.0.call_ref_unchecked(|s| {
             s.contains(&t)

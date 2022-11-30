@@ -1,6 +1,10 @@
 use crate::*;
 
 impl<K: Obj, V: Obj> Map<K, V> {
+    pub fn new() -> Self {
+        Self(Default::default())
+    }
+
     pub fn get(&self, k: K) -> Option<V> {
         self.0.call_ref_unchecked(|m| m.get(&k).cloned())
     }

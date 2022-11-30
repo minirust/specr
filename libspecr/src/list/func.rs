@@ -3,8 +3,8 @@ use crate::*;
 use std::ops::*;
 
 impl<T: Obj> List<T> {
-    pub fn new() -> List<T> {
-        List(GcCow::new(IMVector::new()))
+    pub fn new() -> Self {
+        Self(Default::default())
     }
 
     pub fn len(&self) -> Int {
