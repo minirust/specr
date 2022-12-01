@@ -134,6 +134,13 @@ pub fn translate_operand<'tcx>(operand: &rs::Operand<'tcx>, fcx: FnCtxt<'_, 'tcx
     }
 }
 
+fn place_type_of<'tcx>(ty: rs::Ty<'tcx>, fcx: FnCtxt<'_, 'tcx>) -> mini::PlaceType {
+    let align = layout_of(ty, fcx.tcx).align;
+    let ty = translate_ty(ty, fcx.tcx);
+
+    mini::PlaceType { ty, align }
+}
+
 pub fn translate_place<'tcx>(place: &rs::Place<'tcx>, fcx: FnCtxt<'_, 'tcx>) -> mini::PlaceExpr {
     let mut expr = mini::PlaceExpr::Local(fcx.localname_map[&place.local]);
     for proj in place.projection {
@@ -145,7 +152,15 @@ pub fn translate_place<'tcx>(place: &rs::Place<'tcx>, fcx: FnCtxt<'_, 'tcx>) -> 
                     root: indirected,
                     field: f.into(),
                 };
-            }
+            },
+            rs::ProjectionElem::Deref => {
+                let ty = place.ty(fcx.body, fcx.tcx).ty;
+                let ptype = place_type_of(ty, fcx);
+                expr = mini::PlaceExpr::Deref {
+                    operand: todo!(), // TODO `expr` is `PlaceExpr`, but operand needs to be `ValueExpr`
+                    ptype,
+                };
+            },
             x => todo!("{:?}", x),
         }
     }
