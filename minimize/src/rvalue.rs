@@ -1,11 +1,11 @@
 use crate::*;
 
-pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: FnCtxt<'_, 'tcx>) -> mini::ValueExpr {
+pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> mini::ValueExpr {
     match rv {
         rs::Rvalue::Use(operand) => translate_operand(operand, fcx),
         rs::Rvalue::CheckedBinaryOp(bin_op, box (l, r)) => {
-            let lty = l.ty(fcx.body, fcx.tcx);
-            let rty = r.ty(fcx.body, fcx.tcx);
+            let lty = l.ty(&fcx.body, fcx.tcx);
+            let rty = r.ty(&fcx.body, fcx.tcx);
 
             assert_eq!(lty, rty);
 
@@ -45,7 +45,7 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: FnCtxt<'_, 'tcx>) -> m
             }
         },
         rs::Rvalue::Ref(_, bkind, place) => {
-            let ty = place.ty(fcx.body, fcx.tcx).ty;
+            let ty = place.ty(&fcx.body, fcx.tcx).ty;
             let pointee = layout_of(ty, fcx.tcx);
 
             let place = translate_place(place, fcx);
@@ -57,13 +57,13 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: FnCtxt<'_, 'tcx>) -> m
             mini::ValueExpr::AddrOf { target, ptr_ty }
         },
         rs::Rvalue::AddressOf(_mutbl, place) => {
-            let ty = place.ty(fcx.body, fcx.tcx).ty;
+            let ty = place.ty(&fcx.body, fcx.tcx).ty;
             let pointee = layout_of(ty, fcx.tcx);
 
             let place = translate_place(place, fcx);
             let target = specr::hidden::GcCow::new(place);
 
-            let ty = rv.ty(fcx.body, fcx.tcx);
+            let ty = rv.ty(&fcx.body, fcx.tcx);
             let pointee = layout_of(ty, fcx.tcx);
             let ptr_ty = mini::PtrType::Raw { pointee };
 
@@ -76,7 +76,7 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: FnCtxt<'_, 'tcx>) -> m
     }
 }
 
-pub fn translate_operand<'tcx>(operand: &rs::Operand<'tcx>, fcx: FnCtxt<'_, 'tcx>) -> mini::ValueExpr {
+pub fn translate_operand<'tcx>(operand: &rs::Operand<'tcx>, fcx: &mut FnCtxt<'tcx>) -> mini::ValueExpr {
     match operand {
         rs::Operand::Constant(box c) => {
             match c.literal {
@@ -137,14 +137,14 @@ pub fn translate_operand<'tcx>(operand: &rs::Operand<'tcx>, fcx: FnCtxt<'_, 'tcx
     }
 }
 
-fn place_type_of<'tcx>(ty: rs::Ty<'tcx>, fcx: FnCtxt<'_, 'tcx>) -> mini::PlaceType {
+fn place_type_of<'tcx>(ty: rs::Ty<'tcx>, fcx: &mut FnCtxt<'tcx>) -> mini::PlaceType {
     let align = layout_of(ty, fcx.tcx).align;
     let ty = translate_ty(ty, fcx.tcx);
 
     mini::PlaceType { ty, align }
 }
 
-pub fn translate_place<'tcx>(place: &rs::Place<'tcx>, fcx: FnCtxt<'_, 'tcx>) -> mini::PlaceExpr {
+pub fn translate_place<'tcx>(place: &rs::Place<'tcx>, fcx: &mut FnCtxt<'tcx>) -> mini::PlaceExpr {
     let mut expr = mini::PlaceExpr::Local(fcx.localname_map[&place.local]);
     for proj in place.projection {
         match proj {
@@ -157,7 +157,7 @@ pub fn translate_place<'tcx>(place: &rs::Place<'tcx>, fcx: FnCtxt<'_, 'tcx>) -> 
                 };
             },
             rs::ProjectionElem::Deref => {
-                let ty = place.ty(fcx.body, fcx.tcx).ty;
+                let ty = place.ty(&fcx.body, fcx.tcx).ty;
                 let ptype = place_type_of(ty, fcx);
                 expr = mini::PlaceExpr::Deref {
                     operand: todo!(), // TODO `expr` is `PlaceExpr`, but operand needs to be `ValueExpr`

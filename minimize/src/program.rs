@@ -1,45 +1,47 @@
 use crate::*;
 
 pub fn translate_program<'tcx>(tcx: rs::TyCtxt<'tcx>) -> mini::Program {
-    let mut fnname_map: HashMap<rs::DefId, mini::FnName> = HashMap::new();
-
-    for id in tcx.mir_keys(()) {
-        let id = id.to_def_id();
-
-        let fnname = fnname_map.len(); // .len() is the next free index
-        let fnname = mini::FnName(specr::Name(fnname as u32));
-        fnname_map.insert(id, fnname);
-    }
+    let mut fname_map: HashMap<(rs::DefId, rs::SubstsRef<'tcx>), mini::FnName> = HashMap::new();
+    let mut fmap: specr::Map<mini::FnName, mini::Function> = specr::Map::new();
 
     let (entry, _ty) = tcx.entry_fn(()).unwrap();
-    let start = fnname_map[&entry];
+    let substs_ref: rs::SubstsRef<'tcx> = tcx.intern_substs(&[]);
+    let start = mini::FnName(specr::Name(0));
 
-    let mut program = mini::Program {
-        start,
-        functions: Default::default(),
-    };
+    fname_map.insert((entry, substs_ref), start);
 
-    for (id, fnname) in &fnname_map {
-        let body = tcx.optimized_mir(id);
-        let f = translate_body(body, &fnname_map, tcx);
-        program.functions.insert(*fnname, f);
+    // take any not-yet-implemented function:
+    while let Some(fname) = fname_map.values().find(|k| !fmap.contains_key(**k)).copied() {
+        let (def_id, substs_ref) = fname_map.iter()
+                                            .find(|(_, f)| **f == fname)
+                                            .map(|(r, _)| r)
+                                            .unwrap();
+        let body = tcx.optimized_mir(def_id);
+        let body = tcx.subst_and_normalize_erasing_regions(substs_ref, rs::ParamEnv::empty(), body.clone());
+
+        let f = translate_body(body, &mut fname_map, tcx);
+        fmap.insert(fname, f);
     }
 
-    program
-
+    mini::Program {
+        start,
+        functions: fmap,
+    }
 }
 
 /// contains read-only data regarding the current function.
-#[derive(Clone, Copy)]
-pub struct FnCtxt<'fcx, 'tcx> {
-    pub localname_map: &'fcx HashMap<rs::Local, mini::LocalName>,
-    pub bbname_map: &'fcx HashMap<rs::BasicBlock, mini::BbName>,
-    pub fnname_map: &'fcx HashMap<rs::DefId, mini::FnName>,
+pub struct FnCtxt<'tcx> {
+    pub localname_map: HashMap<rs::Local, mini::LocalName>,
+    pub bbname_map: HashMap<rs::BasicBlock, mini::BbName>,
+    pub fnname_map: HashMap<(rs::DefId, rs::SubstsRef<'tcx>), mini::FnName>,
     pub tcx: rs::TyCtxt<'tcx>,
-    pub body: &'tcx rs::Body<'tcx>,
+    pub body: rs::Body<'tcx>,
 }
 
-fn translate_body<'tcx>(body: &'tcx rs::Body<'tcx>, fnname_map: &HashMap<rs::DefId, mini::FnName>, tcx: rs::TyCtxt<'tcx>) -> mini::Function {
+fn translate_body<'tcx>(body: rs::Body<'tcx>, fnname_map_arg: &mut HashMap<(rs::DefId, rs::SubstsRef<'tcx>), mini::FnName>, tcx: rs::TyCtxt<'tcx>) -> mini::Function {
+    let mut fnname_map = Default::default();
+    std::mem::swap(&mut fnname_map, fnname_map_arg);
+
     // associate names for each mir BB.
     let mut bbname_map: HashMap<rs::BasicBlock, mini::BbName> = HashMap::new();
     for bb_id in body.basic_blocks().indices() {
@@ -67,19 +69,20 @@ fn translate_body<'tcx>(body: &'tcx rs::Body<'tcx>, fnname_map: &HashMap<rs::Def
         locals.insert(*localname, translate_local(local_decl, tcx));
     }
 
-    let fcx = FnCtxt {
-        localname_map: &localname_map,
-        bbname_map: &bbname_map,
+    // TODO fix preventable clones.
+    let mut fcx = FnCtxt {
+        localname_map,
+        bbname_map: bbname_map.clone(),
         fnname_map,
         tcx,
-        body,
+        body: body.clone(),
     };
 
     // convert mirs BBs to minirust.
     let mut blocks = specr::Map::default();
-    for (id, bbname) in &bbname_map {
-        let bb_data = &body.basic_blocks()[*id];
-        blocks.insert(*bbname, translate_bb(bb_data, fcx));
+    for (id, bbname) in bbname_map.clone() {
+        let bb_data = &body.basic_blocks()[id];
+        blocks.insert(bbname, translate_bb(bb_data, &mut fcx));
     }
 
     // "The first local is the return value pointer, followed by arg_count locals for the function arguments, followed by any user-declared variables and temporaries."
@@ -87,11 +90,15 @@ fn translate_body<'tcx>(body: &'tcx rs::Body<'tcx>, fnname_map: &HashMap<rs::Def
     let ret = (mini::LocalName(specr::Name(0)), arg_abi());
 
     let mut args = specr::List::default();
-    for i in 0..body.arg_count {
+    for i in 0..fcx.body.arg_count {
         let i = i+1; // this starts counting with 1, as id 0 is the return value of the function.
         let localname = mini::LocalName(specr::Name(i as _));
         args.push((localname, arg_abi()));
     }
+
+    let mut fnname_map = fcx.fnname_map;
+
+    std::mem::swap(&mut fnname_map, fnname_map_arg);
 
     mini::Function {
         locals,
