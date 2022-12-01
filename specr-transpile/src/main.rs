@@ -82,6 +82,7 @@ fn create_lib(mods: &[Module]) {
     let mods: Vec<Ident> = mods.iter().map(|x| format_ident!("{}", x.name)).collect();
     let code = quote! {
         #![feature(yeet_expr)]
+        #![feature(never_type)]
         #![feature(iterator_try_collect)]
         #[macro_use] pub extern crate libspecr as specr;
         #( #[macro_use] pub mod #mods; )*
