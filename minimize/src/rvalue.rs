@@ -4,6 +4,15 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: FnCtxt<'_, 'tcx>) -> m
     match rv {
         rs::Rvalue::Use(operand) => translate_operand(operand, fcx),
         rs::Rvalue::CheckedBinaryOp(bin_op, box (l, r)) => {
+            let lty = l.ty(fcx.body, fcx.tcx);
+            let rty = r.ty(fcx.body, fcx.tcx);
+
+            assert_eq!(lty, rty);
+
+            let mini::Type::Int(int_ty) = translate_ty(lty, fcx.tcx) else {
+                panic!("arithmetic operation with non-int type unsupported!");
+            };
+
             let l = translate_operand(l, fcx);
             let r = translate_operand(r, fcx);
 
@@ -25,12 +34,6 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: FnCtxt<'_, 'tcx>) -> m
                         dbg!(x);
                         todo!("unsupported BinOp")
                     },
-                };
-                // FIXME how to detect int-type?
-                // fallback to i32.
-                let int_ty = mini::IntType {
-                    signed: mini::Signedness::Signed,
-                    size: specr::Size::from_bits(32),
                 };
                 mini::BinOp::Int(op_int, int_ty)
             };
