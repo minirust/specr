@@ -84,6 +84,7 @@ fn create_lib(mods: &[Module]) {
         #![feature(yeet_expr)]
         #![feature(never_type)]
         #![feature(iterator_try_collect)]
+        #![feature(is_some_and)]
         #[macro_use] pub extern crate libspecr as specr;
         #( #[macro_use] pub mod #mods; )*
     };
