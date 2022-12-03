@@ -2,23 +2,20 @@
 #![feature(box_patterns)]
 #![feature(let_else)]
 
-// is this the rustc_smir from our dependencies, or from the rustc-dev component?
-// It's from the deps, as removing the dependency from Cargo.toml gives a compiler error.
-extern crate rustc_smir;
-use rustc_smir::very_unstable::interface::Queries;
-use rustc_smir::very_unstable::interface::interface::Compiler;
-use rustc_smir::very_unstable::driver::{Callbacks, RunCompiler, Compilation};
-
+extern crate rustc_hir;
 extern crate rustc_target;
+extern crate rustc_interface;
+extern crate rustc_driver;
+extern crate rustc_middle;
+
+use rustc_interface::{Queries, interface::Compiler};
+use rustc_driver::{RunCompiler, Compilation, Callbacks};
 
 mod rs {
-    pub use rustc_smir::very_unstable::hir::def_id::DefId;
-    pub use rustc_smir::very_unstable::middle::ty::*;
-    pub use rustc_smir::very_unstable::middle::mir::interpret::*;
-    pub use rustc_smir::very_unstable::middle::mir::*;
-    pub use rustc_smir::mir::*;
-    pub use rustc_smir::ty::*;
+    pub use rustc_hir::def_id::DefId;
     pub use rustc_target::abi::{Size, Align};
+    pub use rustc_middle::mir::*;
+    pub use rustc_middle::ty::*;
 }
 
 extern crate gen_minirust;

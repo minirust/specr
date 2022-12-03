@@ -19,7 +19,8 @@ pub fn translate_program<'tcx>(tcx: rs::TyCtxt<'tcx>) -> mini::Program {
         let body = tcx.optimized_mir(def_id);
         let body = tcx.subst_and_normalize_erasing_regions(substs_ref, rs::ParamEnv::empty(), body.clone());
 
-        let f = translate_body(body, &mut fname_map, tcx);
+        let is_start = *def_id == entry;
+        let f = translate_body(body, is_start, &mut fname_map, tcx);
         fmap.insert(fname, f);
     }
 
@@ -38,13 +39,13 @@ pub struct FnCtxt<'tcx> {
     pub body: rs::Body<'tcx>,
 }
 
-fn translate_body<'tcx>(body: rs::Body<'tcx>, fnname_map_arg: &mut HashMap<(rs::DefId, rs::SubstsRef<'tcx>), mini::FnName>, tcx: rs::TyCtxt<'tcx>) -> mini::Function {
+fn translate_body<'tcx>(body: rs::Body<'tcx>, is_start: bool, fnname_map_arg: &mut HashMap<(rs::DefId, rs::SubstsRef<'tcx>), mini::FnName>, tcx: rs::TyCtxt<'tcx>) -> mini::Function {
     let mut fnname_map = Default::default();
     std::mem::swap(&mut fnname_map, fnname_map_arg);
 
     // associate names for each mir BB.
     let mut bbname_map: HashMap<rs::BasicBlock, mini::BbName> = HashMap::new();
-    for bb_id in body.basic_blocks().indices() {
+    for bb_id in body.basic_blocks.indices() {
         let bbname = bbname_map.len(); // .len() is the next free index
         let bbname = mini::BbName(specr::Name(bbname as u32));
         bbname_map.insert(bb_id, bbname);
@@ -81,13 +82,17 @@ fn translate_body<'tcx>(body: rs::Body<'tcx>, fnname_map_arg: &mut HashMap<(rs::
     // convert mirs BBs to minirust.
     let mut blocks = specr::Map::default();
     for (id, bbname) in bbname_map.clone() {
-        let bb_data = &body.basic_blocks()[id];
+        let bb_data = &body.basic_blocks[id];
         blocks.insert(bbname, translate_bb(bb_data, &mut fcx));
     }
 
     // "The first local is the return value pointer, followed by arg_count locals for the function arguments, followed by any user-declared variables and temporaries."
     // - https://doc.rust-lang.org/stable/nightly-rustc/rustc_middle/mir/struct.Body.html
-    let ret = (mini::LocalName(specr::Name(0)), arg_abi());
+    let ret = match is_start {
+        false => Some((mini::LocalName(specr::Name(0)), arg_abi())),
+        // the start function has no `ret`.
+        true => None,
+    };
 
     let mut args = specr::List::default();
     for i in 0..fcx.body.arg_count {
