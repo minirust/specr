@@ -146,7 +146,7 @@ fn place_type_of<'tcx>(ty: rs::Ty<'tcx>, fcx: &mut FnCtxt<'tcx>) -> mini::PlaceT
 
 pub fn translate_place<'tcx>(place: &rs::Place<'tcx>, fcx: &mut FnCtxt<'tcx>) -> mini::PlaceExpr {
     let mut expr = mini::PlaceExpr::Local(fcx.localname_map[&place.local]);
-    for proj in place.projection {
+    for (i, proj) in place.projection.iter().enumerate() {
         match proj {
             rs::ProjectionElem::Field(f, ty) => {
                 let f = f.index();
@@ -157,10 +157,19 @@ pub fn translate_place<'tcx>(place: &rs::Place<'tcx>, fcx: &mut FnCtxt<'tcx>) ->
                 };
             },
             rs::ProjectionElem::Deref => {
-                let ty = place.ty(&fcx.body, fcx.tcx).ty;
+                let x = specr::hidden::GcCow::new(expr);
+                let x = mini::ValueExpr::Load {
+                    destructive: false,
+                    source: x
+                };
+                let x = specr::hidden::GcCow::new(x);
+
+                // TODO is this ptype correct?
+                let ty = rs::Place::ty_from(place.local, &place.projection[..i], &fcx.body, fcx.tcx).ty;
                 let ptype = place_type_of(ty, fcx);
+
                 expr = mini::PlaceExpr::Deref {
-                    operand: todo!(), // TODO `expr` is `PlaceExpr`, but operand needs to be `ValueExpr`
+                    operand: x,
                     ptype,
                 };
             },
