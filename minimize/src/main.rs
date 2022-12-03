@@ -2,14 +2,14 @@
 #![feature(box_patterns)]
 #![feature(let_else)]
 
+// This is required since `get::Cb` contained `Option<mini::Program>`.
+#![recursion_limit = "256"]
+
 extern crate rustc_hir;
 extern crate rustc_target;
 extern crate rustc_interface;
 extern crate rustc_driver;
 extern crate rustc_middle;
-
-use rustc_interface::{Queries, interface::Compiler};
-use rustc_driver::{RunCompiler, Compilation, Callbacks};
 
 mod rs {
     pub use rustc_hir::def_id::DefId;
@@ -45,55 +45,12 @@ use rvalue::*;
 mod dump;
 use dump::dump_program;
 
+mod get;
+use get::get_mini;
+
 use std::collections::HashMap;
 
-struct Cb;
-
-impl Callbacks for Cb {
-    fn after_analysis<'tcx>(&mut self, _compiler: &Compiler, queries: &'tcx Queries<'tcx>) -> Compilation {
-        queries.global_ctxt().unwrap().take().enter(|arg| {
-            let prog = translate_program(arg);
-            dump_program(&prog);
-        });
-
-        Compilation::Stop
-    }
-}
-
-fn sysroot() -> String {
-    let sysroot = std::process::Command::new("rustc")
-        .arg("--print=sysroot")
-        .current_dir(".")
-        .output()
-        .unwrap();
-
-    std::str::from_utf8(&sysroot.stdout)
-        .unwrap()
-        .trim()
-        .to_string()
-}
-
 fn main() {
-    if !std::path::Path::new("file.rs").exists() {
-        eprintln!("You need to define some `file.rs` in order to run `minimize`.");
-        std::process::exit(1);
-    }
-
-    let args = [
-        ".".to_string(),
-        "file.rs".to_string(),
-        "--sysroot".to_string(),
-        sysroot(),
-
-        // flags taken from miŕi (see https://github.com/rust-lang/miri/blob/master/src/lib.rs#L116)
-        "-Zalways-encode-mir".to_string(),
-        "-Zmir-emit-retag".to_string(),
-        "-Zmir-opt-level=0".to_string(),
-        "--cfg=miri".to_string(),
-        "-Cdebug-assertions=on".to_string(),
-
-        // FIXME this one doesn't work as of now.
-        // "-Zextra-const-ub-checks".to_string(),
-    ];
-    RunCompiler::new(&args, &mut Cb).run().unwrap();
+    let prog = get_mini();
+    dump_program(&prog);
 }
