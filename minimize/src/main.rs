@@ -22,6 +22,7 @@ extern crate gen_minirust;
 
 mod mini {
     pub use gen_minirust::lang::*;
+    pub use gen_minirust::mem::*;
     pub use gen_minirust::prelude::*;
 }
 
@@ -45,6 +46,9 @@ use rvalue::*;
 mod dump;
 use dump::dump_program;
 
+mod run;
+use run::run_program;
+
 mod get;
 use get::get_mini;
 
@@ -52,5 +56,11 @@ use std::collections::HashMap;
 
 fn main() {
     let prog = get_mini();
-    dump_program(&prog);
+
+    let dump = std::env::args().any(|x| x == "--dump");
+    if dump {
+        dump_program(&prog);
+    } else {
+        run_program(prog);
+    }
 }
