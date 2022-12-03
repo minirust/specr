@@ -16,8 +16,8 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
             let l = translate_operand(l, fcx);
             let r = translate_operand(r, fcx);
 
-            let l = specr::hidden::GcCow::new(l);
-            let r = specr::hidden::GcCow::new(r);
+            let l = specr::GcCow::new(l);
+            let r = specr::GcCow::new(r);
 
             use rs::BinOp::*;
             let op = if *bin_op == Offset {
@@ -49,7 +49,7 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
             let pointee = layout_of(ty, fcx.tcx);
 
             let place = translate_place(place, fcx);
-            let target = specr::hidden::GcCow::new(place);
+            let target = specr::GcCow::new(place);
             let mutbl = translate_mutbl(bkind.to_mutbl_lossy());
 
             let ptr_ty = mini::PtrType::Ref { mutbl, pointee };
@@ -61,7 +61,7 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
             let pointee = layout_of(ty, fcx.tcx);
 
             let place = translate_place(place, fcx);
-            let target = specr::hidden::GcCow::new(place);
+            let target = specr::GcCow::new(place);
 
             let ty = rv.ty(&fcx.body, fcx.tcx);
             let pointee = layout_of(ty, fcx.tcx);
@@ -87,7 +87,7 @@ pub fn translate_operand<'tcx>(operand: &rs::Operand<'tcx>, fcx: &mut FnCtxt<'tc
                             let val = val.try_to_scalar_int().unwrap();
 
                             use mini::Signedness::*;
-                            let bits = specr::hidden::int_to_usize(int_ty.size.bits());
+                            let bits = specr::int_to_usize(int_ty.size.bits());
                             // TODO is there no better way to get the value from a ScalarInt?
                             let int: specr::Int = match (int_ty.signed, bits) {
                                 (Signed, 8) => val.try_to_i8().unwrap().into(),
@@ -125,13 +125,13 @@ pub fn translate_operand<'tcx>(operand: &rs::Operand<'tcx>, fcx: &mut FnCtxt<'tc
         rs::Operand::Copy(place) => {
             mini::ValueExpr::Load {
                 destructive: false,
-                source: specr::hidden::GcCow::new(translate_place(place, fcx)),
+                source: specr::GcCow::new(translate_place(place, fcx)),
             }
         },
         rs::Operand::Move(place) => {
             mini::ValueExpr::Load {
                 destructive: true,
-                source: specr::hidden::GcCow::new(translate_place(place, fcx)),
+                source: specr::GcCow::new(translate_place(place, fcx)),
             }
         },
     }
@@ -150,19 +150,19 @@ pub fn translate_place<'tcx>(place: &rs::Place<'tcx>, fcx: &mut FnCtxt<'tcx>) ->
         match proj {
             rs::ProjectionElem::Field(f, ty) => {
                 let f = f.index();
-                let indirected = specr::hidden::GcCow::new(expr);
+                let indirected = specr::GcCow::new(expr);
                 expr = mini::PlaceExpr::Field {
                     root: indirected,
                     field: f.into(),
                 };
             },
             rs::ProjectionElem::Deref => {
-                let x = specr::hidden::GcCow::new(expr);
+                let x = specr::GcCow::new(expr);
                 let x = mini::ValueExpr::Load {
                     destructive: false,
                     source: x
                 };
-                let x = specr::hidden::GcCow::new(x);
+                let x = specr::GcCow::new(x);
 
                 // TODO is this ptype correct?
                 let ty = rs::Place::ty_from(place.local, &place.projection[..i], &fcx.body, fcx.tcx).ty;

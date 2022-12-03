@@ -29,6 +29,7 @@ mod mini {
 mod specr {
     pub use gen_minirust::specr::*;
     pub use gen_minirust::specr::prelude::*;
+    pub use gen_minirust::specr::hidden::*;
 }
 
 mod program;
