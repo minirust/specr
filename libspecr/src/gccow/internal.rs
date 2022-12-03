@@ -2,6 +2,7 @@ use crate::{*, gccow::*};
 
 use std::cell::RefCell;
 use std::marker::PhantomData;
+use std::sync::Mutex;
 
 impl<T: GcCompat> GcCompat for GcCow<T> {
     fn points_to(&self, buffer: &mut HashSet<usize>) {
@@ -14,9 +15,7 @@ pub struct GcState {
     pub objs: SparseVec<Box<dyn GcCompat>>,
 }
 
-thread_local! {
-    pub static GC_STATE: RefCell<GcState> = RefCell::new(GcState::new());
-}
+pub static GC_STATE: Mutex<RefCell<GcState>> = Mutex::new(RefCell::new(GcState::new()));
 
 impl GcState {
     pub const fn new() -> GcState {

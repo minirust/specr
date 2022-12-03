@@ -81,6 +81,7 @@ fn create_cargo_toml() {
 fn create_lib(mods: &[Module]) {
     let mods: Vec<Ident> = mods.iter().map(|x| format_ident!("{}", x.name)).collect();
     let code = quote! {
+        #![recursion_limit = "256"]
         #![feature(yeet_expr)]
         #![feature(never_type)]
         #![feature(iterator_try_collect)]
