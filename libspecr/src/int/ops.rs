@@ -3,6 +3,7 @@ use crate::*;
 use std::ops::*;
 use std::fmt::{Formatter, Display, Error};
 use std::cmp::Ordering;
+use num_traits::ToPrimitive;
 
 impl Display for Int {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
@@ -85,8 +86,11 @@ impl<T: Into<Int>> RemAssign<T> for Int {
 
 impl<T: Into<Int>> Shl<T> for Int {
     type Output = Self;
-    fn shl(self, _other: T) -> Self {
-        todo!()
+    fn shl(self, other: T) -> Self {
+        if self == 0 { return self; }
+
+        let i = other.into().ext().to_i128().unwrap();
+        Self::wrap(self.ext() << i)
     }
 }
 
@@ -99,8 +103,11 @@ impl<T: Into<Int>> ShlAssign<T> for Int {
 
 impl<T: Into<Int>> Shr<T> for Int {
     type Output = Self;
-    fn shr(self, _other: T) -> Self {
-        todo!()
+    fn shr(self, other: T) -> Self {
+        if self == 0 { return self; }
+
+        let i = other.into().ext().to_i128().unwrap();
+        Self::wrap(self.ext() >> i)
     }
 }
 
