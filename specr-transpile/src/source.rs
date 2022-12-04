@@ -27,7 +27,17 @@ fn mk_mod(basename: &str, modname: &str) -> Option<Module> {
 
     if code.is_empty() { return None; }
 
-    let ast = syn::parse_str::<syn::File>(&*code).unwrap();
+    // TODO implement graceful error messages using `syn` somehow.
+    let ast = syn::parse_str::<syn::File>(&*code).unwrap_or_else(|e| {
+        println!("parse error:");
+        let start = e.span().start().line;
+        let start = start.checked_sub(2).unwrap_or(0);
+        let end = e.span().end().line + 2;
+        for x in code.lines().skip(start).take(end-start) {
+            println!("{}", x);
+        }
+        panic!("{}", &e)
+    });
     Some(Module {
         name: modname.to_string(),
         ast

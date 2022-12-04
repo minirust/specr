@@ -8,4 +8,4 @@ edition = "2021"
 [dependencies]
 syn = { version = "1.0", features = ["full", "extra-traits", "visit", "visit-mut"] }
 quote = "1.0"
-proc-macro2 = "1.0"
+proc-macro2 = { version = "1.0", features = ["span-locations"] }
