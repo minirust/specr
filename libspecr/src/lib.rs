@@ -18,6 +18,8 @@ use im::Vector as IMVector;
 mod int;
 pub use int::*;
 
+mod option;
+
 mod ndresult;
 pub use ndresult::*;
 
@@ -75,6 +77,7 @@ pub mod prelude {
     pub use crate::signedness::*;
     pub use crate::string::{String, format};
     pub use crate::nondet::{pick, predict};
+    pub use crate::option::*;
 
     pub use std::hash::Hash;
     pub use std::fmt::Debug;
