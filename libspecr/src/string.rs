@@ -1,5 +1,7 @@
 use crate::*;
 
+use std::fmt::{Display, Formatter, Error};
+
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Hash)]
 /// Garbage-collected wrapper around `std::string::String` implementing `Copy`.
 pub struct String(pub GcCow<std::string::String>);
@@ -16,6 +18,11 @@ impl GcCompat for std::string::String {
     fn as_any(&self) -> &dyn Any { self }
 }
 
+impl Display for String {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+        self.0.call_ref_unchecked(|s| write!(f, "{}", s))
+    }
+}
 
 /// Wrapper around the `std::format` macro, returning `libspecr::String` instead of `std::string::String`.
 pub macro format {
