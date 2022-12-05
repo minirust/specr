@@ -44,6 +44,7 @@ fn impl_for_struct(s: &ItemStruct) -> Item {
     let ts = quote! {
         impl #g specr::hidden::GcCompat for #name #tg {
             fn as_any(&self) -> &dyn std::any::Any { self }
+            #[allow(unused_variables)]
             fn points_to(&self, s: &mut std::collections::HashSet<usize>) {
                 #(
                     self.#named.points_to(s);
@@ -91,6 +92,7 @@ fn impl_for_enum(e: &ItemEnum) -> Item {
     let ts = quote! {
         impl #g specr::hidden::GcCompat for #enum_ident #tg {
             fn as_any(&self) -> &dyn std::any::Any { self }
+            #[allow(unused_variables)]
             fn points_to(&self, s: &mut std::collections::HashSet<usize>) {
                 match *self {
                     #( #var_arms )*

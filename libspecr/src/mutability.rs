@@ -1,14 +1,14 @@
 use crate::*;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
-/// Either `Signed` or `Unsigned`.
-pub enum Signedness {
-    Signed,
-    Unsigned
+/// Either `Mutable` or `Immutable`.
+pub enum Mutability {
+    Mutable,
+    Immutable,
 }
-pub use Signedness::*;
+pub use Mutability::*;
 
-impl GcCompat for Signedness {
+impl GcCompat for Mutability {
     fn points_to(&self, _m: &mut HashSet<usize>) {}
     fn as_any(&self) -> &dyn Any { self }
 }

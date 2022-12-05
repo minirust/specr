@@ -13,14 +13,6 @@ pub fn pick<T>(_f: impl Fn(T) -> bool) -> crate::Nondet<T> { todo!() }
 /// The `predict` function from the minirust spec. See [Non-determinism](https://github.com/RalfJung/minirust/blob/master/README.md#non-determinism).
 pub fn predict<T>(_f: impl Fn(T) -> bool) -> crate::Nondet<T> { todo!() }
 
-// TODO this is probably redundant.
-/// Wrapper around `do yeet` expressions.
-pub macro yeet {
-    ($x:expr) => {
-        do yeet $x
-    },
-}
-
 impl<T: GcCompat> GcCompat for Nondet<T> {
     fn points_to(&self, m: &mut HashSet<usize>) {
         self.0.points_to(m);

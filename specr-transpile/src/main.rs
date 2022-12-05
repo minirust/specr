@@ -86,8 +86,9 @@ fn create_lib(mods: &[Module]) {
         #![feature(never_type)]
         #![feature(iterator_try_collect)]
         #![feature(is_some_and)]
+        #[allow(unused_imports)]
         #[macro_use] pub extern crate libspecr as specr;
-        #( #[macro_use] pub mod #mods; )*
+        #( #[allow(unused_imports)] #[macro_use] pub mod #mods; )*
     };
     let code = code.to_string();
     fs::write("../gen-minirust/src/lib.rs", &code).unwrap();

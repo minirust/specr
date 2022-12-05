@@ -6,8 +6,9 @@ pub fn add_imports(mut mods: Vec<Module>) -> Vec<Module> {
                                   .collect();
 
     let code = quote! {
+        #[allow(unused_imports)]
         use crate::{ #(#imports),* };
-        use crate::specr::prelude::*;
+        #[allow(unused_imports)]
         use crate::specr;
     };
     let f: syn::File = parse2(code).unwrap();

@@ -46,10 +46,11 @@ mod nondet;
 pub use nondet::*;
 
 mod endianness;
-use endianness::*;
+
+mod mutability;
 
 mod signedness;
-pub use signedness::*;
+use signedness::*;
 
 mod gccow;
 use gccow::*;
@@ -70,13 +71,11 @@ pub mod prelude {
     pub use crate::set::*;
     pub use crate::map::*;
     pub use crate::endianness::*;
+    pub use crate::mutability::*;
+    pub use crate::signedness::*;
     pub use crate::string::{String, format};
     pub use crate::nondet::{pick, predict};
 
     pub use std::hash::Hash;
     pub use std::fmt::Debug;
-
-    // TODO remove?
-    /// Wrapper around `Default::default()`.
-    pub fn default<T: Default>() -> T { T::default() }
 }

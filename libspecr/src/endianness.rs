@@ -8,7 +8,7 @@ pub enum Endianness {
     LittleEndian,
     BigEndian,
 }
-pub use Endianness::{LittleEndian, BigEndian};
+pub use Endianness::*;
 
 fn to_u8(b: Int) -> u8 {
     int_to_usize(b) as u8

@@ -15,9 +15,6 @@ impl<T, E> const MonadicReturn<T> for Result<T, E> { fn monadic_return(t: T) -> 
 impl<T> const MonadicReturn<T> for Nondet<T> { fn monadic_return(t: T) -> Self { Nondet(t) } }
 impl<T, E> const MonadicReturn<T> for NdResult<T, E> { fn monadic_return(t: T) -> Self { NdResult(Ok(t)) } }
 
-/// This is hack that makes this `let x: ! = ret(loop {});` work.
-impl<E> const MonadicReturn<()> for NdResult<!, E> { fn monadic_return(t: ()) -> Self { panic!() } }
-
 #[test]
 fn monadic_return_test() {
 	let _: i32 = ret(5);

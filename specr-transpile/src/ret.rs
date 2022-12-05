@@ -17,6 +17,9 @@ fn empty_ret() -> Expr {
 }
 
 fn wrap_ret_expr(expr: &mut Expr) {
+    // exprs returning `!` shall not be wrapped.
+    if matches!(*expr, Expr::Loop(_) | Expr::Return(_)) { return; }
+
     let code = quote! {
         specr::hidden::ret(#expr)
     };
