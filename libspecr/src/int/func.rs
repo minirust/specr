@@ -116,3 +116,49 @@ impl Int {
         self == self.modulo(signed, size)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // See definition of `m` in `Int::modulo`.
+    fn in_bounds_helper(int: Int, signed: Signedness, size: Size) -> bool {
+        let m = Int::from(2).pow(size.bits());
+
+        let range = match signed {
+            Signed => -m/2..m/2,
+            Unsigned => Int::ZERO..m,
+        };
+
+        range.contains(&int)
+    }
+
+    fn test_modulo_helper(x: Int, signed: Signedness, size: Size) {
+        // check in bounds
+        let out = x.modulo(signed, size);
+        assert!(in_bounds_helper(out, signed, size));
+
+        // check `out == x (mod size.bits())`
+        let delta = (out - x).abs();
+        assert_eq!(delta % size.bits(), 0);
+    }
+
+    #[test]
+    fn test_modulo() {
+        for s in [Signed, Unsigned] {
+            for bits in [16, 32, 64] {
+                let size = Size::from_bits_const(bits);
+                let m = Int::from(2).pow(Int::from(bits));
+
+                for base in [-m*2, -m, Int::ZERO, m, m*2] {
+                    for offset1 in [-m/2, Int::ZERO, m/2] {
+                        for offset2 in [-3, -2, -1, 0, 1, 2, 3] {
+                            let x = base + offset1 + offset2;
+                            test_modulo_helper(x, s, size);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
