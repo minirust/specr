@@ -8,6 +8,7 @@ pub use to::ToInt;
 
 /// The external Bigint Type, which we use under the hood.
 use num_bigint::BigInt as ExtInt;
+use num_traits::ToPrimitive;
 
 #[derive(Copy, Clone, Debug, Hash)]
 /// Garbage collected big integer that implements `Copy` and supports construction in `const` contexts.
@@ -50,8 +51,9 @@ impl Int {
     }
 
     pub fn wrap(ext: ExtInt) -> Self {
-        Self::Big(
-            GcCow::new(ext)
-        )
+        match ext.to_i128() {
+            Some(x) => Self::Small(x),
+            None => Self::Big(GcCow::new(ext))
+        }
     }
 }
