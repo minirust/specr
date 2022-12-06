@@ -50,19 +50,27 @@ impl Int {
     }
 
     pub fn pow(self, other: Int) -> Int {
-        assert!(self != 0);
+        fn ext_pow(x: &ExtInt, other: &ExtInt) -> ExtInt {
+            use num_traits::{Zero, One};
 
-        if other == 0 {
-            Int::from(1)
-        } else if other == 1 {
-            self
-        } else if other % 2 == 0 {
-            let a = self.pow(other/2);
-            a * a
-        } else {
-            let a = self.pow((other-1)/2);
-            a * a * self
+            assert!(x != &ExtInt::zero());
+
+            if other == &ExtInt::zero()  {
+                ExtInt::one()
+            } else if other == &ExtInt::one() {
+                x.clone()
+            } else if other % 2 == ExtInt::zero() {
+                let other = other >> 1;
+                let a = ext_pow(x, &other);
+                &a * &a
+            } else {
+                let other = (other-1) >> 1;
+                let a = ext_pow(x, &other);
+                &a * &a * x
+            }
         }
+
+        Self::wrap(ext_pow(&self.ext(), &other.ext()))
     }
 
     pub fn trailing_zeros(self) -> Option<Int> {
@@ -107,5 +115,4 @@ impl Int {
     pub fn in_bounds(self, signed: Signedness, size: Size) -> bool {
         self == self.modulo(signed, size)
     }
-
 }
