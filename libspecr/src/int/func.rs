@@ -9,11 +9,11 @@ impl Int {
     }
 
     pub fn next_power_of_two(self) -> Int {
-        // TODO improve implementation
-
-        // better implementation idea:
-        // return self, is already power of two.
-        // if self == 0, return 1.
+        // faster implementation idea:
+        //
+        // if self <= 0: return 1
+        // if self is power of two: return self
+        //
         // otherwise:
         // look for most-significant one-bit,
         // and set the next significant bit to 1 instead.
@@ -22,12 +22,18 @@ impl Int {
         //
         // [10000] <- correct result
 
-        let mut n = self.clone();
-        while !n.is_power_of_two() {
-            n = n + 1;
+        let Some(mut n) = self.ext().to_biguint() else {
+            // return 1 for negative inputs.
+            // should this be an error instead?
+            return Int::ONE;
+        };
+
+        // powers of two are exactly the numbers having `_.count_ones() == 1`.
+        while n.count_ones() != 1 {
+            n = n + 1u32;
         }
 
-        n
+        Self::wrap(ExtInt::from(n))
     }
 
     pub fn abs(self) -> Int {
