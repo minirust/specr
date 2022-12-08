@@ -14,6 +14,9 @@ use std::hash::Hash;
 use im::HashSet as IMHashSet;
 use im::HashMap as IMHashMap;
 use im::Vector as IMVector;
+use rand::rngs::ThreadRng;
+use rand::RngCore;
+use rand::thread_rng;
 
 mod int;
 pub use int::*;
