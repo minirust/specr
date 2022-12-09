@@ -107,5 +107,8 @@ impl<T: Obj> List<T> {
         vec.sort_by_key(|t| f(*t));
         *self = vec.into_iter().collect();
     }
-}
 
+    pub fn try_map<O: Obj, E: Obj>(self, f: impl FnMut(T) -> NdResult<O, E>) -> NdResult<List<O>, E> {
+        self.iter().map(f).try_collect()
+    }
+}

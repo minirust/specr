@@ -5,6 +5,7 @@
 #![feature(try_trait_v2_residual)]
 #![feature(decl_macro)]
 #![feature(never_type)]
+#![feature(iterator_try_collect)]
 
 use std::collections::HashSet;
 use std::any::Any;
