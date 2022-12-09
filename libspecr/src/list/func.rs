@@ -49,7 +49,7 @@ impl<T: Obj> List<T> {
         self.0.mutate(|v| v.pop_front())
     }
 
-    pub fn chunks(&self, chunk_size: Int) -> impl Iterator<Item=List<T>> {
+    pub fn chunks(&self, chunk_size: Int) -> List<List<T>> {
         let s = *self;
         let mut i = Int::from(0);
         std::iter::from_fn(move || {
@@ -58,7 +58,7 @@ impl<T: Obj> List<T> {
             let val = s.subslice_with_length(i, size);
             i += chunk_size;
             Some(val)
-        })
+        }).collect()
     }
 
     pub fn reverse(&mut self) {
@@ -108,7 +108,14 @@ impl<T: Obj> List<T> {
         *self = vec.into_iter().collect();
     }
 
-    pub fn try_map<O: Obj, E: Obj>(self, f: impl FnMut(T) -> NdResult<O, E>) -> NdResult<List<O>, E> {
-        self.iter().map(f).try_collect()
+    pub fn try_map<O: Obj, E>(self, f: impl FnMut(T) -> E) -> <<E as Try>::Residual as Residual<List<O>>>::TryType
+        where E: Try<Output=O>,
+              <E as Try>::Residual: Residual<List<O>>,
+    {
+        self.iter().map(f).try_collect::<List<O>>()
+    }
+
+    pub fn zip<T2: Obj>(self, other: List<T2>) -> List<(T, T2)> {
+        self.iter().zip(other.iter()).collect()
     }
 }

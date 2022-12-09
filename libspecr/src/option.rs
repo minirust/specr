@@ -1,26 +1,28 @@
-use crate::*;
+use std::ops::*;
 
 /// Extension trait to implement `try_map`.
 pub trait OptionExt<T> {
-    // Ideally, `try_map` would generalize over the error monad.
-    // It should not only work with `NdResult`.
-
-    // I (memoryleak47) have a hunch that this is not possible generally though.
-    // except if you take the return type as generic parameter, which causes inference problems.
-    fn try_map<O, E>(self, f: impl FnOnce(T) -> NdResult<O, E>) -> NdResult<Option<O>, E>;
+    fn try_map<O, E>(self, f: impl FnOnce(T) -> E) -> <<E as Try>::Residual as Residual<Option<O>>>::TryType
+        where E: Try<Output=O>,
+              <E as Try>::Residual: Residual<Option<O>>;
 }
 
 impl<T> OptionExt<T> for Option<T> {
-    fn try_map<O, E>(self, f: impl FnOnce(T) -> NdResult<O, E>) -> NdResult<Option<O>, E> {
-        NdResult(Ok(match self {
+    fn try_map<O, E>(self, f: impl FnOnce(T) -> E) -> <<E as Try>::Residual as Residual<Option<O>>>::TryType
+        where E: Try<Output=O>,
+              <E as Try>::Residual: Residual<Option<O>>
+    {
+        <<<E as Try>::Residual as Residual<Option<O>>>::TryType>::from_output(match self {
             Some(x) => Some(f(x)?),
             None => None,
-        }))
+        })
     }
 }
 
 #[test]
 fn option_ext_test() {
+    use crate::*;
+
     struct In;
     struct Out;
     struct Error;
