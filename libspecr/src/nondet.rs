@@ -39,10 +39,7 @@ impl Distribution<Int> for Range<Int> {
 }
 
 /// The `pick` function from the minirust spec.  See [Non-determinism](https://github.com/RalfJung/minirust/blob/master/README.md#non-determinism).
-pub fn pick<T>(_f: impl Fn(T) -> bool) -> crate::Nondet<T> { todo!() }
-
-/// currently unused, will replace the `pick` above.
-pub fn new_pick<T: Obj>(distr: impl Distribution<T>, f: impl Fn(T) -> bool) -> crate::Nondet<T> {
+pub fn pick<T: Obj>(distr: impl Distribution<T>, f: impl Fn(T) -> bool) -> crate::Nondet<T> {
     let mut rng = thread_rng();
     for _ in 0..50 {
         let s = distr.sample(&mut rng);
@@ -55,7 +52,7 @@ pub fn new_pick<T: Obj>(distr: impl Distribution<T>, f: impl Fn(T) -> bool) -> c
 }
 
 /// The `predict` function from the minirust spec. See [Non-determinism](https://github.com/RalfJung/minirust/blob/master/README.md#non-determinism).
-pub fn predict<T>(_f: impl Fn(T) -> bool) -> crate::Nondet<T> { todo!() }
+pub fn predict<T>(_f: impl Fn(T) -> bool) -> crate::Nondet<T> { unimplemented!() }
 
 impl<T: GcCompat> GcCompat for Nondet<T> {
     fn points_to(&self, m: &mut HashSet<usize>) {
