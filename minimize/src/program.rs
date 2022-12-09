@@ -6,9 +6,9 @@ pub fn translate_program<'tcx>(tcx: rs::TyCtxt<'tcx>) -> mini::Program {
 
     let (entry, _ty) = tcx.entry_fn(()).unwrap();
     let substs_ref: rs::SubstsRef<'tcx> = tcx.intern_substs(&[]);
-    let start = mini::FnName(specr::Name(0));
+    let entry_name = mini::FnName(specr::Name(0));
 
-    fname_map.insert((entry, substs_ref), start);
+    fname_map.insert((entry, substs_ref), entry_name);
 
     // take any not-yet-implemented function:
     while let Some(fname) = fname_map.values().find(|k| !fmap.contains_key(**k)).copied() {
@@ -19,14 +19,56 @@ pub fn translate_program<'tcx>(tcx: rs::TyCtxt<'tcx>) -> mini::Program {
         let body = tcx.optimized_mir(def_id);
         let body = tcx.subst_and_normalize_erasing_regions(substs_ref, rs::ParamEnv::empty(), body.clone());
 
-        let is_start = *def_id == entry;
-        let f = translate_body(body, is_start, &mut fname_map, tcx);
+        let f = translate_body(body, &mut fname_map, tcx);
         fmap.insert(fname, f);
     }
+
+    let number_of_fns = fname_map.len();
+
+    // add a `start` function, which calls `entry`.
+    let start = mini::FnName(specr::Name(number_of_fns as _));
+    fmap.insert(start, mk_start_fn(entry_name));
 
     mini::Program {
         start,
         functions: fmap,
+    }
+}
+
+fn mk_start_fn(entry: mini::FnName) -> mini::Function {
+    let b0_name = mini::BbName(specr::Name(0));
+    let b1_name = mini::BbName(specr::Name(1));
+
+    let b0 = mini::BasicBlock {
+        statements: specr::List::new(),
+        terminator: mini::Terminator::Call {
+            callee: entry,
+            arguments: specr::List::new(),
+            ret: None,
+            next_block: Some(b1_name),
+        },
+    };
+
+    let b1 = mini::BasicBlock {
+        statements: specr::List::new(),
+        terminator: mini::Terminator::CallIntrinsic {
+            intrinsic: mini::Intrinsic::Exit,
+            arguments: specr::List::new(),
+            ret: None,
+            next_block: None,
+        },
+    };
+
+    let mut blocks = specr::Map::new();
+    blocks.insert(b0_name, b0);
+    blocks.insert(b1_name, b1);
+
+    mini::Function {
+        locals: specr::Map::new(),
+        args: specr::List::new(),
+        ret: None,
+        blocks,
+        start: b0_name,
     }
 }
 
@@ -39,7 +81,7 @@ pub struct FnCtxt<'tcx> {
     pub body: rs::Body<'tcx>,
 }
 
-fn translate_body<'tcx>(body: rs::Body<'tcx>, is_start: bool, fnname_map_arg: &mut HashMap<(rs::DefId, rs::SubstsRef<'tcx>), mini::FnName>, tcx: rs::TyCtxt<'tcx>) -> mini::Function {
+fn translate_body<'tcx>(body: rs::Body<'tcx>, fnname_map_arg: &mut HashMap<(rs::DefId, rs::SubstsRef<'tcx>), mini::FnName>, tcx: rs::TyCtxt<'tcx>) -> mini::Function {
     let mut fnname_map = Default::default();
     std::mem::swap(&mut fnname_map, fnname_map_arg);
 
@@ -88,11 +130,7 @@ fn translate_body<'tcx>(body: rs::Body<'tcx>, is_start: bool, fnname_map_arg: &m
 
     // "The first local is the return value pointer, followed by arg_count locals for the function arguments, followed by any user-declared variables and temporaries."
     // - https://doc.rust-lang.org/stable/nightly-rustc/rustc_middle/mir/struct.Body.html
-    let ret = match is_start {
-        false => Some((mini::LocalName(specr::Name(0)), arg_abi())),
-        // the start function has no `ret`.
-        true => None,
-    };
+    let ret = Some((mini::LocalName(specr::Name(0)), arg_abi()));
 
     let mut args = specr::List::default();
     for i in 0..fcx.body.arg_count {
