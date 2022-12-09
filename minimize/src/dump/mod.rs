@@ -23,10 +23,11 @@ fn dump_function(fname: FnName, f: Function, start: bool) {
             format!("{ident}: {ty}")
         }).collect();
     let args = args.join(", ");
-    let mk_unit_ty = || Type::Tuple { fields: specr::List::new(), size: specr::Size::ZERO };
-    let ret_ty = f.ret.map(|(l, _)| f.locals.index_at(l).ty)
-                      .unwrap_or_else(mk_unit_ty);
-    let ret_ty = type_to_string(ret_ty);
+
+    let mut ret_ty = String::from("!!!");
+    if let Some((ret, _)) = f.ret {
+        ret_ty = type_to_string(f.locals.index_at(ret).ty);
+    }
     println!("{start_str}fn {fname}({args}) -> {ret_ty} {{");
 
     // dump locals
