@@ -1,4 +1,4 @@
-use crate::mini::*;
+use crate::mini::{Program, FnName, Function, Type, PlaceExpr, ValueExpr, Constant, PtrType, Mutability, BinOp, BinOpInt, Statement, Terminator, LocalName, BbName, IntType, BasicBlock, Signed, Unsigned, Intrinsic, List};
 use crate::*;
 
 mod expr;
@@ -75,6 +75,21 @@ fn dump_statement(st: Statement) {
     }
 }
 
+fn dump_call(callee: &str, arguments: List<ValueExpr>, ret: Option<PlaceExpr>, next_block: Option<BbName>) {
+    let args: Vec<_> = arguments.iter().map(value_expr_to_string).collect();
+    let args = args.join(", ");
+
+    let mut r = String::from("!!!");
+    if let Some(ret) = ret {
+        r = place_expr_to_string(ret);
+    }
+    let mut next = String::new();
+    if let Some(next_block) = next_block {
+        next = format!(" -> {}", bbname_to_string(next_block));
+    }
+    println!("    {r} = {callee}({args}){next};");
+}
+
 fn dump_terminator(t: Terminator) {
     match t {
         Terminator::Goto(bb) => {
@@ -100,16 +115,26 @@ fn dump_terminator(t: Terminator) {
             ret,
             next_block,
         } => {
-            let args: Vec<_> = arguments.iter().map(|(x, _)| value_expr_to_string(x)).collect();
-            let args = args.join(", ");
-
-            let ret = place_expr_to_string(ret.0);
             let callee = fnname_to_string(callee);
-            let next = bbname_to_string(next_block);
-            println!("    {ret} = {callee}({args}) -> {next};");
+            let arguments = arguments.iter().map(|(x, _)| x).collect();
+            let ret = ret.map(|(x, _)| x);
+            dump_call(&callee, arguments, ret, next_block);
         },
         Terminator::Return => {
             println!("    return;");
-        }
+        },
+        Terminator::CallIntrinsic {
+            intrinsic,
+            arguments,
+            ret,
+            next_block,
+        } => {
+            let callee = match intrinsic {
+                Intrinsic::Exit => "exit",
+                Intrinsic::PrintStdout => "print",
+                Intrinsic::PrintStderr => "eprint",
+            };
+            dump_call(callee, arguments, ret, next_block);
+        },
     }
 }

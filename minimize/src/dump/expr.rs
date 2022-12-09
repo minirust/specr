@@ -1,5 +1,4 @@
-use crate::*;
-use crate::mini::*;
+use super::*;
 
 pub fn place_expr_to_string(p: PlaceExpr) -> String {
     match p {

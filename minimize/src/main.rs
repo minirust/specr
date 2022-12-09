@@ -1,6 +1,5 @@
 #![feature(rustc_private)]
 #![feature(box_patterns)]
-#![feature(let_else)]
 
 // This is required since `get::Cb` contained `Option<mini::Program>`.
 #![recursion_limit = "256"]

@@ -57,8 +57,8 @@ fn translate_terminator<'tcx>(terminator: &rs::Terminator<'tcx>, fcx: &mut FnCtx
             mini::Terminator::Call {
                 callee: fcx.fnname_map[&key],
                 arguments: args.iter().map(|x| (translate_operand(x, fcx), arg_abi())).collect(),
-                ret: (translate_place(&destination, fcx), arg_abi()),
-                next_block: fcx.bbname_map[&target.unwrap()], // TODO handle `None`: it means that the call necessarily diverges, see the docs.
+                ret: Some((translate_place(&destination, fcx), arg_abi())),
+                next_block: target.as_ref().map(|t| fcx.bbname_map[t]),
             }
         }
         // TODO Assert is unsupported!
