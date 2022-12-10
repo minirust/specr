@@ -34,7 +34,7 @@ impl<T> Clone for GcCow<T> {
 impl<T> Copy for GcCow<T> {}
 
 pub fn mark_and_sweep(roots: HashSet<usize>) {
-    let st = GC_STATE.lock().unwrap();
+    let st = GC_STATE.try_lock().unwrap();
     let mut st = st.borrow_mut();
     st.mark_and_sweep(roots);
 }
@@ -42,7 +42,7 @@ pub fn mark_and_sweep(roots: HashSet<usize>) {
 // methods for specr-internal use:
 impl<T: 'static> GcCow<T> {
     pub fn new(t: T) -> Self where T: GcCompat {
-        let st = GC_STATE.lock().unwrap();
+        let st = GC_STATE.try_lock().unwrap();
         let mut b = st.borrow_mut();
         b.alloc(t)
     }
@@ -53,7 +53,7 @@ impl<T: 'static> GcCow<T> {
 
     // will fail, if `f` manipulates GC_STATE.
     pub fn call_ref_unchecked<O>(self, f: impl FnOnce(&T) -> O) -> O {
-        let st = GC_STATE.lock().unwrap();
+        let st = GC_STATE.try_lock().unwrap();
         let st: &GcState = &*st.borrow();
         let x: &dyn Any = st.objs.get(self.idx).as_any();
         let x = x.downcast_ref::<T>().unwrap();
@@ -73,7 +73,7 @@ impl<T: 'static> GcCow<T> {
     // the same as above with an argument.
     // will fail, if `f` manipulates GC_STATE.
     pub fn call_ref1_unchecked<U, O>(self, arg: GcCow<U>, f: impl FnOnce(&T, &U) -> O) -> O where T: GcCompat, U: GcCompat {
-        let st = GC_STATE.lock().unwrap();
+        let st = GC_STATE.try_lock().unwrap();
         let st: &GcState = &*st.borrow();
         let x: &dyn Any = st.objs.get(self.idx).as_any();
         let x = x.downcast_ref::<T>().unwrap();
@@ -87,13 +87,15 @@ impl<T: 'static> GcCow<T> {
     // will fail, if `f` manipulates GC_STATE.
     pub fn call_mut1_unchecked<U, O>(&mut self, arg: GcCow<U>, f: impl FnOnce(&mut T, &U) -> O) -> O where T: GcCompat + Clone, U: GcCompat {
         let mut val = self.get();
-        let st = GC_STATE.lock().unwrap();
-        let st: &GcState = &*st.borrow();
+        let out = {
+            let st = GC_STATE.try_lock().unwrap();
+            let st: &GcState = &*st.borrow();
 
-        let arg: &dyn Any = st.objs.get(arg.idx).as_any();
-        let arg = arg.downcast_ref::<U>().unwrap();
+            let arg: &dyn Any = st.objs.get(arg.idx).as_any();
+            let arg = arg.downcast_ref::<U>().unwrap();
 
-        let out = f(&mut val, arg);
+            f(&mut val, arg)
+        };
 
         *self = GcCow::new(val);
 
