@@ -5,7 +5,9 @@ mod expr;
 use expr::*;
 
 pub fn dump_program(prog: &Program) {
-    for (fname, f) in prog.functions.iter() {
+    let mut fns: Vec<(_, _)> = prog.functions.iter().collect();
+    fns.sort_by_key(|(k, _)| k.0);
+    for (fname, f) in fns {
         let start = prog.start == fname;
         dump_function(fname, f, start);
     }
@@ -38,7 +40,9 @@ fn dump_function(fname: FnName, f: Function, start: bool) {
         println!("  let {}: {};", localname_to_string(l), type_to_string(ty));
     }
 
-    for (bbname, bb) in f.blocks.iter() {
+    let mut blocks: Vec<(_, _)> = f.blocks.iter().collect();
+    blocks.sort_by_key(|(k, _)| k.0);
+    for (bbname, bb) in blocks {
         let start = f.start == bbname;
         dump_bb(bbname, bb, start);
     }
