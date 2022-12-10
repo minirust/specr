@@ -70,11 +70,7 @@ fn translate_terminator<'tcx>(terminator: &rs::Terminator<'tcx>, fcx: &mut FnCtx
                     next_block: target.as_ref().map(|t| fcx.bbname_map[t]),
                 }
             }
-        }
-        // TODO Assert is unsupported!
-        rs::TerminatorKind::Assert { target, .. } => {
-            mini::Terminator::Goto(fcx.bbname_map[&target])
-        }
+        },
         x => {
             dbg!(x);
             todo!()

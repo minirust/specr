@@ -3,7 +3,7 @@ use crate::*;
 pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> mini::ValueExpr {
     match rv {
         rs::Rvalue::Use(operand) => translate_operand(operand, fcx),
-        rs::Rvalue::CheckedBinaryOp(bin_op, box (l, r)) => {
+        rs::Rvalue::CheckedBinaryOp(bin_op, box (l, r)) | rs::Rvalue::BinaryOp(bin_op, box (l, r)) => {
             let lty = l.ty(&fcx.body, fcx.tcx);
             let rty = r.ty(&fcx.body, fcx.tcx);
 

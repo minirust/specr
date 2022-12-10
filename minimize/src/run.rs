@@ -4,7 +4,7 @@ pub fn run_program(prog: mini::Program) {
     let specr::NdResult(Err(t_info)) = run_program_impl(prog) else { unreachable!() };
 
     match t_info {
-        mini::TerminationInfo::MachineStop(_) => println!("Exiting gracefully."),
+        mini::TerminationInfo::MachineStop => { /* silent exit. */ },
         mini::TerminationInfo::Ub(err) => println!("UB: {}", err),
         _ => todo!(),
     }
