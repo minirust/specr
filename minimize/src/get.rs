@@ -26,9 +26,7 @@ pub fn get_mini() -> mini::Program {
         "-Zmir-opt-level=0".to_string(),
         "--cfg=miri".to_string(),
         "-Cdebug-assertions=on".to_string(),
-
-        // FIXME this one doesn't work as of now.
-        // "-Zextra-const-ub-checks".to_string(),
+        "-Zextra-const-ub-checks".to_string(),
     ];
     let mut cb = Cb(None);
     RunCompiler::new(&args, &mut cb).run().unwrap();
