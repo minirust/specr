@@ -49,16 +49,26 @@ fn translate_terminator<'tcx>(terminator: &rs::Terminator<'tcx>, fcx: &mut FnCtx
             let rs::ConstantKind::Val(_, f) = f.literal else { panic!() };
             let rs::TyKind::FnDef(f, substs_ref) = f.kind() else { panic!() };
             let key = (*f, *substs_ref);
-            if !fcx.fnname_map.contains_key(&key) {
-                let fname = fcx.fnname_map.len();
-                let fname = mini::FnName(specr::Name(fname as _));
-                fcx.fnname_map.insert(key, fname);
-            }
-            mini::Terminator::Call {
-                callee: fcx.fnname_map[&key],
-                arguments: args.iter().map(|x| (translate_operand(x, fcx), arg_abi())).collect(),
-                ret: Some((translate_place(&destination, fcx), arg_abi())),
-                next_block: target.as_ref().map(|t| fcx.bbname_map[t]),
+            // TODO this part should be extracted to somewhere!
+            if f.is_local() {
+                if !fcx.fnname_map.contains_key(&key) {
+                    let fname = fcx.fnname_map.len();
+                    let fname = mini::FnName(specr::Name(fname as _));
+                    fcx.fnname_map.insert(key, fname);
+                }
+                mini::Terminator::Call {
+                    callee: fcx.fnname_map[&key],
+                    arguments: args.iter().map(|x| (translate_operand(x, fcx), arg_abi())).collect(),
+                    ret: Some((translate_place(&destination, fcx), arg_abi())),
+                    next_block: target.as_ref().map(|t| fcx.bbname_map[t]),
+                }
+            } else { // intrinsics!
+                mini::Terminator::CallIntrinsic {
+                    intrinsic: mini::Intrinsic::PrintStdout,
+                    arguments: args.iter().map(|x| translate_operand(x, fcx)).collect(),
+                    ret: None,
+                    next_block: target.as_ref().map(|t| fcx.bbname_map[t]),
+                }
             }
         }
         // TODO Assert is unsupported!

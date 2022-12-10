@@ -15,6 +15,10 @@ pub fn get_mini() -> mini::Program {
         "file.rs".to_string(),
         "--sysroot".to_string(),
         sysroot(),
+        "-L".to_string(),
+        "./intrinsics/target/debug".to_string(),
+        "-l".to_string(),
+        "intrinsics".to_string(),
 
         // flags taken from miŕi (see https://github.com/rust-lang/miri/blob/master/src/lib.rs#L116)
         "-Zalways-encode-mir".to_string(),
