@@ -2,11 +2,11 @@ use crate::*;
 
 #[const_trait]
 pub trait MonadicReturn<T> {
-	fn monadic_return(t: T) -> Self;
+    fn monadic_return(t: T) -> Self;
 }
 
 pub const fn ret<I, O: ~const MonadicReturn<I>>(i: I) -> O {
-	O::monadic_return(i)
+    O::monadic_return(i)
 }
 
 impl<T> const MonadicReturn<T> for T { fn monadic_return(t: T) -> Self { t } }
@@ -17,11 +17,9 @@ impl<T, E> const MonadicReturn<T> for NdResult<T, E> { fn monadic_return(t: T) -
 
 #[test]
 fn monadic_return_test() {
-	let _: i32 = ret(5);
-	let _: Option<i32> = ret(5);
-	let _: Result<i32, ()> = ret(5);
-	let _: Nondet<i32> = ret(5);
-	let _: NdResult<i32, ()> = ret(5);
+    let _: i32 = ret(5);
+    let _: Option<i32> = ret(5);
+    let _: Result<i32, ()> = ret(5);
+    let _: Nondet<i32> = ret(5);
+    let _: NdResult<i32, ()> = ret(5);
 }
-
-
