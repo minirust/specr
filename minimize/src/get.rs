@@ -4,15 +4,15 @@ use crate::*;
 use rustc_interface::{Queries, interface::Compiler};
 use rustc_driver::{RunCompiler, Compilation, Callbacks};
 
-pub fn get_mini() -> mini::Program {
-    if !std::path::Path::new("file.rs").exists() {
+pub fn get_mini(file: String) -> mini::Program {
+    if !Path::new(&file).exists() {
         eprintln!("You need to define some `file.rs` in order to run `minimize`.");
         std::process::exit(1);
     }
 
     let args = [
         ".".to_string(),
-        "file.rs".to_string(),
+        file,
         "--sysroot".to_string(),
         sysroot(),
 

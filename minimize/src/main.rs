@@ -54,11 +54,16 @@ mod get;
 use get::get_mini;
 
 use std::collections::HashMap;
+use std::path::Path;
 
 fn main() {
-    let prog = get_mini();
+    let file = std::env::args().skip(1)
+                               .filter(|x| !x.starts_with('-'))
+                               .next()
+                               .unwrap_or_else(|| String::from("file.rs"));
+    let prog = get_mini(file);
 
-    let dump = std::env::args().any(|x| x == "--dump");
+    let dump = std::env::args().skip(1).any(|x| x == "--dump");
     if dump {
         dump_program(&prog);
     } else {

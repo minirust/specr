@@ -1,6 +1,12 @@
-// These functions are is merely mocks.
-// The actual implementation will be added by `minimize`.
+// Minimize will replace each call to this function by a `CallIntrinsic`.
+pub fn print<T: Show>(t: T) {
+    println!("{}", t.show());
+}
 
-pub fn print<T>(_t: T) { unreachable!() }
-pub fn eprint<T>(_t: T) { unreachable!() }
-pub fn exit() { unreachable!() }
+pub trait Show {
+    fn show(&self) -> String;
+}
+
+impl Show for i32 {
+    fn show(&self) -> String { self.to_string() }
+}

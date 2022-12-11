@@ -15,6 +15,7 @@ pub fn layout_of<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> mini::Layout 
     }
 }
 
+#[allow(unused)]
 pub fn size_of<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> specr::Size {
     let a = rs::ParamEnv::empty().and(ty);
     let layout = tcx.layout_of(a).unwrap().layout;

@@ -57,9 +57,6 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
             mini::ValueExpr::AddrOf { target, ptr_ty }
         },
         rs::Rvalue::AddressOf(_mutbl, place) => {
-            let ty = place.ty(&fcx.body, fcx.tcx).ty;
-            let pointee = layout_of(ty, fcx.tcx);
-
             let place = translate_place(place, fcx);
             let target = specr::GcCow::new(place);
 
@@ -148,7 +145,7 @@ pub fn translate_place<'tcx>(place: &rs::Place<'tcx>, fcx: &mut FnCtxt<'tcx>) ->
     let mut expr = mini::PlaceExpr::Local(fcx.localname_map[&place.local]);
     for (i, proj) in place.projection.iter().enumerate() {
         match proj {
-            rs::ProjectionElem::Field(f, ty) => {
+            rs::ProjectionElem::Field(f, _ty) => {
                 let f = f.index();
                 let indirected = specr::GcCow::new(expr);
                 expr = mini::PlaceExpr::Field {

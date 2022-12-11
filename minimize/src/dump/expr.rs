@@ -56,7 +56,7 @@ pub fn value_expr_to_string(v: ValueExpr) -> String {
             };
             format!("&{mutbl}{target}")
         },
-        ValueExpr::AddrOf { target, ptr_ty: PtrType::Box { .. } } => {
+        ValueExpr::AddrOf { target: _, ptr_ty: PtrType::Box { .. } } => {
             panic!("what? AddrOf with Box?")
         },
         ValueExpr::BinOp { operator: BinOp::Int(int_op, int_ty), left, right } => {
