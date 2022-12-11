@@ -1,6 +1,6 @@
-# specr
+# specr-transpile
 
-specr helps building a `minirust` interpreter.
+specr-transpile helps building a `minirust` interpreter.
 It does that by transpiling the Pseudorust code to actual Rust code.
 
 The code is WIP, highly unstable.
