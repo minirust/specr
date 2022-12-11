@@ -3,7 +3,9 @@ use super::*;
 pub fn place_expr_to_string(p: PlaceExpr) -> String {
     match p {
         PlaceExpr::Local(l) => localname_to_string(l),
-        PlaceExpr::Deref { .. } => format!("{:?}", p),
+        PlaceExpr::Deref { operand, .. } => {
+            format!("*{}", value_expr_to_string(operand.get()))
+        },
         PlaceExpr::Field { root, field } => {
             let root = root.get();
             format!("{}.{}", place_expr_to_string(root), field)
