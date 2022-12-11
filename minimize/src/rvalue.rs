@@ -161,8 +161,7 @@ pub fn translate_place<'tcx>(place: &rs::Place<'tcx>, fcx: &mut FnCtxt<'tcx>) ->
                 };
                 let x = specr::GcCow::new(x);
 
-                // TODO is this ptype correct?
-                let ty = rs::Place::ty_from(place.local, &place.projection[..i], &fcx.body, fcx.tcx).ty;
+                let ty = rs::Place::ty_from(place.local, &place.projection[..(i+1)], &fcx.body, fcx.tcx).ty;
                 let ptype = place_type_of(ty, fcx);
 
                 expr = mini::PlaceExpr::Deref {
