@@ -7,7 +7,7 @@ mod obj;
 pub use obj::*;
 
 // The GcCow primites are only accessible through the `hidden` module.
-pub use crate::gccow::{GcCow, GcCompat};
+pub use crate::gccow::{GcCow, GcCompat, mark_and_sweep};
 
 // TODO this function panics in some cases. I should handle those cases.
 pub fn int_to_usize(b: Int) -> usize {
