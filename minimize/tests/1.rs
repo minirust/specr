@@ -1,6 +1,7 @@
-extern crate intrinsics;
-use intrinsics::print;
+extern {
+    fn print_i32(x: i32);
+}
 
 fn main() {
-    print(42);
+    unsafe { print_i32(42) };
 }

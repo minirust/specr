@@ -50,7 +50,7 @@ fn translate_terminator<'tcx>(terminator: &rs::Terminator<'tcx>, fcx: &mut FnCtx
             let rs::TyKind::FnDef(f, substs_ref) = f.kind() else { panic!() };
             let key = (*f, *substs_ref);
             // TODO this part should be extracted to somewhere!
-            if f.is_local() {
+            if !fcx.tcx.is_foreign_item(f) {
                 if !fcx.fnname_map.contains_key(&key) {
                     let fname = fcx.fnname_map.len();
                     let fname = mini::FnName(specr::Name(fname as _));

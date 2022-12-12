@@ -1,11 +1,9 @@
-// Minimize will replace each call to this function by a `CallIntrinsic`.
-pub fn print<T: Show>(t: T) {
-    println!("{}", t.show());
+#[no_mangle]
+pub fn print_i32(t: i32) {
+    println!("{}", t);
 }
 
-pub trait Show {
-    fn show(&self) -> String;
+#[no_mangle]
+pub fn print_i64(t: i64) {
+    println!("{}", t);
 }
-
-impl Show for i32 { fn show(&self) -> String { self.to_string() } }
-impl Show for i64 { fn show(&self) -> String { self.to_string() } }

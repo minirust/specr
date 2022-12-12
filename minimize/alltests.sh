@@ -2,13 +2,6 @@
 
 set -e
 
-# setup of tmp directory
-x="/tmp/minimize-testcrate"
-[ -d "$x" ] && rm -r "$x"
-cargo new "$x" --quiet
-echo "intrinsics = { path = \"$(pwd)/intrinsics\"}" >> "$x/Cargo.toml"
-
-# actual testing
 for i in $(find tests -type f | cut -d "/" -f 2 | cut -d "." -f 1 | sort -h)
 do
     echo "========="
@@ -18,10 +11,15 @@ do
 
     res1=$(cargo r --quiet "tests/${i}.rs")
     echo "$res1"
-    cp "tests/${i}.rs" "$x/src/main.rs"
-    res2=$(cargo run --quiet --manifest-path="$x/Cargo.toml")
+
     echo "----------"
+
+    rustc "tests/${i}.rs" -o out -L ./intrinsics/target/debug -l intrinsics -Zalways-encode-mir -Zmir-emit-retag -Zmir-opt-level=0 --cfg=miri -Zextra-const-ub-checks -Cdebug-assertions=off
+    res2=$(./out)
+    rm ./out
+
     echo "$res2"
+
     if [[ ! "$res1" == "$res2" ]]; then
         echo different output:
         echo "$res1"
