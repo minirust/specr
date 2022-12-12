@@ -108,6 +108,26 @@ impl<T: Obj> List<T> {
         *self = vec.into_iter().collect();
     }
 
+    pub fn zip<T2: Obj>(self, other: List<T2>) -> List<(T, T2)> {
+        self.iter().zip(other.iter()).collect()
+    }
+
+    pub fn any(self, f: impl FnMut(T) -> bool) -> bool {
+        self.iter().any(f)
+    }
+
+    pub fn all(self, f: impl FnMut(T) -> bool) -> bool {
+        self.iter().all(f)
+    }
+
+    pub fn map<O: Obj>(self, f: impl FnMut(T) -> O) -> List<O> {
+        self.iter().map(f).collect()
+    }
+
+    pub fn flat_map<O: Obj>(self, f: impl FnMut(T) -> List<O>) -> List<O> {
+        self.iter().flat_map(f).collect()
+    }
+
     pub fn try_map<O: Obj, E>(self, f: impl FnMut(T) -> E) -> <<E as Try>::Residual as Residual<List<O>>>::TryType
         where E: Try<Output=O>,
               <E as Try>::Residual: Residual<List<O>>,
@@ -115,7 +135,4 @@ impl<T: Obj> List<T> {
         self.iter().map(f).try_collect::<List<O>>()
     }
 
-    pub fn zip<T2: Obj>(self, other: List<T2>) -> List<(T, T2)> {
-        self.iter().zip(other.iter()).collect()
-    }
 }
