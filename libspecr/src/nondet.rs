@@ -13,13 +13,20 @@ pub trait Distribution<T> {
     fn sample(&self, rng: &mut ThreadRng) -> T;
 }
 
-impl Distribution<Int> for Range<Int> {
+pub struct IntDistribution {
+    pub start: Int,
+    pub end: Int,
+    pub divisor: Int,
+}
+
+impl Distribution<Int> for IntDistribution {
     fn sample(&self, rng: &mut ThreadRng) -> Int {
-        let start = self.start.ext();
-        let end = self.end.ext();
+        let start = &self.start.ext();
+        let end = &self.end.ext();
+        let divisor = &self.divisor.ext();
 
         assert!(start < end);
-        let range = (end - &start).to_biguint().unwrap();
+        let range = (end - start).to_biguint().unwrap();
 
         // we first generate a random number `ext` in 0..range
         // we use `to_bytes_be` to get the number of bytes required to store a number in 0..range.
@@ -30,9 +37,15 @@ impl Distribution<Int> for Range<Int> {
         let uint: ExtUint = uint % range;
         let ext: ExtInt = uint.into();
 
-        // `out` in start..end, because
-        // `ext` in 0..range
-        let out = ext + start;
+        // `out` in start..end, because `ext` in 0..range
+        let mut out = ext + start;
+
+        // This makes `out % divisor == 0`.
+        out -= &out % divisor;
+        if &out < start {
+            out += divisor;
+            assert!(&out < end);
+        }
 
         Int::wrap(out)
     }
