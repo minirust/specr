@@ -44,44 +44,44 @@ fn translate_terminator<'tcx>(terminator: &rs::Terminator<'tcx>, fcx: &mut FnCtx
     match &terminator.kind {
         rs::TerminatorKind::Return => mini::Terminator::Return,
         rs::TerminatorKind::Goto { target } => mini::Terminator::Goto(fcx.bbname_map[&target]),
-        rs::TerminatorKind::Call { func, target, destination, args, .. } => {
-            let rs::Operand::Constant(box f) = func else { panic!() };
-            let rs::ConstantKind::Val(_, f) = f.literal else { panic!() };
-            let rs::TyKind::FnDef(f, substs_ref) = f.kind() else { panic!() };
-            let key = (*f, *substs_ref);
-            // TODO this part should be extracted to somewhere!
-
-            // check intrinsics
-            if fcx.tcx.crate_name(f.krate).as_str() == "intrinsics" {
-                let intrinsic = match fcx.tcx.item_name(*f).as_str() {
-                    "print" => mini::Intrinsic::PrintStdout,
-                    "eprint" => mini::Intrinsic::PrintStderr,
-                    "exit" => mini::Intrinsic::Exit,
-                    name => panic!("unsupported intrinsic `{}`", name),
-                };
-                mini::Terminator::CallIntrinsic {
-                    intrinsic,
-                    arguments: args.iter().map(|x| translate_operand(x, fcx)).collect(),
-                    ret: None,
-                    next_block: target.as_ref().map(|t| fcx.bbname_map[t]),
-                }
-            } else {
-                if !fcx.fnname_map.contains_key(&key) {
-                    let fname = fcx.fnname_map.len();
-                    let fname = mini::FnName(specr::Name(fname as _));
-                    fcx.fnname_map.insert(key, fname);
-                }
-                mini::Terminator::Call {
-                    callee: fcx.fnname_map[&key],
-                    arguments: args.iter().map(|x| (translate_operand(x, fcx), arg_abi())).collect(),
-                    ret: Some((translate_place(&destination, fcx), arg_abi())),
-                    next_block: target.as_ref().map(|t| fcx.bbname_map[t]),
-                }
-            }
-        },
+        rs::TerminatorKind::Call { func, target, destination, args, .. } => translate_call(fcx, func, args, destination, target),
         x => {
             dbg!(x);
             todo!()
+        }
+    }
+}
+
+fn translate_call<'tcx>(fcx: &mut FnCtxt<'tcx>, func: &rs::Operand<'tcx>, args: &[rs::Operand<'tcx>], destination: &rs::Place<'tcx>, target: &Option<rs::BasicBlock>) -> mini::Terminator {
+    let rs::Operand::Constant(box f) = func else { panic!() };
+    let rs::ConstantKind::Val(_, f) = f.literal else { panic!() };
+    let rs::TyKind::FnDef(f, substs_ref) = f.kind() else { panic!() };
+    let key = (*f, *substs_ref);
+
+    if fcx.tcx.crate_name(f.krate).as_str() == "intrinsics" {
+        let intrinsic = match fcx.tcx.item_name(*f).as_str() {
+            "print" => mini::Intrinsic::PrintStdout,
+            "eprint" => mini::Intrinsic::PrintStderr,
+            "exit" => mini::Intrinsic::Exit,
+            name => panic!("unsupported intrinsic `{}`", name),
+        };
+        mini::Terminator::CallIntrinsic {
+            intrinsic,
+            arguments: args.iter().map(|x| translate_operand(x, fcx)).collect(),
+            ret: None,
+            next_block: target.as_ref().map(|t| fcx.bbname_map[t]),
+        }
+    } else {
+        if !fcx.fnname_map.contains_key(&key) {
+            let fname = fcx.fnname_map.len();
+            let fname = mini::FnName(specr::Name(fname as _));
+            fcx.fnname_map.insert(key, fname);
+        }
+        mini::Terminator::Call {
+            callee: fcx.fnname_map[&key],
+            arguments: args.iter().map(|x| (translate_operand(x, fcx), arg_abi())).collect(),
+            ret: Some((translate_place(&destination, fcx), arg_abi())),
+            next_block: target.as_ref().map(|t| fcx.bbname_map[t]),
         }
     }
 }
