@@ -11,6 +11,8 @@ TEST_PATH="/tmp/minimize-testing"
 arg="$(readlink -f "$1")"
 wd="$(pwd)"
 
+(cd ../intrinsics; cargo b)
+
 [ ! -d "$TEST_PATH" ] && mkdir "$TEST_PATH"
 [ -f "$TEST_PATH/out" ] && rm "$TEST_PATH/out"
 cp "$wd/../../rust-toolchain.toml" "$TEST_PATH"
