@@ -53,8 +53,14 @@ fn translate_terminator<'tcx>(terminator: &rs::Terminator<'tcx>, fcx: &mut FnCtx
 
             // check intrinsics
             if fcx.tcx.crate_name(f.krate).as_str() == "intrinsics" {
+                let intrinsic = match fcx.tcx.item_name(*f).as_str() {
+                    "print" => mini::Intrinsic::PrintStdout,
+                    "eprint" => mini::Intrinsic::PrintStderr,
+                    "exit" => mini::Intrinsic::Exit,
+                    name => panic!("unsupported intrinsic `{}`", name),
+                };
                 mini::Terminator::CallIntrinsic {
-                    intrinsic: mini::Intrinsic::PrintStdout,
+                    intrinsic,
                     arguments: args.iter().map(|x| translate_operand(x, fcx)).collect(),
                     ret: None,
                     next_block: target.as_ref().map(|t| fcx.bbname_map[t]),
