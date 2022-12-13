@@ -1,9 +1,9 @@
-extern {
-    fn print_i32(x: i32);
-}
+extern crate intrinsics;
+use intrinsics::*;
 
 fn main() {
     let x = 2;
     let y = &x as *const i32;
-    unsafe { print_i32(*y) };
+    let z = unsafe { *y };
+    print(z);
 }
