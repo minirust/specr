@@ -6,6 +6,7 @@ set -e
 
 TEST_PATH="/tmp/minimize-testing"
 
+[ ! -f "rust.sh" ] && echo 'You need to be in the `tests/` folder to execute `rust.sh`' && exit 1
 [ -z $1 ] && echo "missing file to execute!" && exit 1
 
 arg="$(readlink -f "$1")"
