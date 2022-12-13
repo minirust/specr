@@ -7,3 +7,10 @@ edition = "2021"
 
 [dependencies]
 gen-minirust = { path = "../gen-minirust" }
+
+[dev-dependencies]
+ui_test = "0.5"
+
+[[test]]
+name = "compiletest"
+harness = false
