@@ -8,7 +8,6 @@ pub use to::ToInt;
 
 /// The external Bigint Type, which we use under the hood.
 pub(crate) use num_bigint::BigInt as ExtInt;
-pub(crate) use num_bigint::BigUint as ExtUint;
 use num_traits::ToPrimitive;
 
 #[derive(Copy, Clone, Debug, Hash)]

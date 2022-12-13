@@ -7,53 +7,9 @@ use std::ops::*;
 /// Non-determinism primitive. See [Non-determinism](https://github.com/RalfJung/minirust/blob/master/README.md#non-determinism).
 pub struct Nondet<T>(pub T);
 
-/// A probability distribution over values of type `T`.
-pub trait Distribution<T> {
-    /// samples a value from the distribution.
-    fn sample(&self, rng: &mut ThreadRng) -> T;
-}
-
-pub struct IntDistribution {
-    pub start: Int,
-    pub end: Int,
-    pub divisor: Int,
-}
-
-impl Distribution<Int> for IntDistribution {
-    fn sample(&self, rng: &mut ThreadRng) -> Int {
-        let start = &self.start.ext();
-        let end = &self.end.ext();
-        let divisor = &self.divisor.ext();
-
-        assert!(start < end);
-        let range = (end - start).to_biguint().unwrap();
-
-        // we first generate a random number `ext` in 0..range
-        // we use `to_bytes_be` to get the number of bytes required to store a number in 0..range.
-        let mut bytes = range.to_bytes_be();
-        rng.fill_bytes(&mut bytes);
-        // This number might be `>= range` still.
-        let uint: ExtUint = ExtUint::from_bytes_be(&bytes);
-        let uint: ExtUint = uint % range;
-        let ext: ExtInt = uint.into();
-
-        // `out` in start..end, because `ext` in 0..range
-        let mut out = ext + start;
-
-        // This makes `out % divisor == 0`.
-        out -= &out % divisor;
-        if &out < start {
-            out += divisor;
-            assert!(&out < end);
-        }
-
-        Int::wrap(out)
-    }
-}
-
 /// The `pick` function from the minirust spec.  See [Non-determinism](https://github.com/RalfJung/minirust/blob/master/README.md#non-determinism).
 pub fn pick<T: Obj>(distr: impl Distribution<T>, f: impl Fn(T) -> bool) -> crate::Nondet<T> {
-    let mut rng = thread_rng();
+    let mut rng = rand::thread_rng();
     for _ in 0..50 {
         let s = distr.sample(&mut rng);
         if f(s) {
