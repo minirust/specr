@@ -86,7 +86,7 @@ fn int_type_to_string(int_ty: IntType) -> String {
         Signed => "i",
         Unsigned => "u",
     };
-    let bits = specr::int_to_usize(int_ty.size.bits());
+    let bits = int_to_usize(int_ty.size.bits());
 
     format!("{signed}{bits}")
 }

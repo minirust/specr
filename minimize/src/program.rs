@@ -1,12 +1,12 @@
 use crate::*;
 
-pub fn translate_program<'tcx>(tcx: rs::TyCtxt<'tcx>) -> mini::Program {
-    let mut fname_map: HashMap<(rs::DefId, rs::SubstsRef<'tcx>), mini::FnName> = HashMap::new();
-    let mut fmap: specr::Map<mini::FnName, mini::Function> = specr::Map::new();
+pub fn translate_program<'tcx>(tcx: rs::TyCtxt<'tcx>) -> Program {
+    let mut fname_map: HashMap<(rs::DefId, rs::SubstsRef<'tcx>), FnName> = HashMap::new();
+    let mut fmap: Map<FnName, Function> = Map::new();
 
     let (entry, _ty) = tcx.entry_fn(()).unwrap();
     let substs_ref: rs::SubstsRef<'tcx> = tcx.intern_substs(&[]);
-    let entry_name = mini::FnName(specr::Name(0));
+    let entry_name = FnName(Name(0));
 
     fname_map.insert((entry, substs_ref), entry_name);
 
@@ -26,46 +26,46 @@ pub fn translate_program<'tcx>(tcx: rs::TyCtxt<'tcx>) -> mini::Program {
     let number_of_fns = fname_map.len();
 
     // add a `start` function, which calls `entry`.
-    let start = mini::FnName(specr::Name(number_of_fns as _));
+    let start = FnName(Name(number_of_fns as _));
     fmap.insert(start, mk_start_fn(entry_name));
 
-    mini::Program {
+    Program {
         start,
         functions: fmap,
     }
 }
 
-fn mk_start_fn(entry: mini::FnName) -> mini::Function {
-    let b0_name = mini::BbName(specr::Name(0));
-    let b1_name = mini::BbName(specr::Name(1));
+fn mk_start_fn(entry: FnName) -> Function {
+    let b0_name = BbName(Name(0));
+    let b1_name = BbName(Name(1));
 
-    let b0 = mini::BasicBlock {
-        statements: specr::List::new(),
-        terminator: mini::Terminator::Call {
+    let b0 = BasicBlock {
+        statements: List::new(),
+        terminator: Terminator::Call {
             callee: entry,
-            arguments: specr::List::new(),
+            arguments: List::new(),
             ret: None,
             next_block: Some(b1_name),
         },
     };
 
-    let b1 = mini::BasicBlock {
-        statements: specr::List::new(),
-        terminator: mini::Terminator::CallIntrinsic {
-            intrinsic: mini::Intrinsic::Exit,
-            arguments: specr::List::new(),
+    let b1 = BasicBlock {
+        statements: List::new(),
+        terminator: Terminator::CallIntrinsic {
+            intrinsic: Intrinsic::Exit,
+            arguments: List::new(),
             ret: None,
             next_block: None,
         },
     };
 
-    let mut blocks = specr::Map::new();
+    let mut blocks = Map::new();
     blocks.insert(b0_name, b0);
     blocks.insert(b1_name, b1);
 
-    mini::Function {
-        locals: specr::Map::new(),
-        args: specr::List::new(),
+    Function {
+        locals: Map::new(),
+        args: List::new(),
         ret: None,
         blocks,
         start: b0_name,
@@ -74,39 +74,39 @@ fn mk_start_fn(entry: mini::FnName) -> mini::Function {
 
 /// contains read-only data regarding the current function.
 pub struct FnCtxt<'tcx> {
-    pub localname_map: HashMap<rs::Local, mini::LocalName>,
-    pub bbname_map: HashMap<rs::BasicBlock, mini::BbName>,
-    pub fnname_map: HashMap<(rs::DefId, rs::SubstsRef<'tcx>), mini::FnName>,
+    pub localname_map: HashMap<rs::Local, LocalName>,
+    pub bbname_map: HashMap<rs::BasicBlock, BbName>,
+    pub fnname_map: HashMap<(rs::DefId, rs::SubstsRef<'tcx>), FnName>,
     pub tcx: rs::TyCtxt<'tcx>,
     pub body: rs::Body<'tcx>,
 }
 
-fn translate_body<'tcx>(body: rs::Body<'tcx>, fnname_map_arg: &mut HashMap<(rs::DefId, rs::SubstsRef<'tcx>), mini::FnName>, tcx: rs::TyCtxt<'tcx>) -> mini::Function {
+fn translate_body<'tcx>(body: rs::Body<'tcx>, fnname_map_arg: &mut HashMap<(rs::DefId, rs::SubstsRef<'tcx>), FnName>, tcx: rs::TyCtxt<'tcx>) -> Function {
     let mut fnname_map = Default::default();
     std::mem::swap(&mut fnname_map, fnname_map_arg);
 
     // associate names for each mir BB.
-    let mut bbname_map: HashMap<rs::BasicBlock, mini::BbName> = HashMap::new();
+    let mut bbname_map: HashMap<rs::BasicBlock, BbName> = HashMap::new();
     for bb_id in body.basic_blocks.indices() {
         let bbname = bbname_map.len(); // .len() is the next free index
-        let bbname = mini::BbName(specr::Name(bbname as u32));
+        let bbname = BbName(Name(bbname as u32));
         bbname_map.insert(bb_id, bbname);
     }
 
     // bb with id 0 is the start block:
     // see https://doc.rust-lang.org/stable/nightly-rustc/src/rustc_middle/mir/mod.rs.html#1014-1042
-    let start = mini::BbName(specr::Name(0));
+    let start = BbName(Name(0));
 
     // associate names for each mir Local.
-    let mut localname_map: HashMap<rs::Local, mini::LocalName> = HashMap::new();
+    let mut localname_map: HashMap<rs::Local, LocalName> = HashMap::new();
     for local_id in body.local_decls.indices() {
         let localname = localname_map.len(); // .len() is the next free index
-        let localname = mini::LocalName(specr::Name(localname as u32));
+        let localname = LocalName(Name(localname as u32));
         localname_map.insert(local_id, localname);
     }
 
     // convert mirs Local-types to minirust.
-    let mut locals = specr::Map::default();
+    let mut locals = Map::default();
     for (id, localname) in &localname_map {
         let local_decl = &body.local_decls[*id];
         locals.insert(*localname, translate_local(local_decl, tcx));
@@ -122,7 +122,7 @@ fn translate_body<'tcx>(body: rs::Body<'tcx>, fnname_map_arg: &mut HashMap<(rs::
     };
 
     // convert mirs BBs to minirust.
-    let mut blocks = specr::Map::default();
+    let mut blocks = Map::default();
     for (id, bbname) in bbname_map.clone() {
         let bb_data = &body.basic_blocks[id];
         blocks.insert(bbname, translate_bb(bb_data, &mut fcx));
@@ -130,12 +130,12 @@ fn translate_body<'tcx>(body: rs::Body<'tcx>, fnname_map_arg: &mut HashMap<(rs::
 
     // "The first local is the return value pointer, followed by arg_count locals for the function arguments, followed by any user-declared variables and temporaries."
     // - https://doc.rust-lang.org/stable/nightly-rustc/rustc_middle/mir/struct.Body.html
-    let ret = Some((mini::LocalName(specr::Name(0)), arg_abi()));
+    let ret = Some((LocalName(Name(0)), arg_abi()));
 
-    let mut args = specr::List::default();
+    let mut args = List::default();
     for i in 0..fcx.body.arg_count {
         let i = i+1; // this starts counting with 1, as id 0 is the return value of the function.
-        let localname = mini::LocalName(specr::Name(i as _));
+        let localname = LocalName(Name(i as _));
         args.push((localname, arg_abi()));
     }
 
@@ -143,7 +143,7 @@ fn translate_body<'tcx>(body: rs::Body<'tcx>, fnname_map_arg: &mut HashMap<(rs::
 
     std::mem::swap(&mut fnname_map, fnname_map_arg);
 
-    mini::Function {
+    Function {
         locals,
         args,
         ret,
@@ -152,7 +152,7 @@ fn translate_body<'tcx>(body: rs::Body<'tcx>, fnname_map_arg: &mut HashMap<(rs::
     }
 }
 
-fn translate_local<'tcx>(local: &rs::LocalDecl<'tcx>, tcx: rs::TyCtxt<'tcx>) -> mini::PlaceType {
+fn translate_local<'tcx>(local: &rs::LocalDecl<'tcx>, tcx: rs::TyCtxt<'tcx>) -> PlaceType {
     let ty = translate_ty(local.ty, tcx);
 
     // TODO is this `empty` ParamEnv correct? probably not.
@@ -162,14 +162,14 @@ fn translate_local<'tcx>(local: &rs::LocalDecl<'tcx>, tcx: rs::TyCtxt<'tcx>) -> 
     let align = layout.align().pref;
     let align = translate_align(align);
 
-    mini::PlaceType { ty, align }
+    PlaceType { ty, align }
 }
 
-// TODO implement this when mini::ArgAbi is somewhat complete.
-pub fn arg_abi() -> mini::ArgAbi {
-    mini::ArgAbi::Register
+// TODO implement this when ArgAbi is somewhat complete.
+pub fn arg_abi() -> ArgAbi {
+    ArgAbi::Register
 }
 
-pub fn translate_align(align: rs::Align) -> specr::Align {
-    specr::Align::from_bytes(align.bytes())
+pub fn translate_align(align: rs::Align) -> Align {
+    Align::from_bytes(align.bytes())
 }

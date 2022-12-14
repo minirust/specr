@@ -1,10 +1,10 @@
-// This module generates the Mir, and then calls `translate_program` to obtain the `mini::Program`.
+// This module generates the Mir, and then calls `translate_program` to obtain the `Program`.
 
 use crate::*;
 use rustc_interface::{Queries, interface::Compiler};
 use rustc_driver::{RunCompiler, Compilation, Callbacks};
 
-pub fn get_mini(file: String) -> mini::Program {
+pub fn get_mini(file: String) -> Program {
     if !Path::new(&file).exists() {
         eprintln!("You need to define some `file.rs` in order to run `minimize`.");
         std::process::exit(1);
@@ -39,7 +39,7 @@ pub fn get_mini(file: String) -> mini::Program {
     cb.0.unwrap()
 }
 
-struct Cb(Option<mini::Program>);
+struct Cb(Option<Program>);
 
 impl Callbacks for Cb {
     fn after_analysis<'tcx>(&mut self, _compiler: &Compiler, queries: &'tcx Queries<'tcx>) -> Compilation {

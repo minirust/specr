@@ -2,7 +2,7 @@
 #![feature(box_patterns)]
 #![feature(never_type)]
 
-// This is required since `get::Cb` contained `Option<mini::Program>`.
+// This is required since `get::Cb` contained `Option<Program>`.
 #![recursion_limit = "256"]
 
 extern crate rustc_hir;
@@ -20,17 +20,17 @@ mod rs {
 
 extern crate gen_minirust;
 
-mod mini {
-    pub use gen_minirust::lang::*;
-    pub use gen_minirust::mem::*;
-    pub use gen_minirust::prelude::*;
-}
+pub use gen_minirust::lang::*;
+pub use gen_minirust::mem::*;
+pub use gen_minirust::prelude::*;
 
-mod specr {
-    pub use gen_minirust::specr::*;
-    pub use gen_minirust::specr::prelude::*;
-    pub use gen_minirust::specr::hidden::*;
-}
+pub use gen_minirust::specr::*;
+pub use gen_minirust::specr::prelude::*;
+pub use gen_minirust::specr::hidden::*;
+
+pub use std::format;
+pub use std::string::String;
+pub use gen_minirust::prelude::NdResult;
 
 mod program;
 use program::*;

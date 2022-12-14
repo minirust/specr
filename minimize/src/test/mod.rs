@@ -1,4 +1,4 @@
-use crate::{*, mini::*, specr::*};
+use crate::*;
 
 mod env;
 use env::*;
@@ -74,7 +74,7 @@ fn uninit_read() {
             destination: PlaceExpr::Local(l0),
             source: ValueExpr::Load {
                 destructive: false,
-                source: specr::GcCow::new(PlaceExpr::Local(l1)),
+                source: GcCow::new(PlaceExpr::Local(l1)),
             },
         },
     ];

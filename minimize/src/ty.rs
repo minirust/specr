@@ -1,14 +1,14 @@
 use crate::*;
 
 // TODO the ParamEnv might need to be an argument to `layout_of` in the future.
-pub fn layout_of<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> mini::Layout {
+pub fn layout_of<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> Layout {
     let a = rs::ParamEnv::empty().and(ty);
     let layout = tcx.layout_of(a).unwrap().layout;
     let size = translate_size(layout.size());
     let align = translate_align(layout.align().pref);
     let inhabited = !layout.abi().is_uninhabited();
 
-    mini::Layout {
+    Layout {
         size,
         align,
         inhabited,
@@ -16,25 +16,25 @@ pub fn layout_of<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> mini::Layout 
 }
 
 #[allow(unused)]
-pub fn size_of<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> specr::Size {
+pub fn size_of<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> Size {
     let a = rs::ParamEnv::empty().and(ty);
     let layout = tcx.layout_of(a).unwrap().layout;
 
     translate_size(layout.size())
 }
 
-pub fn translate_mutbl(mutbl: rs::Mutability) -> mini::Mutability {
+pub fn translate_mutbl(mutbl: rs::Mutability) -> Mutability {
     match mutbl {
-        rs::Mutability::Mut => mini::Mutability::Mutable,
-        rs::Mutability::Not => mini::Mutability::Immutable,
+        rs::Mutability::Mut => Mutability::Mutable,
+        rs::Mutability::Not => Mutability::Immutable,
     }
 }
 
-pub fn translate_ty<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> mini::Type {
+pub fn translate_ty<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> Type {
     match ty.kind() {
-        rs::TyKind::Bool => mini::Type::Bool,
-        rs::TyKind::Int(int_ty) => mini::Type::Int(translate_int_ty(int_ty)),
-        rs::TyKind::Uint(uint_ty) => mini::Type::Int(translate_uint_ty(uint_ty)),
+        rs::TyKind::Bool => Type::Bool,
+        rs::TyKind::Int(int_ty) => Type::Int(translate_int_ty(int_ty)),
+        rs::TyKind::Uint(uint_ty) => Type::Int(translate_uint_ty(uint_ty)),
         rs::TyKind::Tuple(ts) => {
             let a = rs::ParamEnv::empty().and(ty);
             let layout = tcx.layout_of(a).unwrap().layout;
@@ -50,7 +50,7 @@ pub fn translate_ty<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> mini::Type
                                 (offset, t)
                            }).collect();
 
-            mini::Type::Tuple {
+            Type::Tuple {
                 fields,
                 size,
             }
@@ -73,7 +73,7 @@ pub fn translate_ty<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> mini::Type
                                 (offset, ty)
                            }).collect();
 
-            mini::Type::Tuple {
+            Type::Tuple {
                 fields,
                 size,
             }
@@ -81,21 +81,21 @@ pub fn translate_ty<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> mini::Type
         rs::TyKind::Adt(adt_def, _) if adt_def.is_box() => {
             let ty = ty.boxed_ty();
             let pointee = layout_of(ty, tcx);
-            mini::Type::Ptr(mini::PtrType::Box { pointee })
+            Type::Ptr(PtrType::Box { pointee })
         },
         rs::TyKind::Ref(_, ty, mutbl) => {
             let pointee = layout_of(*ty, tcx);
             let mutbl = translate_mutbl(*mutbl);
-            mini::Type::Ptr(mini::PtrType::Ref { pointee, mutbl } )
+            Type::Ptr(PtrType::Ref { pointee, mutbl } )
         },
         rs::TyKind::RawPtr(rs::TypeAndMut { ty, mutbl: _ }) => {
             let pointee = layout_of(*ty, tcx);
-            mini::Type::Ptr(mini::PtrType::Raw { pointee } )
+            Type::Ptr(PtrType::Raw { pointee } )
         },
         rs::TyKind::Array(ty, c) => {
-            let count = specr::Int::from(c.eval_usize(tcx, rs::ParamEnv::empty()));
-            let elem = specr::GcCow::new(translate_ty(*ty, tcx));
-            mini::Type::Array { elem, count }
+            let count = Int::from(c.eval_usize(tcx, rs::ParamEnv::empty()));
+            let elem = GcCow::new(translate_ty(*ty, tcx));
+            Type::Array { elem, count }
         },
         x => {
             dbg!(x);
@@ -104,7 +104,7 @@ pub fn translate_ty<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> mini::Type
     }
 }
 
-fn translate_int_ty(int_ty: &rs::IntTy) -> mini::IntType {
+fn translate_int_ty(int_ty: &rs::IntTy) -> IntType {
     use rs::IntTy::*;
 
     let size = match int_ty {
@@ -117,12 +117,12 @@ fn translate_int_ty(int_ty: &rs::IntTy) -> mini::IntType {
         I128 => 16,
     };
 
-    let signed = mini::Signedness::Signed;
-    let size = specr::Size::from_bytes(size);
-    mini::IntType { signed, size }
+    let signed = Signedness::Signed;
+    let size = Size::from_bytes(size);
+    IntType { signed, size }
 }
 
-fn translate_uint_ty(uint_ty: &rs::UintTy) -> mini::IntType {
+fn translate_uint_ty(uint_ty: &rs::UintTy) -> IntType {
     use rs::UintTy::*;
 
     let size = match uint_ty {
@@ -134,11 +134,11 @@ fn translate_uint_ty(uint_ty: &rs::UintTy) -> mini::IntType {
         U128 => 16,
     };
 
-    let signed = mini::Signedness::Unsigned;
-    let size = specr::Size::from_bytes(size);
-    mini::IntType { signed, size }
+    let signed = Signedness::Unsigned;
+    let size = Size::from_bytes(size);
+    IntType { signed, size }
 }
 
-fn translate_size(size: rs::Size) -> specr::Size {
-    specr::Size::from_bytes(size.bytes())
+fn translate_size(size: rs::Size) -> Size {
+    Size::from_bytes(size.bytes())
 }

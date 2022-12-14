@@ -1,4 +1,4 @@
-use crate::mini::{Program, FnName, Function, Type, PlaceExpr, ValueExpr, Constant, PtrType, Mutability, BinOp, BinOpInt, Statement, Terminator, LocalName, BbName, IntType, BasicBlock, Signed, Unsigned, Intrinsic, List};
+use crate::{Program, FnName, Function, Type, PlaceExpr, ValueExpr, Constant, PtrType, Mutability, BinOp, BinOpInt, Statement, Terminator, LocalName, BbName, IntType, BasicBlock, Signed, Unsigned, Intrinsic, List};
 use crate::*;
 
 mod expr;
