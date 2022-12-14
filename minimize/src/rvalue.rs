@@ -67,6 +67,21 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
 
             mini::ValueExpr::AddrOf { target, ptr_ty }
         },
+        rs::Rvalue::Aggregate(box rs::AggregateKind::Array(ty), operands) => {
+            let count = specr::Int::from(operands.len());
+            let ty = translate_ty(*ty, fcx.tcx);
+            let ty = mini::Type::Array { elem: specr::GcCow::new(ty), count };
+            let ops: specr::List<_> = operands.iter().map(|x| {
+                let op = translate_operand(x, fcx);
+                let mini::ValueExpr::Constant(c, _) = op else {
+                    panic!("non-constants in array-expr not supported!");
+                };
+
+                c
+            }).collect();
+            let c = mini::Constant::Tuple(ops);
+            mini::ValueExpr::Constant(c, ty)
+        }
         x => {
             dbg!(x);
             todo!()
@@ -169,6 +184,9 @@ pub fn translate_place<'tcx>(place: &rs::Place<'tcx>, fcx: &mut FnCtxt<'tcx>) ->
                     operand: x,
                     ptype,
                 };
+            },
+            rs::ProjectionElem::Index(i) => {
+                todo!("{:?}", i)
             },
             x => todo!("{:?}", x),
         }

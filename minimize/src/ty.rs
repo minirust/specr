@@ -92,6 +92,11 @@ pub fn translate_ty<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> mini::Type
             let pointee = layout_of(*ty, tcx);
             mini::Type::Ptr(mini::PtrType::Raw { pointee } )
         },
+        rs::TyKind::Array(ty, c) => {
+            let count = specr::Int::from(c.eval_usize(tcx, rs::ParamEnv::empty()));
+            let elem = specr::GcCow::new(translate_ty(*ty, tcx));
+            mini::Type::Array { elem, count }
+        },
         x => {
             dbg!(x);
             todo!()
