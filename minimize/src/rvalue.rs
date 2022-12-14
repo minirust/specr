@@ -83,6 +83,12 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
             let c = Constant::Tuple(ops);
             ValueExpr::Constant(c, ty)
         },
+        rs::Rvalue::CopyForDeref(place) => {
+            ValueExpr::Load {
+                destructive: false,
+                source: GcCow::new(translate_place(place, fcx)),
+            }
+        },
         rs::Rvalue::Len(..) => return None, // This is IGNORED. It's generated due to bounds checking.
         x => {
             dbg!(x);
