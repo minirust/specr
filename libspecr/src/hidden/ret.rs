@@ -17,9 +17,11 @@ impl<T, E> const MonadicReturn<T> for NdResult<T, E> { fn monadic_return(t: T) -
 
 #[test]
 fn monadic_return_test() {
-    let _: i32 = ret(5);
-    let _: Option<i32> = ret(5);
-    let _: Result<i32, ()> = ret(5);
-    let _: Nondet<i32> = ret(5);
-    let _: NdResult<i32, ()> = ret(5);
+    run_sequential(|| {
+        let _: i32 = ret(5);
+        let _: Option<i32> = ret(5);
+        let _: Result<i32, ()> = ret(5);
+        let _: Nondet<i32> = ret(5);
+        let _: NdResult<i32, ()> = ret(5);
+    });
 }

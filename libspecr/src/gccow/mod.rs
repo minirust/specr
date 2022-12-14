@@ -8,6 +8,7 @@ mod impls;
 mod trait_passthrough;
 
 use std::marker::PhantomData;
+use std::sync::Mutex;
 
 use internal::*;
 
@@ -41,6 +42,27 @@ fn with_gc<O>(f: impl FnOnce(&GcState) -> O) -> O {
 fn with_gc_mut<O>(f: impl FnOnce(&mut GcState) -> O) -> O {
     let mut st = GC_STATE.try_write().unwrap();
     f(&mut *st)
+}
+
+pub static SEQUENTIAL_LOCK: Mutex<()> = Mutex::new(());
+
+/// This function is used to syncronize tests.
+///
+/// Per default, tests run in parallel, which might cause tests to `mark_and_sweep` the other tests' objects.
+/// Hence tests should be run inside of this function.
+pub fn run_sequential(f: impl FnOnce()) {
+    let _lock = match SEQUENTIAL_LOCK.lock() {
+        Ok(x) => x,
+        Err(x) => x.into_inner(), // ignore poison.
+    };
+
+    // pre cleanup for the case that someone poisoned `SEQUENTIAL_LOCK` in an uncleared state.
+    mark_and_sweep(HashSet::new());
+
+    f();
+
+    // post cleanup
+    mark_and_sweep(HashSet::new());
 }
 
 pub fn mark_and_sweep(roots: HashSet<usize>) {

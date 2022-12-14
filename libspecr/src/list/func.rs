@@ -139,10 +139,12 @@ impl<T: Obj> List<T> {
 
 #[test]
 fn test_list() {
-    let mut l = list![1, 2, 3];
-    assert_eq!(l.index_at(0), 1);
-    assert_eq!(l.pop(), Some(3));
-    assert_eq!(l.len(), Int::from(2));
-    l.push(3);
-    assert_eq!(l.len(), Int::from(3));
+    run_sequential(|| {
+        let mut l = list![1, 2, 3];
+        assert_eq!(l.index_at(0), 1);
+        assert_eq!(l.pop(), Some(3));
+        assert_eq!(l.len(), Int::from(2));
+        l.push(3);
+        assert_eq!(l.len(), Int::from(3));
+    });
 }
