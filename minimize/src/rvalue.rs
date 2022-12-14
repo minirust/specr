@@ -1,7 +1,7 @@
 use crate::*;
 
-pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> mini::ValueExpr {
-    match rv {
+pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> Option<mini::ValueExpr> {
+    Some(match rv {
         rs::Rvalue::Use(operand) => translate_operand(operand, fcx),
         rs::Rvalue::CheckedBinaryOp(bin_op, box (l, r)) | rs::Rvalue::BinaryOp(bin_op, box (l, r)) => {
             let lty = l.ty(&fcx.body, fcx.tcx);
@@ -22,7 +22,7 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
             use rs::BinOp::*;
             let op = if *bin_op == Offset {
                 mini::BinOp::PtrOffset {
-                    inbounds: true // FIXME where to find this bool `inbouds` in mir?
+                    inbounds: true // FIXME where to find this bool `inbounds` in mir?
                 }
             } else { // everything else right-now is a int op!
                 let op_int = match bin_op {
@@ -30,6 +30,7 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
                     Sub => mini::BinOpInt::Sub,
                     Mul => mini::BinOpInt::Mul,
                     Div => mini::BinOpInt::Div,
+                    Lt => return None, // This is IGNORED. It's generated in bounds checking.
                     x => {
                         dbg!(x);
                         todo!("unsupported BinOp")
@@ -81,12 +82,13 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
             }).collect();
             let c = mini::Constant::Tuple(ops);
             mini::ValueExpr::Constant(c, ty)
-        }
+        },
+        rs::Rvalue::Len(..) => return None, // This is IGNORED. It's generated due to bounds checking.
         x => {
             dbg!(x);
             todo!()
         }
-    }
+    })
 }
 
 pub fn translate_operand<'tcx>(operand: &rs::Operand<'tcx>, fcx: &mut FnCtxt<'tcx>) -> mini::ValueExpr {
@@ -185,8 +187,16 @@ pub fn translate_place<'tcx>(place: &rs::Place<'tcx>, fcx: &mut FnCtxt<'tcx>) ->
                     ptype,
                 };
             },
-            rs::ProjectionElem::Index(i) => {
-                todo!("{:?}", i)
+            rs::ProjectionElem::Index(loc) => {
+                let i = mini::PlaceExpr::Local(fcx.localname_map[&loc]);
+                let i = specr::GcCow::new(i);
+                let i = mini::ValueExpr::Load {
+                    destructive: false,
+                    source: i,
+                };
+                let i = specr::GcCow::new(i);
+                let root = specr::GcCow::new(expr);
+                expr = mini::PlaceExpr::Index { root, index: i };
             },
             x => todo!("{:?}", x),
         }

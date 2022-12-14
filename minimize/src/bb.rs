@@ -1,9 +1,15 @@
 use crate::*;
 
+// Some Rust features are not supported, and are ignored by `minimize`.
+// Those can be found by grepping "IGNORED".
+
 pub fn translate_bb<'tcx>(bb: &rs::BasicBlockData<'tcx>, fcx: &mut FnCtxt<'tcx>) -> mini::BasicBlock {
     let mut statements = specr::List::new();
     for stmt in bb.statements.iter() {
-        translate_stmt(stmt, fcx, &mut statements);
+        // unsupported statements will be IGNORED.
+        if let Some(x) = translate_stmt(stmt, fcx) {
+            statements.push(x);
+        }
     }
     mini::BasicBlock {
         statements,
@@ -11,33 +17,26 @@ pub fn translate_bb<'tcx>(bb: &rs::BasicBlockData<'tcx>, fcx: &mut FnCtxt<'tcx>)
     }
 }
 
-fn translate_stmt<'tcx>(stmt: &rs::Statement<'tcx>, fcx: &mut FnCtxt<'tcx>, statements: &mut specr::List<mini::Statement>) {
-    match &stmt.kind {
+fn translate_stmt<'tcx>(stmt: &rs::Statement<'tcx>, fcx: &mut FnCtxt<'tcx>) -> Option<mini::Statement> {
+    Some(match &stmt.kind {
         rs::StatementKind::Assign(box (place, rval)) => {
-            statements.push(
-                mini::Statement::Assign {
-                    destination: translate_place(place, fcx),
-                    source: translate_rvalue(rval, fcx),
-                }
-            );
+            mini::Statement::Assign {
+                destination: translate_place(place, fcx),
+                source: translate_rvalue(rval, fcx)?, // assign of unsupported rvalues are IGNORED.
+            }
         },
         rs::StatementKind::StorageLive(local) => {
-            statements.push(
-                mini::Statement::StorageLive(fcx.localname_map[&local])
-            );
+            mini::Statement::StorageLive(fcx.localname_map[&local])
         },
         rs::StatementKind::StorageDead(local) => {
-            statements.push(
-                mini::Statement::StorageDead(fcx.localname_map[&local])
-            );
+            mini::Statement::StorageDead(fcx.localname_map[&local])
         },
-        rs::StatementKind::Deinit(..) => { /* this has no mini::_ equivalent. */ },
-        rs::StatementKind::Retag(..) => { /* this has no mini::_ equivalent. */ },
+        rs::StatementKind::Deinit(..) | rs::StatementKind::Retag(..) => return None, // IGNORED for now.
         x => {
             dbg!(x);
             todo!()
         }
-    }
+    })
 }
 
 fn translate_terminator<'tcx>(terminator: &rs::Terminator<'tcx>, fcx: &mut FnCtxt<'tcx>) -> mini::Terminator {
@@ -45,6 +44,9 @@ fn translate_terminator<'tcx>(terminator: &rs::Terminator<'tcx>, fcx: &mut FnCtx
         rs::TerminatorKind::Return => mini::Terminator::Return,
         rs::TerminatorKind::Goto { target } => mini::Terminator::Goto(fcx.bbname_map[&target]),
         rs::TerminatorKind::Call { func, target, destination, args, .. } => translate_call(fcx, func, args, destination, target),
+        rs::TerminatorKind::Assert { target, .. } => { // Assert is IGNORED as of now.
+            mini::Terminator::Goto(fcx.bbname_map[&target])
+        }
         x => {
             dbg!(x);
             todo!()
