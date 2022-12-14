@@ -1,18 +1,11 @@
 extern crate intrinsics;
 use intrinsics::*;
-
-union A {
-    p: *const i32,
-    i: usize,
-}
+include!("../conv.rs");
 
 fn main() {
     unsafe {
-        let x = 2;
-        let mut a = A { p: &x as *const _ };
-        a.i += 4; // alignment is correct, but pointer still invalid.
-        let ptr = a.p;
-        let i: i32 = *ptr;
+        let x = 2i32;
+        let i: i32 = *i_to_p(ref_to_i(&x) + 4);
         print(i);
     }
 }
