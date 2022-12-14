@@ -29,3 +29,36 @@ fn too_large_alloc() {
     let small = Int::from(2);
     assert_stop(program_alloc(small));
 }
+
+#[test]
+fn double_live() {
+    let l0 = LocalName(Name(0));
+    let stmts = vec![
+        Statement::StorageLive(l0),
+        Statement::StorageLive(l0),
+    ];
+    let locals = vec![
+        PlaceType {
+            ty: Type::Bool,
+            align: Align::from_bytes(1),
+        }
+    ];
+    let p = program_from_statements(stmts, locals);
+    assert_unwell(p);
+}
+
+#[test]
+fn dead_before_live() {
+    let l0 = LocalName(Name(0));
+    let stmts = vec![
+        Statement::StorageDead(l0),
+    ];
+    let locals = vec![
+        PlaceType {
+            ty: Type::Bool,
+            align: Align::from_bytes(1),
+        }
+    ];
+    let p = program_from_statements(stmts, locals);
+    assert_unwell(p);
+}
