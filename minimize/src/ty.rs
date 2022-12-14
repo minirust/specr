@@ -58,6 +58,7 @@ pub fn translate_ty<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> Type {
             let (fields, size) = translate_adt_fields(ty, *adt_def, sref, tcx);
 
             // TODO this is just one large chunk.
+            // see https://github.com/rust-lang/unsafe-code-guidelines/issues/354
             let chunks = list![(Size::from_bytes(0), size)];
 
             Type::Union {
