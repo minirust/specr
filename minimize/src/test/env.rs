@@ -1,18 +1,18 @@
-use crate::{*, mini::*, specr::*};
+use crate::test::*;
 
-fn assert_ub(prog: Program, msg: &str) {
+pub fn assert_ub(prog: Program, msg: &str) {
     assert_eq!(run_program(prog), Outcome::Ub(msg.to_string()));
 }
 
-fn assert_stop(prog: Program) {
+pub fn assert_stop(prog: Program) {
     assert_eq!(run_program(prog), Outcome::Stop);
 }
 
-fn assert_unwell(prog: Program) {
+pub fn assert_unwell(prog: Program) {
     assert_eq!(run_program(prog), Outcome::Unwell);
 }
 
-fn function_from_statements(stmts: Vec<Statement>, local_types: Vec<PlaceType>) -> Function {
+pub fn function_from_statements(stmts: Vec<Statement>, local_types: Vec<PlaceType>) -> Function {
     let bb = BasicBlock {
         statements: stmts.into_iter().collect(),
         terminator: Terminator::CallIntrinsic {
@@ -42,7 +42,7 @@ fn function_from_statements(stmts: Vec<Statement>, local_types: Vec<PlaceType>) 
     }
 }
 
-fn program_from_statements(stmts: Vec<Statement>, locals: Vec<PlaceType>) -> Program {
+pub fn program_from_statements(stmts: Vec<Statement>, locals: Vec<PlaceType>) -> Program {
     let f = function_from_statements(stmts, locals);
 
     let mut functions = Map::new();
@@ -54,23 +54,4 @@ fn program_from_statements(stmts: Vec<Statement>, locals: Vec<PlaceType>) -> Pro
     }
 }
 
-#[test]
-fn too_large_alloc() {
-    let count = Int::from(2).pow(BasicMemory::PTR_SIZE.bits());
-    let big_bad_array = Type::Array { elem: GcCow::new(Type::Bool), count }; 
 
-    let l0 = LocalName(Name(0));
-    let stmts = vec![
-        Statement::StorageLive(l0),
-        Statement::StorageDead(l0),
-    ];
-    let locals = vec![
-        PlaceType {
-            ty: big_bad_array,
-            align: Align::from_bytes(64),
-        }
-    ];
-    let p = program_from_statements(stmts, locals);
-
-    assert_unwell(p);
-}
