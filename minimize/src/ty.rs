@@ -1,6 +1,5 @@
 use crate::*;
 
-// TODO the ParamEnv might need to be an argument to `layout_of` in the future.
 pub fn layout_of<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> Layout {
     let a = rs::ParamEnv::empty().and(ty);
     let layout = tcx.layout_of(a).unwrap().layout;
@@ -13,14 +12,6 @@ pub fn layout_of<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> Layout {
         align,
         inhabited,
     }
-}
-
-#[allow(unused)]
-pub fn size_of<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> Size {
-    let a = rs::ParamEnv::empty().and(ty);
-    let layout = tcx.layout_of(a).unwrap().layout;
-
-    translate_size(layout.size())
 }
 
 pub fn translate_mutbl(mutbl: rs::Mutability) -> Mutability {
@@ -55,27 +46,24 @@ pub fn translate_ty<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> Type {
                 size,
             }
         },
-
-        // TODO support generics
         rs::TyKind::Adt(adt_def, sref) if adt_def.is_struct() => {
-            let a = rs::ParamEnv::empty().and(ty);
-            let layout = tcx.layout_of(a).unwrap().layout;
-            let size = translate_size(layout.size());
-
-            let fields = adt_def.all_fields()
-                           .enumerate()
-                           .map(|(i, field)| {
-                                let ty = field.ty(tcx, sref);
-                                let ty = translate_ty(ty, tcx);
-                                let offset = layout.fields().offset(i);
-                                let offset = translate_size(offset);
-
-                                (offset, ty)
-                           }).collect();
+            let (fields, size) = translate_adt_fields(ty, *adt_def, sref, tcx);
 
             Type::Tuple {
                 fields,
                 size,
+            }
+        },
+        rs::TyKind::Adt(adt_def, sref) if adt_def.is_union() => {
+            let (fields, size) = translate_adt_fields(ty, *adt_def, sref, tcx);
+
+            // TODO this is just one large chunk.
+            let chunks = list![(Size::from_bytes(0), size)];
+
+            Type::Union {
+                fields,
+                size,
+                chunks,
             }
         },
         rs::TyKind::Adt(adt_def, _) if adt_def.is_box() => {
@@ -97,37 +85,30 @@ pub fn translate_ty<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> Type {
             let elem = GcCow::new(translate_ty(*ty, tcx));
             Type::Array { elem, count }
         },
-        // TODO this code is largely equivalent for tuples, structs and union.
-        rs::TyKind::Adt(adt_def, sref) if adt_def.is_union() => {
-            let a = rs::ParamEnv::empty().and(ty);
-            let layout = tcx.layout_of(a).unwrap().layout;
-            let size = translate_size(layout.size());
-
-            let fields = adt_def.all_fields()
-                           .enumerate()
-                           .map(|(i, field)| {
-                                let ty = field.ty(tcx, sref);
-                                let ty = translate_ty(ty, tcx);
-                                let offset = layout.fields().offset(i);
-                                let offset = translate_size(offset);
-
-                                (offset, ty)
-                           }).collect();
-
-            // TODO this is just one large chunk.
-            let chunks = list![(Size::from_bytes(0), size)];
-
-            Type::Union {
-                fields,
-                size,
-                chunks,
-            }
-        },
         x => {
             dbg!(x);
             todo!()
         }
     }
+}
+
+fn translate_adt_fields<'tcx>(ty: rs::Ty<'tcx>, adt_def: rs::AdtDef<'tcx>, sref: rs::SubstsRef<'tcx>, tcx: rs::TyCtxt<'tcx>) -> (Fields, Size) {
+    let a = rs::ParamEnv::empty().and(ty);
+    let layout = tcx.layout_of(a).unwrap().layout;
+    let fields = adt_def
+       .all_fields()
+       .enumerate()
+       .map(|(i, field)| {
+            let ty = field.ty(tcx, sref);
+            let ty = translate_ty(ty, tcx);
+            let offset = layout.fields().offset(i);
+            let offset = translate_size(offset);
+
+            (offset, ty)
+       }).collect();
+    let size = translate_size(layout.size());
+
+    (fields, size)
 }
 
 fn translate_int_ty(int_ty: &rs::IntTy) -> IntType {
