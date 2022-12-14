@@ -48,10 +48,13 @@ mod dump;
 use dump::dump_program;
 
 mod run;
-use run::run_program;
+use run::*;
 
 mod get;
 use get::get_mini;
+
+#[cfg(test)]
+mod test;
 
 use std::collections::HashMap;
 use std::path::Path;
@@ -67,6 +70,10 @@ fn main() {
     if dump {
         dump_program(&prog);
     } else {
-        run_program(prog);
+        match run_program(prog) {
+            Outcome::Unwell => eprintln!("ERR: program not well-formed."),
+            Outcome::Stop => { /* silent exit. */ },
+            Outcome::Ub(err) => eprintln!("UB: {}", err),
+        }
     }
 }

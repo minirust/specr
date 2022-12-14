@@ -3,24 +3,36 @@ use crate::*;
 use std::collections::HashSet;
 use specr::GcCompat;
 
-pub fn run_program(prog: mini::Program) {
-    let specr::NdResult(Err(t_info)) = run_program_impl(prog) else { unreachable!() };
-
-    match t_info {
-        mini::TerminationInfo::MachineStop => { /* silent exit. */ },
-        mini::TerminationInfo::Ub(err) => println!("UB: {}", err),
-        _ => todo!(),
-    }
+#[derive(Debug, PartialEq, Eq)]
+pub enum Outcome {
+    Unwell, // program not well-formed
+    Stop, // program stopped normally
+    Ub(String), // program raised UB
 }
 
+pub fn run_program(prog: mini::Program) -> Outcome {
+    fn run_impl<M: mini::Memory>(mut machine: mini::Machine<M>) -> mini::NdResult<!> {
+        loop {
+            machine.step()?;
+            mark_and_sweep(&machine);
+        }
+    }
 
-fn run_program_impl(prog: mini::Program) -> mini::NdResult<!> {
-    let mut machine = mini::Machine::<mini::BasicMemory>::new(prog).unwrap();
+    let Some(machine) = mini::Machine::<mini::BasicMemory>::new(prog) else {
+        return Outcome::Unwell;
+    };
     mark_and_sweep(&machine);
 
-    loop {
-        machine.step()?;
-        mark_and_sweep(&machine);
+    let specr::NdResult(x) = run_impl(machine);
+    let t_info = match x {
+        Ok(never) => never,
+        Err(t_info) => t_info,
+    };
+
+    match t_info {
+        mini::TerminationInfo::Ub(err) => Outcome::Ub(err.0.get()),
+        mini::TerminationInfo::MachineStop => Outcome::Stop,
+        _ => todo!(),
     }
 }
 
