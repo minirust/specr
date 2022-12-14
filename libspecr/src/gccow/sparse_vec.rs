@@ -40,4 +40,9 @@ impl<T> SparseVec<T> {
             }
         }
     }
+
+    #[allow(unused)]
+    pub fn len(&self) -> usize {
+        self.data.len() - self.nones.len()
+    }
 }
