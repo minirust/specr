@@ -97,6 +97,32 @@ pub fn translate_ty<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> Type {
             let elem = GcCow::new(translate_ty(*ty, tcx));
             Type::Array { elem, count }
         },
+        // TODO this code is largely equivalent for tuples, structs and union.
+        rs::TyKind::Adt(adt_def, sref) if adt_def.is_union() => {
+            let a = rs::ParamEnv::empty().and(ty);
+            let layout = tcx.layout_of(a).unwrap().layout;
+            let size = translate_size(layout.size());
+
+            let fields = adt_def.all_fields()
+                           .enumerate()
+                           .map(|(i, field)| {
+                                let ty = field.ty(tcx, sref);
+                                let ty = translate_ty(ty, tcx);
+                                let offset = layout.fields().offset(i);
+                                let offset = translate_size(offset);
+
+                                (offset, ty)
+                           }).collect();
+
+            // TODO this is just one large chunk.
+            let chunks = list![(Size::from_bytes(0), size)];
+
+            Type::Union {
+                fields,
+                size,
+                chunks,
+            }
+        },
         x => {
             dbg!(x);
             todo!()
