@@ -1,0 +1,39 @@
+use crate::*;
+
+#[const_trait]
+pub trait MonadicReturn {
+    type Inner;
+    fn monadic_return(t: Self::Inner) -> Self;
+}
+
+pub const fn ret<T: ~const MonadicReturn>(i: T::Inner) -> T {
+    T::monadic_return(i)
+}
+
+impl<T> const MonadicReturn for Option<T> {
+    type Inner = T;
+    fn monadic_return(t: T) -> Self { Some(t) }
+}
+
+impl<T, E> const MonadicReturn for Result<T, E> {
+    type Inner = T;
+    fn monadic_return(t: T) -> Self { Ok(t) }
+}
+
+impl<T> const MonadicReturn for Nondet<T> {
+    type Inner = T;
+    fn monadic_return(t: T) -> Self { Nondet(t) }
+}
+
+impl<T, E> const MonadicReturn for NdResult<T, E> {
+    type Inner = T;
+    fn monadic_return(t: T) -> Self { NdResult(Ok(t)) }
+}
+
+#[test]
+fn monadic_return_test() {
+    let _: Option<i32> = ret(5);
+    let _: Result<i32, ()> = ret(5);
+    let _: Nondet<i32> = ret(5);
+    let _: NdResult<i32, ()> = ret(5);
+}

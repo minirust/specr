@@ -39,10 +39,6 @@ Similarly using `ref` or `ref mut` are not supported for fields behind an `#[spe
 2. Specr does not resolve names first, so there could be naming collisions between variants of different enums and structs.
 In the future we intend to warn if such an ambiguity is found.
 
-### Automatic Return Wrapping
-For functions returning `Option<T>`, `Result<T>` or `Nondet<T>`
-it is valid to simply return `T`, which will automatically be wrapped by `Some(_)`, `Ok(_)`, or `Nondet(_)`.
-
 ### Garbage collection and Copy
 All types provided by specr like `List`, `Set`, `Map`, `BigInt` are Copy, as they only contain an index into a garbage-collected data structure.
 Further, the enum indirection discussed before applies an indirection by using the same garbage collected index.

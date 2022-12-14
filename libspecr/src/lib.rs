@@ -24,6 +24,9 @@ mod option;
 mod ndresult;
 pub use ndresult::*;
 
+mod ret;
+pub use ret::*;
+
 mod size;
 pub use size::*;
 
@@ -70,6 +73,7 @@ pub use crate::name::*;
 
 /// The items from this module are automatically imported into minirust.
 pub mod prelude {
+    pub use crate::ret;
     pub use crate::Align;
     pub use crate::Size;
     pub use crate::Int;

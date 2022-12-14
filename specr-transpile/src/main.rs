@@ -7,7 +7,6 @@ mod argmatch;
 mod merge_impls;
 mod source;
 mod typerec;
-mod ret;
 mod autoattr;
 mod autobounds;
 mod index;
@@ -104,7 +103,6 @@ fn compile(mods: Vec<Module>) {
         // apply all other compilation stages.
         let ast = let_else::let_else(m.ast);
         let ast = merge_impls::merge(ast);
-        let ast = ret::add_ret(ast);
         let ast = autoattr::autoattr(ast);
         let ast = index::index(ast);
         let ast = gccompat_impl::gccompat_impl(ast);
