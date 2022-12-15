@@ -1,0 +1,73 @@
+use crate::test::*;
+
+pub fn assign(destination: PlaceExpr, source: ValueExpr) -> Statement {
+    Statement::Assign { destination, source }
+}
+
+pub fn finalize(place: PlaceExpr, fn_entry: bool) -> Statement {
+    Statement::Finalize { place, fn_entry }
+}
+
+pub fn live(x: u32) -> Statement {
+    Statement::StorageLive(LocalName(Name(x)))
+}
+
+pub fn dead(x: u32) -> Statement {
+    Statement::StorageDead(LocalName(Name(x)))
+}
+
+pub fn goto(x: u32) -> Terminator {
+    Terminator::Goto(BbName(Name(x)))
+}
+
+pub fn if_(condition: ValueExpr, then_blk: u32, else_blk: u32) -> Terminator {
+    Terminator::If {
+        condition,
+        then_block: BbName(Name(then_blk)),
+        else_block: BbName(Name(else_blk)),
+    }
+}
+
+pub fn unreachable() -> Terminator {
+    Terminator::Unreachable
+}
+
+pub fn call(f: u32, args: &[ValueExpr], ret: Option<PlaceExpr>, next: Option<u32>) -> Terminator {
+    Terminator::Call {
+        callee: FnName(Name(f)),
+        arguments: args.iter().map(|x| (*x, ArgAbi::Register)).collect(),
+        ret: ret.map(|x| (x, ArgAbi::Register)),
+        next_block: next.map(|x| BbName(Name(x))),
+    }
+}
+
+pub fn print(arg: ValueExpr, next: u32) -> Terminator {
+    Terminator::CallIntrinsic {
+        intrinsic: Intrinsic::PrintStdout,
+        arguments: list![arg],
+        ret: None,
+        next_block: Some(BbName(Name(next))),
+    }
+}
+
+pub fn eprint(arg: ValueExpr, next: u32) -> Terminator {
+    Terminator::CallIntrinsic {
+        intrinsic: Intrinsic::PrintStderr,
+        arguments: list![arg],
+        ret: None,
+        next_block: Some(BbName(Name(next))),
+    }
+}
+
+pub fn exit() -> Terminator {
+    Terminator::CallIntrinsic {
+        intrinsic: Intrinsic::Exit,
+        arguments: list![],
+        ret: None,
+        next_block: None,
+    }
+}
+
+pub fn ret() -> Terminator {
+    Terminator::Return
+}

@@ -1,8 +1,21 @@
 use crate::*;
 
-mod env;
-use env::*;
+mod build;
+use build::*;
 
+pub fn assert_ub(prog: Program, msg: &str) {
+    assert_eq!(run_program(prog), Outcome::Ub(msg.to_string()));
+}
+
+pub fn assert_stop(prog: Program) {
+    assert_eq!(run_program(prog), Outcome::Stop);
+}
+
+pub fn assert_unwell(prog: Program) {
+    assert_eq!(run_program(prog), Outcome::Unwell);
+}
+
+/*
 #[test]
 fn too_large_alloc() {
     fn program_alloc(bytes: Int) -> Program {
@@ -143,3 +156,4 @@ fn no_preserve_padding() {
         assert_ub(p, "load at type PlaceType { ty: Int(IntType { signed: Unsigned, size: Size { raw: Small(1) } }), align: Align { raw: Small(1) } } but the data in memory violates the validity invariant");
     });
 }
+*/
