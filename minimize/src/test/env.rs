@@ -115,6 +115,26 @@ impl<T: TypeConv> TypeConv for *const T {
     }
 }
 
+impl TypeConv for bool {
+    fn get_type() -> Type { Type::Bool }
+    fn get_align() -> Align { align(1) }
+    fn get_size() -> Size { size(1) }
+}
+
+impl<T: TypeConv, const N: usize> TypeConv for [T; N] {
+    fn get_type() -> Type {
+        Type::Array {
+            elem: GcCow::new(T::get_type()),
+            count: N.into()
+        }
+    }
+
+    fn get_align() -> Align { T::get_align() }
+    fn get_size() -> Size {
+        T::get_size() * N.into()
+    }
+}
+
 pub fn f(x: u32) -> FnName { FnName(Name(x)) }
 pub fn bb(x: u32) -> BbName { BbName(Name(x)) }
 pub fn l(x: u32) -> LocalName { LocalName(Name(x)) }
@@ -169,4 +189,12 @@ pub fn assign(x: PlaceExpr, y: ValueExpr) -> Statement {
 
 pub fn ptype(ty: Type, align: Align) -> PlaceType {
     PlaceType { ty, align }
+}
+
+pub fn live(i: u32) -> Statement {
+    Statement::StorageLive(l(i))
+}
+
+pub fn dead(i: u32) -> Statement {
+    Statement::StorageDead(l(i))
 }

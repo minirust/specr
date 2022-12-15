@@ -9,17 +9,8 @@ fn too_large_alloc() {
         let count = bytes;
         let array = Type::Array { elem: GcCow::new(Type::Bool), count };
 
-        let l0 = LocalName(Name(0));
-        let stmts = vec![
-            Statement::StorageLive(l0),
-            Statement::StorageDead(l0),
-        ];
-        let locals = vec![
-            PlaceType {
-                ty: array,
-                align: Align::from_bytes(64),
-            }
-        ];
+        let locals = vec![ptype(array, align(1))];
+        let stmts = vec![live(0), dead(0)];
         program_from_statements(stmts, locals)
     }
 
@@ -35,17 +26,8 @@ fn too_large_alloc() {
 #[test]
 fn double_live() {
     run_sequential(|| {
-        let l0 = LocalName(Name(0));
-        let stmts = vec![
-            Statement::StorageLive(l0),
-            Statement::StorageLive(l0),
-        ];
-        let locals = vec![
-            PlaceType {
-                ty: Type::Bool,
-                align: Align::from_bytes(1),
-            }
-        ];
+        let locals = vec![ <bool>::get_ptype() ];
+        let stmts = vec![live(0), live(0)];
         let p = program_from_statements(stmts, locals);
         assert_unwell(p);
     });
@@ -54,16 +36,8 @@ fn double_live() {
 #[test]
 fn dead_before_live() {
     run_sequential(|| {
-        let l0 = LocalName(Name(0));
-        let stmts = vec![
-            Statement::StorageDead(l0),
-        ];
-        let locals = vec![
-            PlaceType {
-                ty: Type::Bool,
-                align: Align::from_bytes(1),
-            }
-        ];
+        let locals = vec![ <bool>::get_ptype() ];
+        let stmts = vec![dead(0)];
         let p = program_from_statements(stmts, locals);
         assert_unwell(p);
     });
@@ -72,25 +46,15 @@ fn dead_before_live() {
 #[test]
 fn uninit_read() {
     run_sequential(|| {
-        let l0 = LocalName(Name(0));
-        let l1 = LocalName(Name(1));
+        let locals = vec![ <bool>::get_ptype(); 2];
         let stmts = vec![
-            Statement::StorageLive(l0),
-            Statement::StorageLive(l1),
-            Statement::Assign {
-                destination: PlaceExpr::Local(l0),
-                source: ValueExpr::Load {
-                    destructive: false,
-                    source: GcCow::new(PlaceExpr::Local(l1)),
-                },
-            },
+            live(0),
+            live(1),
+            assign(
+                local(0),
+                load(local(1)),
+            ),
         ];
-        let pt = PlaceType {
-            ty: Type::Bool,
-            align: Align::from_bytes(1),
-        };
-        let locals = vec![pt, pt];
-
         let p = program_from_statements(stmts, locals);
         assert_ub(p, "load at type PlaceType { ty: Bool, align: Align { raw: Small(1) } } but the data in memory violates the validity invariant");
     });
@@ -141,10 +105,10 @@ fn no_preserve_padding() {
         ];
 
         let stmts = vec![
-            Statement::StorageLive(l(0)),
-            Statement::StorageLive(l(1)),
-            Statement::StorageLive(l(2)),
-            Statement::StorageLive(l(3)),
+            live(0),
+            live(1),
+            live(2),
+            live(3),
             assign(
                 field(local(0), 1),
                 const_int::<u32>(0)
