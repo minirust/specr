@@ -99,8 +99,8 @@ fn uninit_read() {
 // see https://github.com/rust-lang/miri/issues/845
 #[test]
 fn no_preserve_padding() {
-    // Pair := Type::Tuple { ... }
-    // Union := Type::Union { f0: Pair, f1: u32 }
+    // type Pair = (u8, u16);
+    // union Union { f0: Pair, f1: u32 }
     //
     // let _0: Union;
     // let _1: *const u8;
@@ -114,23 +114,23 @@ fn no_preserve_padding() {
     run_sequential(|| {
         let pair_ty = Type::Tuple {
             fields: list![
-                (Size::from_bytes(0), u8::get_type()),
-                (Size::from_bytes(2), u16::get_type())
+                (size(0), u8::get_type()),
+                (size(2), u16::get_type())
             ],
-            size: Size::from_bits(32),
+            size: size(4),
         };
 
         let union_ty = Type::Union {
             fields: list![
-                (Size::ZERO, pair_ty),
-                (Size::ZERO, u32::get_type())
+                (size(0), pair_ty),
+                (size(0), u32::get_type())
             ],
-            chunks: list![(Size::ZERO, Size::from_bytes(4))],
-            size: Size::from_bytes(4),
+            chunks: list![(size(0), size(4))],
+            size: size(4),
         };
         let union_pty = PlaceType {
             ty: union_ty,
-            align: Align::from_bytes(4),
+            align: align(4),
         };
 
         let locals = vec![
@@ -143,29 +143,29 @@ fn no_preserve_padding() {
             Statement::StorageLive(l(0)),
             Statement::StorageLive(l(1)),
             Statement::StorageLive(l(2)),
-            Statement::Assign {
-                destination: field(local(0), 1),
-                source: const_int::<u32>(0),
-            },
-            Statement::Assign {
-                destination: local(1),
-                source: ValueExpr::AddrOf {
+            assign(
+                field(local(0), 1),
+                const_int::<u32>(0)
+            ),
+            assign(
+                local(1),
+                ValueExpr::AddrOf {
                     target: GcCow::new(field(local(0), 0)),
                     ptr_ty: PtrType::Raw { pointee: <u8>::get_layout() },
                 },
-            },
-            Statement::Assign {
-                destination: local(1),
-                source: ValueExpr::BinOp {
+            ),
+            assign(
+                local(1),
+                ValueExpr::BinOp {
                     operator: BinOp::PtrOffset { inbounds: true }, // TODO inbounds or not?
                     left: GcCow::new(load(local(1))),
                     right: GcCow::new(const_int::<u32>(1)),
-                },
-            },
-            Statement::Assign {
-                destination: local(2),
-                source: load(deref(load(local(1)), <u8>::get_ptype())),
-            },
+                }
+            ),
+            assign(
+                local(2),
+                load(deref(load(local(1)), <u8>::get_ptype())),
+            ),
         ];
 
         let p = program_from_statements(stmts, locals);

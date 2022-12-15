@@ -151,3 +151,18 @@ pub fn deref(v: ValueExpr, ptype: PlaceType) -> PlaceExpr {
         ptype,
     }
 }
+
+pub fn align(x: u32) -> Align {
+    Align::from_bytes(x)
+}
+
+pub fn size(x: u32) -> Size {
+    Size::from_bytes(x)
+}
+
+pub fn assign(x: PlaceExpr, y: ValueExpr) -> Statement {
+    Statement::Assign {
+        destination: x,
+        source: y,
+    }
+}
