@@ -103,13 +103,15 @@ fn no_preserve_padding() {
     // union Union { f0: Pair, f1: u32 }
     //
     // let _0: Union;
-    // let _1: *const u8;
-    // let _2: u8;
+    // let _1: Pair;
+    // let _2: *const u8;
+    // let _3: u8;
     //
     // _0.f1 = 0;
-    // _1 = &raw _0.f0;
-    // _1 = load(_1).offset(1)
-    // _2 = *_1;
+    // _1 = _0.f0;
+    // _2 = &raw _1;
+    // _2 = load(_2).offset(1)
+    // _3 = *_2;
 
     run_sequential(|| {
         let pair_ty = Type::Tuple {
@@ -119,6 +121,7 @@ fn no_preserve_padding() {
             ],
             size: size(4),
         };
+        let pair_pty = ptype(pair_ty, align(2));
 
         let union_ty = Type::Union {
             fields: list![
@@ -128,48 +131,51 @@ fn no_preserve_padding() {
             chunks: list![(size(0), size(4))],
             size: size(4),
         };
-        let union_pty = PlaceType {
-            ty: union_ty,
-            align: align(4),
-        };
+        let union_pty = ptype(union_ty, align(4));
 
         let locals = vec![
             union_pty,
+            pair_pty,
             <*const u8>::get_ptype(),
-            <u8>::get_ptype()
+            <u8>::get_ptype(),
         ];
 
         let stmts = vec![
             Statement::StorageLive(l(0)),
             Statement::StorageLive(l(1)),
             Statement::StorageLive(l(2)),
+            Statement::StorageLive(l(3)),
             assign(
                 field(local(0), 1),
                 const_int::<u32>(0)
             ),
             assign(
                 local(1),
+                load(field(local(0), 0))
+            ),
+            assign(
+                local(2),
                 ValueExpr::AddrOf {
-                    target: GcCow::new(field(local(0), 0)),
+                    target: GcCow::new(local(1)),
                     ptr_ty: PtrType::Raw { pointee: <u8>::get_layout() },
                 },
             ),
             assign(
-                local(1),
+                local(2),
                 ValueExpr::BinOp {
                     operator: BinOp::PtrOffset { inbounds: true }, // TODO inbounds or not?
-                    left: GcCow::new(load(local(1))),
+                    left: GcCow::new(load(local(2))),
                     right: GcCow::new(const_int::<u32>(1)),
                 }
             ),
             assign(
-                local(2),
-                load(deref(load(local(1)), <u8>::get_ptype())),
+                local(3),
+                load(deref(load(local(2)), <u8>::get_ptype())),
             ),
         ];
 
         let p = program_from_statements(stmts, locals);
         dump_program(&p);
-        assert_ub(p, "");
+        assert_ub(p, "load at type PlaceType { ty: Int(IntType { signed: Unsigned, size: Size { raw: Small(1) } }), align: Align { raw: Small(1) } } but the data in memory violates the validity invariant");
     });
 }

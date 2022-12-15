@@ -166,3 +166,7 @@ pub fn assign(x: PlaceExpr, y: ValueExpr) -> Statement {
         source: y,
     }
 }
+
+pub fn ptype(ty: Type, align: Align) -> PlaceType {
+    PlaceType { ty, align }
+}
