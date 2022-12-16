@@ -51,34 +51,42 @@ type_conv_impl!(i32, Signed, 4, 4);
 type_conv_impl!(i64, Signed, 8, 8);
 type_conv_impl!(i128, Signed, 16, 8);
 
+type_conv_impl!(usize, Unsigned, 8, 8);
+type_conv_impl!(isize, Signed, 8, 8);
+
 impl<T: TypeConv> TypeConv for *const T {
-    fn get_type() -> Type {
-        Type::Ptr(PtrType::Raw { pointee: T::get_layout() })
-    }
-    fn get_align() -> Align {
-        Align::from_bytes(8)
-    }
-    fn get_size() -> Size {
-        Size::from_bytes(8)
-    }
+    fn get_type() -> Type { raw_ptr_ty(T::get_layout()) }
+    fn get_align() -> Align { align(8) }
+    fn get_size() -> Size { size(8) }
+}
+
+impl<T: TypeConv> TypeConv for *mut T {
+    fn get_type() -> Type { raw_ptr_ty(T::get_layout()) }
+    fn get_align() -> Align { align(8) }
+    fn get_size() -> Size { size(8) }
+}
+
+impl<T: TypeConv> TypeConv for &T {
+    fn get_type() -> Type { ref_ty(T::get_layout()) }
+    fn get_align() -> Align { align(8) }
+    fn get_size() -> Size { size(8) }
+}
+
+impl<T: TypeConv> TypeConv for &mut T {
+    fn get_type() -> Type { ref_mut_ty(T::get_layout()) }
+    fn get_align() -> Align { align(8) }
+    fn get_size() -> Size { size(8) }
 }
 
 impl TypeConv for bool {
-    fn get_type() -> Type { Type::Bool }
+    fn get_type() -> Type { bool_ty() }
     fn get_align() -> Align { align(1) }
     fn get_size() -> Size { size(1) }
 }
 
 impl<T: TypeConv, const N: usize> TypeConv for [T; N] {
-    fn get_type() -> Type {
-        Type::Array {
-            elem: GcCow::new(T::get_type()),
-            count: N.into()
-        }
-    }
+    fn get_type() -> Type { array_ty(T::get_type(), N) }
 
     fn get_align() -> Align { T::get_align() }
-    fn get_size() -> Size {
-        T::get_size() * N.into()
-    }
+    fn get_size() -> Size { T::get_size() * N.into() }
 }

@@ -148,3 +148,47 @@ fn no_preserve_padding() {
         assert_ub(p, "load at type PlaceType { ty: Int(IntType { signed: Unsigned, size: Size { raw: Small(1) } }), align: Align { raw: Small(1) } } but the data in memory violates the validity invariant");
     });
 }
+
+// see https://github.com/rust-lang/miri/issues/2182
+#[test]
+fn no_preserve_prov() {
+    run_sequential(|| {
+        let union_ty = union_ty(&[
+                (size(0), <[&i32; 1]>::get_type()),
+                (size(0), <[usize; 1]>::get_type()),
+                (size(0), <&i32>::get_type()),
+            ], size(8));
+        let union_pty = ptype(union_ty, align(8));
+
+        let locals = vec![
+            <i32>::get_ptype(),
+            union_pty,
+            <i32>::get_ptype(),
+        ];
+
+        let stmts = vec![
+            live(0),
+            live(1),
+            live(2),
+            assign(local(0), const_int::<i32>(42)),
+            assign(
+                index(
+                    field(local(1), 0),
+                    const_int::<usize>(0)
+                ),
+                addr_of(local(0), <&i32>::get_type()),
+            ),
+            assign(
+                local(2),
+                load(deref(
+                    load(field(local(1), 2)),
+                    <i32>::get_ptype(),
+                ))
+            ),
+        ];
+
+        let p = small_program(&locals, &stmts);
+        dump_program(&p);
+        assert_ub(p, ""); // this fails right now!
+    });
+}
