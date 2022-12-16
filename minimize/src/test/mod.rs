@@ -15,16 +15,15 @@ pub fn assert_unwell(prog: Program) {
     assert_eq!(run_program(prog), Outcome::Unwell);
 }
 
-/*
 #[test]
 fn too_large_alloc() {
     fn program_alloc(bytes: Int) -> Program {
         let count = bytes;
-        let array = Type::Array { elem: GcCow::new(Type::Bool), count };
+        let ty = array_ty(bool_ty(), count);
 
-        let locals = vec![ptype(array, align(1))];
+        let locals = vec![ptype(ty, align(1))];
         let stmts = vec![live(0), dead(0)];
-        program_from_statements(stmts, locals)
+        small_program(&locals, &stmts)
     }
 
     run_sequential(|| {
@@ -41,7 +40,7 @@ fn double_live() {
     run_sequential(|| {
         let locals = vec![ <bool>::get_ptype() ];
         let stmts = vec![live(0), live(0)];
-        let p = program_from_statements(stmts, locals);
+        let p = small_program(&locals, &stmts);
         assert_unwell(p);
     });
 }
@@ -51,7 +50,7 @@ fn dead_before_live() {
     run_sequential(|| {
         let locals = vec![ <bool>::get_ptype() ];
         let stmts = vec![dead(0)];
-        let p = program_from_statements(stmts, locals);
+        let p = small_program(&locals, &stmts);
         assert_unwell(p);
     });
 }
@@ -68,7 +67,7 @@ fn uninit_read() {
                 load(local(1)),
             ),
         ];
-        let p = program_from_statements(stmts, locals);
+        let p = small_program(&locals, &stmts);
         assert_ub(p, "load at type PlaceType { ty: Bool, align: Align { raw: Small(1) } } but the data in memory violates the validity invariant");
     });
 }
@@ -91,23 +90,16 @@ fn no_preserve_padding() {
     // _3 = *_2;
 
     run_sequential(|| {
-        let pair_ty = Type::Tuple {
-            fields: list![
+        let pair_ty = tuple_ty(&[
                 (size(0), u8::get_type()),
                 (size(2), u16::get_type())
-            ],
-            size: size(4),
-        };
+            ], size(4));
         let pair_pty = ptype(pair_ty, align(2));
 
-        let union_ty = Type::Union {
-            fields: list![
+        let union_ty = union_ty(&[
                 (size(0), pair_ty),
-                (size(0), u32::get_type())
-            ],
-            chunks: list![(size(0), size(4))],
-            size: size(4),
-        };
+                (size(0), u32::get_type()),
+            ], size(4));
         let union_pty = ptype(union_ty, align(4));
 
         let locals = vec![
@@ -132,18 +124,18 @@ fn no_preserve_padding() {
             ),
             assign(
                 local(2),
-                ValueExpr::AddrOf {
-                    target: GcCow::new(local(1)),
-                    ptr_ty: PtrType::Raw { pointee: <u8>::get_layout() },
-                },
+                addr_of(
+                    local(1),
+                    <*const u8>::get_type(),
+                ),
             ),
             assign(
                 local(2),
-                ValueExpr::BinOp {
-                    operator: BinOp::PtrOffset { inbounds: true }, // TODO inbounds or not?
-                    left: GcCow::new(load(local(2))),
-                    right: GcCow::new(const_int::<u32>(1)),
-                }
+                ptr_offset(
+                    load(local(2)),
+                    const_int::<u32>(1),
+                    true,
+                )
             ),
             assign(
                 local(3),
@@ -151,9 +143,8 @@ fn no_preserve_padding() {
             ),
         ];
 
-        let p = program_from_statements(stmts, locals);
+        let p = small_program(&locals, &stmts);
         dump_program(&p);
         assert_ub(p, "load at type PlaceType { ty: Int(IntType { signed: Unsigned, size: Size { raw: Small(1) } }), align: Align { raw: Small(1) } } but the data in memory violates the validity invariant");
     });
 }
-*/

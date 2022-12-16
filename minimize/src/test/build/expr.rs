@@ -44,7 +44,10 @@ pub fn load_destructive(p: PlaceExpr) -> ValueExpr {
     }
 }
 
-pub fn addr_of(target: PlaceExpr, ptr_ty: PtrType) -> ValueExpr {
+pub fn addr_of(target: PlaceExpr, ty: Type) -> ValueExpr {
+    let Type::Ptr(ptr_ty) = ty else {
+        panic!("addr_of requires a Type::Ptr!");
+    };
     ValueExpr::AddrOf {
         target: GcCow::new(target),
         ptr_ty,
