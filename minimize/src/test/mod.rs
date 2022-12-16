@@ -134,7 +134,7 @@ fn no_preserve_padding() {
                 ptr_offset(
                     load(local(2)),
                     const_int::<u32>(1),
-                    true,
+                    InBounds::Yes,
                 )
             ),
             assign(
@@ -235,7 +235,7 @@ fn manual_align() {
                     ptr_offset(
                         addr_of(local(0), <*mut u64>::get_type()),
                         load(local(1)),
-                        true
+                        InBounds::Yes
                     ),
                     <u64>::get_ptype()
                 ),
@@ -246,5 +246,45 @@ fn manual_align() {
         let p = small_program(locals, stmts);
         dump_program(&p);
         assert_stop(p);
+    });
+}
+
+#[test]
+fn pointer_partial_overwrite() {
+    run_sequential(|| {
+        let locals = &[
+            <i32>::get_ptype(),
+            <&i32>::get_ptype(),
+            <i32>::get_ptype(),
+        ];
+
+        let stmts = &[
+            live(0),
+            live(1),
+            live(2),
+            assign(local(0), const_int::<i32>(42)),
+            assign(
+                local(1),
+                addr_of(local(0), <&i32>::get_type())
+            ),
+            assign( // this corrupts one u8 of the pointer, stripping it's provenance
+                deref(
+                    addr_of(local(1), <*mut u8>::get_type()),
+                    <u8>::get_ptype(),
+                ),
+                const_int::<u8>(12)
+            ),
+            assign(
+                local(2),
+                load(deref(
+                    load(local(1)),
+                    <i32>::get_ptype(),
+                ))
+            )
+        ];
+
+        let p = small_program(locals, stmts);
+        dump_program(&p);
+        assert_ub(p, "non-zero-sized access with invalid pointer");
     });
 }

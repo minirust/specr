@@ -109,9 +109,11 @@ pub fn sub<T: TypeConv>(l: ValueExpr, r: ValueExpr) -> ValueExpr { int_binop::<T
 pub fn mul<T: TypeConv>(l: ValueExpr, r: ValueExpr) -> ValueExpr { int_binop::<T>(BinOpInt::Mul, l, r) }
 pub fn div<T: TypeConv>(l: ValueExpr, r: ValueExpr) -> ValueExpr { int_binop::<T>(BinOpInt::Div, l, r) }
 
-pub fn ptr_offset(l: ValueExpr, r: ValueExpr, inbounds: bool) -> ValueExpr {
+pub enum InBounds { Yes, No}
+
+pub fn ptr_offset(l: ValueExpr, r: ValueExpr, inbounds: InBounds) -> ValueExpr {
     ValueExpr::BinOp {
-        operator: BinOp::PtrOffset { inbounds },
+        operator: BinOp::PtrOffset { inbounds: matches!(inbounds, InBounds::Yes) },
         left: GcCow::new(l),
         right: GcCow::new(r),
     }
