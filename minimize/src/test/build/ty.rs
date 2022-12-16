@@ -1,6 +1,12 @@
-//! This allows you to convert Rust types to minirust types conveniently.
-
 use crate::test::*;
+
+pub fn layout(size: Size, align: Align) -> Layout {
+    Layout {
+        size,
+        align,
+        inhabited: true, // currently everything is inhabited (enums don't exist yet).
+    }
+}
 
 pub fn int_ty(signed: Signedness, size: Size) -> Type {
     Type::Int(IntType {
@@ -11,83 +17,55 @@ pub fn int_ty(signed: Signedness, size: Size) -> Type {
 
 pub fn bool_ty() -> Type { Type::Bool }
 
-pub trait TypeConv {
-    fn get_type() -> Type;
-    fn get_align() -> Align;
-    fn get_size() -> Size;
+pub fn ref_ty(pointee: Layout) -> Type {
+    Type::Ptr(PtrType::Ref {
+        mutbl: Mutability::Immutable,
+        pointee,
+    })
+}
 
-    fn get_ptype() -> PlaceType {
-        PlaceType {
-            ty: Self::get_type(),
-            align: Self::get_align(),
-        }
-    }
+pub fn ref_mut_ty(pointee: Layout) -> Type {
+    Type::Ptr(PtrType::Ref {
+        mutbl: Mutability::Mutable,
+        pointee,
+    })
+}
 
-    fn get_layout() -> Layout {
-        Layout {
-            size: Self::get_size(),
-            align: Self::get_align(),
-            inhabited: true, // currently there are no uninhabited types in minirust; Type::Enum is not yet supported!
-        }
+pub fn box_ty(pointee: Layout) -> Type {
+    Type::Ptr(PtrType::Box { pointee })
+}
+
+pub fn raw_ptr_ty(pointee: Layout) -> Type {
+    Type::Ptr(PtrType::Raw { pointee })
+}
+
+fn fields(fs: &[(Size, Type)]) -> Fields {
+    fs.iter().copied().collect()
+}
+
+pub fn tuple_ty(f: &[(Size, Type)], size: Size) -> Type {
+    Type::Tuple {
+        fields: fields(f),
+        size,
     }
 }
 
-macro_rules! type_conv_impl {
-    ($ty:ty, $signed:expr, $size:expr, $align:expr) => {
-        impl TypeConv for $ty {
-            fn get_type() -> Type {
-                Type::Int(IntType { signed: $signed, size: Size::from_bytes($size)})
-            }
-            fn get_align() -> Align {
-                Align::from_bytes($align)
-            }
-            fn get_size() -> Size {
-                Size::from_bytes($size)
-            }
-        }
+pub fn array_ty(elem: Type, count: impl Into<Int>) -> Type {
+    Type::Array {
+        elem: GcCow::new(elem),
+        count: count.into(),
     }
 }
 
-type_conv_impl!(u8, Unsigned, 1, 1);
-type_conv_impl!(u16, Unsigned, 2, 2);
-type_conv_impl!(u32, Unsigned, 4, 4);
-type_conv_impl!(u64, Unsigned, 8, 8);
-type_conv_impl!(u128, Unsigned, 16, 8);
-
-type_conv_impl!(i8, Signed, 1, 1);
-type_conv_impl!(i16, Signed, 2, 2);
-type_conv_impl!(i32, Signed, 4, 4);
-type_conv_impl!(i64, Signed, 8, 8);
-type_conv_impl!(i128, Signed, 16, 8);
-
-impl<T: TypeConv> TypeConv for *const T {
-    fn get_type() -> Type {
-        Type::Ptr(PtrType::Raw { pointee: T::get_layout() })
-    }
-    fn get_align() -> Align {
-        Align::from_bytes(8)
-    }
-    fn get_size() -> Size {
-        Size::from_bytes(8)
+pub fn union_ty(f: &[(Size, Type)], size: Size) -> Type {
+    let chunks = list![(Size::ZERO, size)];
+    Type::Union {
+        fields: fields(f),
+        size,
+        chunks,
     }
 }
 
-impl TypeConv for bool {
-    fn get_type() -> Type { Type::Bool }
-    fn get_align() -> Align { align(1) }
-    fn get_size() -> Size { size(1) }
-}
-
-impl<T: TypeConv, const N: usize> TypeConv for [T; N] {
-    fn get_type() -> Type {
-        Type::Array {
-            elem: GcCow::new(T::get_type()),
-            count: N.into()
-        }
-    }
-
-    fn get_align() -> Align { T::get_align() }
-    fn get_size() -> Size {
-        T::get_size() * N.into()
-    }
+pub fn ptype(ty: Type, align: Align) -> PlaceType {
+    PlaceType { ty, align }
 }

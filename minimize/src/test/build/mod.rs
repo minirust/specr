@@ -14,6 +14,9 @@ pub use expr::*;
 mod ty;
 pub use ty::*;
 
+mod ty_conv;
+pub use ty_conv::*;
+
 pub fn align(bytes: u32) -> Align {
     Align::from_bytes(bytes)
 }
