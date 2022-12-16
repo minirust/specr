@@ -29,6 +29,28 @@ pub fn const_tuple(args: &[ValueExpr], ty: Type) -> ValueExpr {
     ValueExpr::Constant(tuple, ty)
 }
 
+// doesn't support zero-length arrays, as their type wouldn't be clear.
+pub fn const_array(args: &[ValueExpr]) -> ValueExpr {
+    assert!(args.len() > 0);
+
+    let args: Vec<_> = args.iter().map(|x| {
+        match x {
+            ValueExpr::Constant(c, ty) => (*c, *ty),
+            _ => panic!("const_array received non-const arg!"),
+        }
+    }).collect();
+
+    let elem_ty = args[0].1;
+    for (_, ty) in &args {
+        assert_eq!(*ty, elem_ty);
+    }
+
+    let array = Constant::Tuple(args.iter().map(|(x, _)| *x).collect());
+    let ty = array_ty(elem_ty, args.len());
+
+    ValueExpr::Constant(array, ty)
+}
+
 // non-destructive load.
 pub fn load(p: PlaceExpr) -> ValueExpr {
     ValueExpr::Load {

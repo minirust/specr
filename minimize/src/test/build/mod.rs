@@ -1,4 +1,5 @@
 //! This module makes it easy to create a `Program`.
+#![allow(unused)]
 
 use crate::test::*;
 
