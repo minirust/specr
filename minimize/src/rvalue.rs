@@ -31,6 +31,7 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
                     Mul => BinOpInt::Mul,
                     Div => BinOpInt::Div,
                     Lt => return None, // This is IGNORED. It's generated in bounds checking.
+                    Eq => return None, // This is IGNORED. It's generated in div-zero checking.
                     x => {
                         dbg!(x);
                         todo!("unsupported BinOp")
