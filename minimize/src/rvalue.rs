@@ -91,6 +91,17 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
             }
         },
         rs::Rvalue::Len(..) => return None, // This is IGNORED. It's generated due to bounds checking.
+        rs::Rvalue::Cast(rs::CastKind::IntToInt, operand, ty) => {
+            let operand = translate_operand(operand, fcx);
+            let Type::Int(int_ty) = translate_ty(*ty, fcx.tcx) else {
+                panic!("attempting to IntToInt-Cast to non-int type!");
+            };
+
+            ValueExpr::UnOp {
+                operator: UnOp::Int(UnOpInt::Cast, int_ty),
+                operand: GcCow::new(operand),
+            }
+        },
         x => {
             dbg!(x);
             todo!()
