@@ -90,3 +90,9 @@ impl<T: TypeConv, const N: usize> TypeConv for [T; N] {
     fn get_align() -> Align { T::get_align() }
     fn get_size() -> Size { T::get_size() * N.into() }
 }
+
+impl TypeConv for () {
+    fn get_type() -> Type { tuple_ty(&[], size(0)) }
+    fn get_align() -> Align { align(1) }
+    fn get_size() -> Size { size(0) }
+}
