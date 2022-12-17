@@ -102,6 +102,24 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
                 operand: GcCow::new(operand),
             }
         },
+        rs::Rvalue::Cast(rs::CastKind::PointerExposeAddress, operand, _) => {
+            let operand = translate_operand(operand, fcx);
+
+            ValueExpr::UnOp {
+                operator: UnOp::Ptr2Int,
+                operand: GcCow::new(operand),
+            }
+        },
+        rs::Rvalue::Cast(rs::CastKind::PointerFromExposedAddress, operand, ty) => {
+            // TODO untested so far!
+            let operand = translate_operand(operand, fcx);
+            let Type::Ptr(ptr_ty) = translate_ty(*ty, fcx.tcx) else { panic!() };
+
+            ValueExpr::UnOp {
+                operator: UnOp::Int2Ptr(ptr_ty),
+                operand: GcCow::new(operand),
+            }
+        },
         x => {
             dbg!(x);
             todo!()
