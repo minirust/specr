@@ -130,6 +130,9 @@ pub fn translate_operand<'tcx>(operand: &rs::Operand<'tcx>, fcx: &mut FnCtxt<'tc
                         Type::Tuple { fields, .. } if fields.is_empty() => {
                             Constant::Tuple(List::new())
                         }
+                        Type::Bool => {
+                            Constant::Bool(val.try_to_bool().unwrap())
+                        }
                         x => {
                             dbg!(x);
                             todo!()
