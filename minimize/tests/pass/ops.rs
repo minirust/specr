@@ -1,0 +1,12 @@
+extern crate intrinsics;
+use intrinsics::*;
+
+fn black_box<T>(t: T) -> T { t }
+
+fn main() {
+    print(-black_box(-42));
+    print(black_box(12) + 30);
+    print(black_box(55) - 13);
+    print(black_box(7) * 6);
+    print(black_box(504) / 12);
+}

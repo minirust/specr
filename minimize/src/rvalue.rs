@@ -9,10 +9,6 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
 
             assert_eq!(lty, rty);
 
-            let Type::Int(int_ty) = translate_ty(lty, fcx.tcx) else {
-                panic!("arithmetic operation with non-int type unsupported!");
-            };
-
             let l = translate_operand(l, fcx);
             let r = translate_operand(r, fcx);
 
@@ -32,11 +28,17 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
                     Div => BinOpInt::Div,
                     Lt => return None, // This is IGNORED. It's generated in bounds checking.
                     Eq => return None, // This is IGNORED. It's generated in div-zero checking.
+                    BitAnd => return None,
                     x => {
                         dbg!(x);
                         todo!("unsupported BinOp")
                     },
                 };
+
+                let Type::Int(int_ty) = translate_ty(lty, fcx.tcx) else {
+                    panic!("arithmetic operation with non-int type unsupported!");
+                };
+
                 BinOp::Int(op_int, int_ty)
             };
 
@@ -46,6 +48,25 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
                 right: r,
             }
         },
+        rs::Rvalue::UnaryOp(unop, operand) => {
+            match unop {
+                rs::UnOp::Neg => {
+                    let ty = operand.ty(&fcx.body, fcx.tcx);
+                    let ty = translate_ty(ty, fcx.tcx);
+                    let Type::Int(int_ty) = ty else {
+                        panic!("Neg operation with non-int type!");
+                    };
+
+                    let operand = translate_operand(operand, fcx);
+
+                    ValueExpr::UnOp {
+                        operator: UnOp::Int(UnOpInt::Neg, int_ty),
+                        operand: GcCow::new(operand),
+                    }
+                },
+                _ => panic!("unsupported UnOp!"),
+            }
+        }
         rs::Rvalue::Ref(_, bkind, place) => {
             let ty = place.ty(&fcx.body, fcx.tcx).ty;
             let pointee = layout_of(ty, fcx.tcx);
