@@ -2,7 +2,7 @@ use super::*;
 
 pub fn place_expr_to_string(p: PlaceExpr) -> String {
     match p {
-        PlaceExpr::Local(l) => localname_to_string(l),
+        PlaceExpr::Local(l) => local_name_to_string(l),
         PlaceExpr::Deref { operand, .. } => {
             format!("*{}", value_expr_to_string(operand.get()))
         },
@@ -18,7 +18,7 @@ pub fn place_expr_to_string(p: PlaceExpr) -> String {
     }
 }
 
-pub fn localname_to_string(l: LocalName) -> String {
+pub fn local_name_to_string(l: LocalName) -> String {
     format!("_{}", l.0.get())
 }
 
@@ -109,10 +109,10 @@ pub fn type_to_string(t: Type) -> String {
     }
 }
 
-pub fn bbname_to_string(bb: BbName) -> String {
+pub fn bb_name_to_string(bb: BbName) -> String {
     format!("bb{}", bb.0.get())
 }
 
-pub fn fnname_to_string(fnname: FnName) -> String {
-    format!("f{}", fnname.0.get())
+pub fn fn_name_to_string(fn_name: FnName) -> String {
+    format!("f{}", fn_name.0.get())
 }

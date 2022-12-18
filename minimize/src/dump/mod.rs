@@ -7,19 +7,19 @@ use expr::*;
 pub fn dump_program(prog: &Program) {
     let mut fns: Vec<(_, _)> = prog.functions.iter().collect();
     fns.sort_by_key(|(k, _)| k.0);
-    for (fname, f) in fns {
-        let start = prog.start == fname;
-        dump_function(fname, f, start);
+    for (fn_name, f) in fns {
+        let start = prog.start == fn_name;
+        dump_function(fn_name, f, start);
     }
 }
 
-fn dump_function(fname: FnName, f: Function, start: bool) {
+fn dump_function(fn_name: FnName, f: Function, start: bool) {
     let start_str = if start {
         "[start] "
     } else { "" };
-    let fname = fnname_to_string(fname);
+    let fn_name = fn_name_to_string(fn_name);
     let args: Vec<_> = f.args.iter().map(|(x, _)| {
-            let ident = localname_to_string(x);
+            let ident = local_name_to_string(x);
             let ty = type_to_string(f.locals.index_at(x).ty);
 
             format!("{ident}: {ty}")
@@ -30,31 +30,31 @@ fn dump_function(fname: FnName, f: Function, start: bool) {
     if let Some((ret, _)) = f.ret {
         ret_ty = type_to_string(f.locals.index_at(ret).ty);
     }
-    println!("{start_str}fn {fname}({args}) -> {ret_ty} {{");
+    println!("{start_str}fn {fn_name}({args}) -> {ret_ty} {{");
 
     // dump locals
     let mut locals: Vec<_> = f.locals.keys().collect();
     locals.sort_by_key(|l| l.0.get());
     for l in locals {
         let ty = f.locals.index_at(l).ty;
-        println!("  let {}: {};", localname_to_string(l), type_to_string(ty));
+        println!("  let {}: {};", local_name_to_string(l), type_to_string(ty));
     }
 
     let mut blocks: Vec<(_, _)> = f.blocks.iter().collect();
     blocks.sort_by_key(|(k, _)| k.0);
-    for (bbname, bb) in blocks {
-        let start = f.start == bbname;
-        dump_bb(bbname, bb, start);
+    for (bb_name, bb) in blocks {
+        let start = f.start == bb_name;
+        dump_bb(bb_name, bb, start);
     }
     println!("}}");
     println!("");
 }
 
-fn dump_bb(bbname: BbName, bb: BasicBlock, start: bool) {
+fn dump_bb(bb_name: BbName, bb: BasicBlock, start: bool) {
     if start {
-        println!("  bb{} [start]:", bbname.0.get());
+        println!("  bb{} [start]:", bb_name.0.get());
     } else {
-        println!("  bb{}:", bbname.0.get());
+        println!("  bb{}:", bb_name.0.get());
     }
 
     for st in bb.statements.iter() {
@@ -72,10 +72,10 @@ fn dump_statement(st: Statement) {
             println!("    Finalize({}, {});", place_expr_to_string(place), fn_entry);
         },
         Statement::StorageLive(local) => {
-            println!("    StorageLive({});", localname_to_string(local));
+            println!("    StorageLive({});", local_name_to_string(local));
         },
         Statement::StorageDead(local) => {
-            println!("    StorageDead({});", localname_to_string(local));
+            println!("    StorageDead({});", local_name_to_string(local));
         },
     }
 }
@@ -90,7 +90,7 @@ fn dump_call(callee: &str, arguments: List<ValueExpr>, ret: Option<PlaceExpr>, n
     }
     let mut next = String::new();
     if let Some(next_block) = next_block {
-        next = format!(" -> {}", bbname_to_string(next_block));
+        next = format!(" -> {}", bb_name_to_string(next_block));
     }
     println!("    {r} = {callee}({args}){next};");
 }
@@ -98,7 +98,7 @@ fn dump_call(callee: &str, arguments: List<ValueExpr>, ret: Option<PlaceExpr>, n
 fn dump_terminator(t: Terminator) {
     match t {
         Terminator::Goto(bb) => {
-            println!("    goto -> {};", bbname_to_string(bb));
+            println!("    goto -> {};", bb_name_to_string(bb));
         },
         Terminator::If {
             condition,
@@ -106,9 +106,9 @@ fn dump_terminator(t: Terminator) {
             else_block,
         } => {
             println!("    if {} {{", value_expr_to_string(condition));
-            println!("      goto -> {};", bbname_to_string(then_block));
+            println!("      goto -> {};", bb_name_to_string(then_block));
             println!("    }} else {{");
-            println!("      goto -> {};", bbname_to_string(else_block));
+            println!("      goto -> {};", bb_name_to_string(else_block));
             println!("    }}");
         },
         Terminator::Unreachable => {
@@ -120,7 +120,7 @@ fn dump_terminator(t: Terminator) {
             ret,
             next_block,
         } => {
-            let callee = fnname_to_string(callee);
+            let callee = fn_name_to_string(callee);
             let arguments = arguments.iter().map(|(x, _)| x).collect();
             let ret = ret.map(|(x, _)| x);
             dump_call(&callee, arguments, ret, next_block);

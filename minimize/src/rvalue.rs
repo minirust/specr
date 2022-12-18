@@ -18,7 +18,7 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
             use rs::BinOp::*;
             let op = if *bin_op == Offset {
                 BinOp::PtrOffset {
-                    inbounds: true // FIXME where to find this bool `inbounds` in mir?
+                    inbounds: true // TODO is rs::BinOp::Offset always `inbounds`?
                 }
             } else { // everything else right-now is a int op!
                 let op_int = match bin_op {
@@ -206,7 +206,7 @@ fn place_type_of<'tcx>(ty: rs::Ty<'tcx>, fcx: &mut FnCtxt<'tcx>) -> PlaceType {
 }
 
 pub fn translate_place<'tcx>(place: &rs::Place<'tcx>, fcx: &mut FnCtxt<'tcx>) -> PlaceExpr {
-    let mut expr = PlaceExpr::Local(fcx.localname_map[&place.local]);
+    let mut expr = PlaceExpr::Local(fcx.local_name_map[&place.local]);
     for (i, proj) in place.projection.iter().enumerate() {
         match proj {
             rs::ProjectionElem::Field(f, _ty) => {
@@ -234,7 +234,7 @@ pub fn translate_place<'tcx>(place: &rs::Place<'tcx>, fcx: &mut FnCtxt<'tcx>) ->
                 };
             },
             rs::ProjectionElem::Index(loc) => {
-                let i = PlaceExpr::Local(fcx.localname_map[&loc]);
+                let i = PlaceExpr::Local(fcx.local_name_map[&loc]);
                 let i = GcCow::new(i);
                 let i = ValueExpr::Load {
                     destructive: false,

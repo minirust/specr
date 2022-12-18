@@ -13,6 +13,6 @@ fn uninit_read() {
             ),
         ];
         let p = small_program(&locals, &stmts);
-        assert_ub(p, "load at type PlaceType { ty: Bool, align: Align { raw: Small(1) } } but the data in memory violates the validity invariant");
+        assert_ub(p, "load at type PlaceType { ty: Bool, align: Align { raw: Int(Small(1)) } } but the data in memory violates the validity invariant");
     });
 }

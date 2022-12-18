@@ -1,29 +1,33 @@
 use crate::*;
 
+/// maps Rust function calls to minirust FnNames.
+pub type FnNameMap<'tcx> = HashMap<(rs::DefId, rs::SubstsRef<'tcx>), FnName>;
+
 pub fn translate_program<'tcx>(tcx: rs::TyCtxt<'tcx>) -> Program {
-    let mut fname_map: HashMap<(rs::DefId, rs::SubstsRef<'tcx>), FnName> = HashMap::new();
+    let mut fn_name_map = FnNameMap::new();
     let mut fmap: Map<FnName, Function> = Map::new();
 
     let (entry, _ty) = tcx.entry_fn(()).unwrap();
     let substs_ref: rs::SubstsRef<'tcx> = tcx.intern_substs(&[]);
     let entry_name = FnName(Name::new(0));
 
-    fname_map.insert((entry, substs_ref), entry_name);
+    fn_name_map.insert((entry, substs_ref), entry_name);
 
     // take any not-yet-implemented function:
-    while let Some(fname) = fname_map.values().find(|k| !fmap.contains_key(**k)).copied() {
-        let (def_id, substs_ref) = fname_map.iter()
-                                            .find(|(_, f)| **f == fname)
+    while let Some(fn_name) = fn_name_map.values().find(|k| !fmap.contains_key(**k)).copied() {
+        let (def_id, substs_ref) = fn_name_map.iter()
+                                            .find(|(_, f)| **f == fn_name)
                                             .map(|(r, _)| r)
                                             .unwrap();
         let body = tcx.optimized_mir(def_id);
         let body = tcx.subst_and_normalize_erasing_regions(substs_ref, rs::ParamEnv::empty(), body.clone());
 
-        let f = translate_body(body, &mut fname_map, tcx);
-        fmap.insert(fname, f);
+        let (f, m) = translate_body(body, fn_name_map, tcx);
+        fmap.insert(fn_name, f);
+        fn_name_map = m;
     }
 
-    let number_of_fns = fname_map.len();
+    let number_of_fns = fn_name_map.len();
 
     // add a `start` function, which calls `entry`.
     let start = FnName(Name::new(number_of_fns as _));
@@ -76,24 +80,22 @@ fn mk_start_fn(entry: FnName) -> Function {
 pub struct FnCtxt<'tcx> {
     /// This is the only field mutated during translation.
     /// Upon function call, the callees DefId + SubstsRef will be mapped to a fresh `FnName`.
-    pub fnname_map: HashMap<(rs::DefId, rs::SubstsRef<'tcx>), FnName>,
-    pub localname_map: HashMap<rs::Local, LocalName>,
-    pub bbname_map: HashMap<rs::BasicBlock, BbName>,
+    pub fn_name_map: FnNameMap<'tcx>,
+    pub local_name_map: HashMap<rs::Local, LocalName>,
+    pub bb_name_map: HashMap<rs::BasicBlock, BbName>,
     pub tcx: rs::TyCtxt<'tcx>,
     pub body: rs::Body<'tcx>,
 }
 
-// TODO implement non-mem::swap solution
-fn translate_body<'tcx>(body: rs::Body<'tcx>, fnname_map_arg: &mut HashMap<(rs::DefId, rs::SubstsRef<'tcx>), FnName>, tcx: rs::TyCtxt<'tcx>) -> Function {
-    let mut fnname_map = Default::default();
-    std::mem::swap(&mut fnname_map, fnname_map_arg);
-
+/// translates a function body.
+/// Any fn calls occuring during this translation will be added to the `FnNameMap`.
+fn translate_body<'tcx>(body: rs::Body<'tcx>, fn_name_map: FnNameMap<'tcx>, tcx: rs::TyCtxt<'tcx>) -> (Function, FnNameMap<'tcx>) {
     // associate names for each mir BB.
-    let mut bbname_map: HashMap<rs::BasicBlock, BbName> = HashMap::new();
+    let mut bb_name_map: HashMap<rs::BasicBlock, BbName> = HashMap::new();
     for bb_id in body.basic_blocks.indices() {
-        let bbname = bbname_map.len(); // .len() is the next free index
-        let bbname = BbName(Name::new(bbname as u32));
-        bbname_map.insert(bb_id, bbname);
+        let bb_name = bb_name_map.len(); // .len() is the next free index
+        let bb_name = BbName(Name::new(bb_name as u32));
+        bb_name_map.insert(bb_id, bb_name);
     }
 
     // bb with id 0 is the start block:
@@ -101,33 +103,33 @@ fn translate_body<'tcx>(body: rs::Body<'tcx>, fnname_map_arg: &mut HashMap<(rs::
     let start = BbName(Name::new(0));
 
     // associate names for each mir Local.
-    let mut localname_map: HashMap<rs::Local, LocalName> = HashMap::new();
+    let mut local_name_map: HashMap<rs::Local, LocalName> = HashMap::new();
     for local_id in body.local_decls.indices() {
-        let localname = localname_map.len(); // .len() is the next free index
-        let localname = LocalName(Name::new(localname as u32));
-        localname_map.insert(local_id, localname);
+        let local_name = local_name_map.len(); // .len() is the next free index
+        let local_name = LocalName(Name::new(local_name as u32));
+        local_name_map.insert(local_id, local_name);
     }
 
     // convert mirs Local-types to minirust.
     let mut locals = Map::default();
-    for (id, localname) in &localname_map {
+    for (id, local_name) in &local_name_map {
         let local_decl = &body.local_decls[*id];
-        locals.insert(*localname, translate_local(local_decl, tcx));
+        locals.insert(*local_name, translate_local(local_decl, tcx));
     }
 
     let mut fcx = FnCtxt {
-        localname_map,
-        bbname_map: bbname_map.clone(),
-        fnname_map,
+        local_name_map,
+        bb_name_map: bb_name_map.clone(),
+        fn_name_map,
         tcx,
         body: body.clone(),
     };
 
     // convert mirs BBs to minirust.
     let mut blocks = Map::default();
-    for (id, bbname) in bbname_map {
+    for (id, bb_name) in bb_name_map {
         let bb_data = &body.basic_blocks[id];
-        blocks.insert(bbname, translate_bb(bb_data, &mut fcx));
+        blocks.insert(bb_name, translate_bb(bb_data, &mut fcx));
     }
 
     // "The first local is the return value pointer, followed by arg_count locals for the function arguments, followed by any user-declared variables and temporaries."
@@ -137,21 +139,21 @@ fn translate_body<'tcx>(body: rs::Body<'tcx>, fnname_map_arg: &mut HashMap<(rs::
     let mut args = List::default();
     for i in 0..fcx.body.arg_count {
         let i = i+1; // this starts counting with 1, as id 0 is the return value of the function.
-        let localname = LocalName(Name::new(i as _));
-        args.push((localname, arg_abi()));
+        let local_name = LocalName(Name::new(i as _));
+        args.push((local_name, arg_abi()));
     }
 
-    let mut fnname_map = fcx.fnname_map;
+    let fn_name_map = fcx.fn_name_map;
 
-    std::mem::swap(&mut fnname_map, fnname_map_arg);
-
-    Function {
+    let f = Function {
         locals,
         args,
         ret,
         blocks,
         start
-    }
+    };
+
+    (f, fn_name_map)
 }
 
 fn translate_local<'tcx>(local: &rs::LocalDecl<'tcx>, tcx: rs::TyCtxt<'tcx>) -> PlaceType {

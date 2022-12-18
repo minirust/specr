@@ -26,10 +26,10 @@ fn translate_stmt<'tcx>(stmt: &rs::Statement<'tcx>, fcx: &mut FnCtxt<'tcx>) -> O
             }
         },
         rs::StatementKind::StorageLive(local) => {
-            Statement::StorageLive(fcx.localname_map[&local])
+            Statement::StorageLive(fcx.local_name_map[&local])
         },
         rs::StatementKind::StorageDead(local) => {
-            Statement::StorageDead(fcx.localname_map[&local])
+            Statement::StorageDead(fcx.local_name_map[&local])
         },
         rs::StatementKind::Deinit(..) | rs::StatementKind::Retag(..) => return None, // IGNORED for now.
         x => {
@@ -42,10 +42,10 @@ fn translate_stmt<'tcx>(stmt: &rs::Statement<'tcx>, fcx: &mut FnCtxt<'tcx>) -> O
 fn translate_terminator<'tcx>(terminator: &rs::Terminator<'tcx>, fcx: &mut FnCtxt<'tcx>) -> Terminator {
     match &terminator.kind {
         rs::TerminatorKind::Return => Terminator::Return,
-        rs::TerminatorKind::Goto { target } => Terminator::Goto(fcx.bbname_map[&target]),
+        rs::TerminatorKind::Goto { target } => Terminator::Goto(fcx.bb_name_map[&target]),
         rs::TerminatorKind::Call { func, target, destination, args, .. } => translate_call(fcx, func, args, destination, target),
         rs::TerminatorKind::Assert { target, .. } => { // Assert is IGNORED as of now.
-            Terminator::Goto(fcx.bbname_map[&target])
+            Terminator::Goto(fcx.bb_name_map[&target])
         }
         x => {
             dbg!(x);
@@ -71,19 +71,19 @@ fn translate_call<'tcx>(fcx: &mut FnCtxt<'tcx>, func: &rs::Operand<'tcx>, args: 
             intrinsic,
             arguments: args.iter().map(|x| translate_operand(x, fcx)).collect(),
             ret: None,
-            next_block: target.as_ref().map(|t| fcx.bbname_map[t]),
+            next_block: target.as_ref().map(|t| fcx.bb_name_map[t]),
         }
     } else {
-        if !fcx.fnname_map.contains_key(&key) {
-            let fname = fcx.fnname_map.len();
-            let fname = FnName(Name::new(fname as _));
-            fcx.fnname_map.insert(key, fname);
+        if !fcx.fn_name_map.contains_key(&key) {
+            let fn_name = fcx.fn_name_map.len();
+            let fn_name = FnName(Name::new(fn_name as _));
+            fcx.fn_name_map.insert(key, fn_name);
         }
         Terminator::Call {
-            callee: fcx.fnname_map[&key],
+            callee: fcx.fn_name_map[&key],
             arguments: args.iter().map(|x| (translate_operand(x, fcx), arg_abi())).collect(),
             ret: Some((translate_place(&destination, fcx), arg_abi())),
-            next_block: target.as_ref().map(|t| fcx.bbname_map[t]),
+            next_block: target.as_ref().map(|t| fcx.bb_name_map[t]),
         }
     }
 }
