@@ -1,7 +1,6 @@
 use crate::test::*;
 
 #[test]
-#[ignore] // TODO unignore when minirust is fixed
 fn zst_tuple() {
     run_sequential(|| {
         let tuple = tuple_ty(&[(size(0), <()>::get_type()); 2], size(0));

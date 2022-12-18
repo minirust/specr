@@ -1,7 +1,6 @@
 use crate::test::*;
 
 #[test]
-#[ignore] // TODO unignore when minirust is fixed
 fn negative_index() {
     run_sequential(|| {
         let locals = &[
