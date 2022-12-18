@@ -115,6 +115,16 @@ impl Int {
     pub fn in_bounds(self, signed: Signedness, size: Size) -> bool {
         self == self.modulo(signed, size)
     }
+
+    #[doc(hidden)]
+    pub fn try_to_usize(self) -> Option<usize> {
+        self.ext().to_usize()
+    }
+
+    #[doc(hidden)]
+    pub fn try_to_u8(self) -> Option<u8> {
+        self.ext().to_u8()
+    }
 }
 
 #[cfg(test)]

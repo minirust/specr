@@ -23,14 +23,14 @@ pub fn run_program(prog: Program) -> Outcome {
     };
     mark_and_sweep(&machine);
 
-    let NdResult(x) = run_impl(machine);
+    let x = run_impl(machine).get();
     let t_info = match x {
         Ok(never) => never,
         Err(t_info) => t_info,
     };
 
     match t_info {
-        TerminationInfo::Ub(err) => Outcome::Ub(err.0.get()),
+        TerminationInfo::Ub(err) => Outcome::Ub(err.get()),
         TerminationInfo::MachineStop => Outcome::Stop,
         _ => todo!(),
     }

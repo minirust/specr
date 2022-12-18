@@ -140,7 +140,7 @@ pub fn ptr_offset(l: ValueExpr, r: ValueExpr, inbounds: InBounds) -> ValueExpr {
 }
 
 pub fn local(x: u32) -> PlaceExpr {
-    PlaceExpr::Local(LocalName(Name(x)))
+    PlaceExpr::Local(LocalName(Name::new(x)))
 }
 
 pub fn deref(operand: ValueExpr, ptype: PlaceType) -> PlaceExpr {

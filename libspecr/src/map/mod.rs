@@ -5,7 +5,7 @@ mod iter;
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
 /// Garbage-collected hash map implementing `Copy`.
-pub struct Map<K: Obj, V: Obj>(pub GcCow<IMHashMap<K, V>>);
+pub struct Map<K: Obj, V: Obj>(pub(crate) GcCow<IMHashMap<K, V>>);
 
 impl<K: Obj, V: Obj> GcCompat for Map<K, V> {
     fn points_to(&self, m: &mut HashSet<usize>) {

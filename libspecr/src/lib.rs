@@ -64,9 +64,14 @@ use signedness::*;
 mod gccow;
 use gccow::*;
 
+mod obj;
+use obj::*;
+
 #[doc(hidden)]
-pub mod hidden;
-use hidden::*;
+pub mod hidden {
+    pub use crate::obj::*;
+    pub use crate::gccow::{GcCow, GcCompat, mark_and_sweep, run_sequential};
+}
 
 pub use crate::nondet::*;
 pub use crate::name::*;

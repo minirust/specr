@@ -19,7 +19,7 @@ pub fn place_expr_to_string(p: PlaceExpr) -> String {
 }
 
 pub fn localname_to_string(l: LocalName) -> String {
-    format!("_{}", l.0.0)
+    format!("_{}", l.0.get())
 }
 
 fn constant_to_string(c: Constant) -> String {
@@ -110,9 +110,9 @@ pub fn type_to_string(t: Type) -> String {
 }
 
 pub fn bbname_to_string(bb: BbName) -> String {
-    format!("bb{}", bb.0.0)
+    format!("bb{}", bb.0.get())
 }
 
 pub fn fnname_to_string(fnname: FnName) -> String {
-    format!("f{}", fnname.0.0)
+    format!("f{}", fnname.0.get())
 }

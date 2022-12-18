@@ -9,22 +9,22 @@ pub fn finalize(place: PlaceExpr, fn_entry: bool) -> Statement {
 }
 
 pub fn live(x: u32) -> Statement {
-    Statement::StorageLive(LocalName(Name(x)))
+    Statement::StorageLive(LocalName(Name::new(x)))
 }
 
 pub fn dead(x: u32) -> Statement {
-    Statement::StorageDead(LocalName(Name(x)))
+    Statement::StorageDead(LocalName(Name::new(x)))
 }
 
 pub fn goto(x: u32) -> Terminator {
-    Terminator::Goto(BbName(Name(x)))
+    Terminator::Goto(BbName(Name::new(x)))
 }
 
 pub fn if_(condition: ValueExpr, then_blk: u32, else_blk: u32) -> Terminator {
     Terminator::If {
         condition,
-        then_block: BbName(Name(then_blk)),
-        else_block: BbName(Name(else_blk)),
+        then_block: BbName(Name::new(then_blk)),
+        else_block: BbName(Name::new(else_blk)),
     }
 }
 
@@ -34,10 +34,10 @@ pub fn unreachable() -> Terminator {
 
 pub fn call(f: u32, args: &[ValueExpr], ret: Option<PlaceExpr>, next: Option<u32>) -> Terminator {
     Terminator::Call {
-        callee: FnName(Name(f)),
+        callee: FnName(Name::new(f)),
         arguments: args.iter().map(|x| (*x, ArgAbi::Register)).collect(),
         ret: ret.map(|x| (x, ArgAbi::Register)),
-        next_block: next.map(|x| BbName(Name(x))),
+        next_block: next.map(|x| BbName(Name::new(x))),
     }
 }
 
@@ -46,7 +46,7 @@ pub fn print(arg: ValueExpr, next: u32) -> Terminator {
         intrinsic: Intrinsic::PrintStdout,
         arguments: list![arg],
         ret: None,
-        next_block: Some(BbName(Name(next))),
+        next_block: Some(BbName(Name::new(next))),
     }
 }
 
@@ -55,7 +55,7 @@ pub fn eprint(arg: ValueExpr, next: u32) -> Terminator {
         intrinsic: Intrinsic::PrintStderr,
         arguments: list![arg],
         ret: None,
-        next_block: Some(BbName(Name(next))),
+        next_block: Some(BbName(Name::new(next))),
     }
 }
 

@@ -5,7 +5,7 @@ use std::ops::*;
 
 #[derive(Copy, Clone)]
 /// Non-determinism primitive. See [Non-determinism](https://github.com/RalfJung/minirust/blob/master/README.md#non-determinism).
-pub struct Nondet<T>(pub T);
+pub struct Nondet<T>(pub(crate) T);
 
 /// The `pick` function from the minirust spec.  See [Non-determinism](https://github.com/RalfJung/minirust/blob/master/README.md#non-determinism).
 pub fn pick<T: Obj>(distr: impl Distribution<T>, f: impl Fn(T) -> bool) -> crate::Nondet<T> {

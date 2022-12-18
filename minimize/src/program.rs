@@ -6,7 +6,7 @@ pub fn translate_program<'tcx>(tcx: rs::TyCtxt<'tcx>) -> Program {
 
     let (entry, _ty) = tcx.entry_fn(()).unwrap();
     let substs_ref: rs::SubstsRef<'tcx> = tcx.intern_substs(&[]);
-    let entry_name = FnName(Name(0));
+    let entry_name = FnName(Name::new(0));
 
     fname_map.insert((entry, substs_ref), entry_name);
 
@@ -26,7 +26,7 @@ pub fn translate_program<'tcx>(tcx: rs::TyCtxt<'tcx>) -> Program {
     let number_of_fns = fname_map.len();
 
     // add a `start` function, which calls `entry`.
-    let start = FnName(Name(number_of_fns as _));
+    let start = FnName(Name::new(number_of_fns as _));
     fmap.insert(start, mk_start_fn(entry_name));
 
     Program {
@@ -36,8 +36,8 @@ pub fn translate_program<'tcx>(tcx: rs::TyCtxt<'tcx>) -> Program {
 }
 
 fn mk_start_fn(entry: FnName) -> Function {
-    let b0_name = BbName(Name(0));
-    let b1_name = BbName(Name(1));
+    let b0_name = BbName(Name::new(0));
+    let b1_name = BbName(Name::new(1));
 
     let b0 = BasicBlock {
         statements: List::new(),
@@ -92,19 +92,19 @@ fn translate_body<'tcx>(body: rs::Body<'tcx>, fnname_map_arg: &mut HashMap<(rs::
     let mut bbname_map: HashMap<rs::BasicBlock, BbName> = HashMap::new();
     for bb_id in body.basic_blocks.indices() {
         let bbname = bbname_map.len(); // .len() is the next free index
-        let bbname = BbName(Name(bbname as u32));
+        let bbname = BbName(Name::new(bbname as u32));
         bbname_map.insert(bb_id, bbname);
     }
 
     // bb with id 0 is the start block:
     // see https://doc.rust-lang.org/stable/nightly-rustc/src/rustc_middle/mir/mod.rs.html#1014-1042
-    let start = BbName(Name(0));
+    let start = BbName(Name::new(0));
 
     // associate names for each mir Local.
     let mut localname_map: HashMap<rs::Local, LocalName> = HashMap::new();
     for local_id in body.local_decls.indices() {
         let localname = localname_map.len(); // .len() is the next free index
-        let localname = LocalName(Name(localname as u32));
+        let localname = LocalName(Name::new(localname as u32));
         localname_map.insert(local_id, localname);
     }
 
@@ -132,12 +132,12 @@ fn translate_body<'tcx>(body: rs::Body<'tcx>, fnname_map_arg: &mut HashMap<(rs::
 
     // "The first local is the return value pointer, followed by arg_count locals for the function arguments, followed by any user-declared variables and temporaries."
     // - https://doc.rust-lang.org/stable/nightly-rustc/rustc_middle/mir/struct.Body.html
-    let ret = Some((LocalName(Name(0)), arg_abi()));
+    let ret = Some((LocalName(Name::new(0)), arg_abi()));
 
     let mut args = List::default();
     for i in 0..fcx.body.arg_count {
         let i = i+1; // this starts counting with 1, as id 0 is the return value of the function.
-        let localname = LocalName(Name(i as _));
+        let localname = LocalName(Name::new(i as _));
         args.push((localname, arg_abi()));
     }
 

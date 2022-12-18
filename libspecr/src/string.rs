@@ -4,7 +4,7 @@ use std::fmt::{Display, Formatter, Error};
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Hash)]
 /// Garbage-collected wrapper around `std::string::String` implementing `Copy`.
-pub struct String(pub GcCow<std::string::String>);
+pub struct String(pub(crate) GcCow<std::string::String>);
 
 impl GcCompat for String {
     fn points_to(&self, m: &mut HashSet<usize>) {
@@ -24,13 +24,25 @@ impl Display for String {
     }
 }
 
+impl String {
+    #[doc(hidden)]
+    pub fn from(s: std::string::String) -> Self {
+        Self(GcCow::new(s))
+    }
+
+    #[doc(hidden)]
+    pub fn get(self) -> std::string::String {
+        self.0.get()
+    }
+}
+
 /// Wrapper around the `std::format` macro, returning `libspecr::String` instead of `std::string::String`.
 pub macro format {
     ($($thing:expr),*) => {
-        String(GcCow::new(
+        String::from(
             std::format!(
                 $($thing),*
             )
-        ))
+        )
     },
 }

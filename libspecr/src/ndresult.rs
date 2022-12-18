@@ -4,7 +4,17 @@ use std::convert::Infallible;
 /// Conceptually, this is a `Nondet<Result<T, E>>`.
 ///
 /// This newtype is necessary so that applying `?` on a `NdResult<T, E>` yields `T` and not `Result<T, E>`.
-pub struct NdResult<T, E>(pub Result<T, E>);
+pub struct NdResult<T, E>(pub(crate) Result<T, E>);
+
+impl<T, E> NdResult<T, E> {
+    #[doc(hidden)]
+    pub fn from(r: Result<T, E>) -> Self { Self(r) }
+
+    #[doc(hidden)]
+    pub fn get(self) -> Result<T, E> {
+        self.0
+    }
+}
 
 impl<T, E> Try for NdResult<T, E> {
     type Output = T;

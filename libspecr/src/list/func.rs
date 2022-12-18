@@ -135,6 +135,13 @@ impl<T: Obj> List<T> {
         self.iter().map(f).try_collect::<List<O>>()
     }
 
+    #[doc(hidden)]
+    pub fn from_elem(elem: T, n: Int) -> List<T> {
+        let n = n.try_to_usize().expect("invalid number of elements in List::from_elem");
+        let v: im::vector::Vector<T> = std::iter::repeat(elem).take(n).collect();
+
+        List(GcCow::new(v))
+    }
 }
 
 #[test]

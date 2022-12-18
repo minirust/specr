@@ -76,7 +76,7 @@ fn translate_call<'tcx>(fcx: &mut FnCtxt<'tcx>, func: &rs::Operand<'tcx>, args: 
     } else {
         if !fcx.fnname_map.contains_key(&key) {
             let fname = fcx.fnname_map.len();
-            let fname = FnName(Name(fname as _));
+            let fname = FnName(Name::new(fname as _));
             fcx.fnname_map.insert(key, fname);
         }
         Terminator::Call {

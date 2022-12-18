@@ -34,7 +34,7 @@ fn dump_function(fname: FnName, f: Function, start: bool) {
 
     // dump locals
     let mut locals: Vec<_> = f.locals.keys().collect();
-    locals.sort_by_key(|l| l.0.0);
+    locals.sort_by_key(|l| l.0.get());
     for l in locals {
         let ty = f.locals.index_at(l).ty;
         println!("  let {}: {};", localname_to_string(l), type_to_string(ty));
@@ -52,9 +52,9 @@ fn dump_function(fname: FnName, f: Function, start: bool) {
 
 fn dump_bb(bbname: BbName, bb: BasicBlock, start: bool) {
     if start {
-        println!("  bb{} [start]:", bbname.0.0);
+        println!("  bb{} [start]:", bbname.0.get());
     } else {
-        println!("  bb{}:", bbname.0.0);
+        println!("  bb{}:", bbname.0.get());
     }
 
     for st in bb.statements.iter() {

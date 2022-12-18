@@ -5,7 +5,7 @@ mod iter;
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
 /// Garbage-collected hash set implementing `Copy`.
-pub struct Set<T: Obj>(pub GcCow<IMHashSet<T>>);
+pub struct Set<T: Obj>(pub(crate) GcCow<IMHashSet<T>>);
 
 impl<T: Obj> GcCompat for Set<T> {
     fn points_to(&self, m: &mut HashSet<usize>) {

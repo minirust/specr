@@ -1,4 +1,4 @@
-use crate::*;
+use crate::int::*;
 
 #[const_trait]
 /// Conversion to `Int`.
@@ -13,7 +13,7 @@ macro_rules! setup {
         $(
             impl const ToInt for $t {
                 fn to_int(self) -> Int {
-                    Int::Small(self as i128)
+                    Int(IntInner::Small(self as i128))
                 }
             }
         )*
