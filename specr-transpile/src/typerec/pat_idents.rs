@@ -1,9 +1,7 @@
-use syn::visit::*;
-
 use crate::typerec::*;
 
 /// finds identifiers within a pattern that need to be get'ed before being used.
-pub(in crate::typerec) fn pat_idents(pat: &Pat, elements: &HashSet<VariantElement>) -> HashSet<String> {
+pub(in crate::typerec) fn pat_idents(pat: &Pat, elements: &HashSet<VariantElement>) -> HashSet<Ident> {
     let mut v = Visitor {
         elements,
         idents: HashSet::new(),
@@ -15,7 +13,7 @@ pub(in crate::typerec) fn pat_idents(pat: &Pat, elements: &HashSet<VariantElemen
 
 struct Visitor<'a> {
     elements: &'a HashSet<VariantElement>,
-    idents: HashSet<String>,
+    idents: HashSet<Ident>,
 }
 
 impl Visit<'_> for Visitor<'_> {
@@ -26,12 +24,11 @@ impl Visit<'_> for Visitor<'_> {
             let ElementIdx::Named(n) = &e.idx else { continue };
 
             for f in &pat.fields {
-                let m = format!("{}", f.member.to_token_stream());
-                if &m != n { continue; }
+                let Member::Named(m) = &f.member else { continue };
+                if m != n { continue; }
 
                 if let Pat::Ident(id) = &*f.pat {
-                    let id = format!("{}", id.to_token_stream());
-                    self.idents.insert(id);
+                    self.idents.insert(id.ident.clone());
                 }
             }
         }
@@ -47,8 +44,7 @@ impl Visit<'_> for Visitor<'_> {
 
             let Some(f) = pat.pat.elems.iter().nth(*idx) else { continue };
             if let Pat::Ident(id) = f {
-                let id = format!("{}", id.to_token_stream());
-                self.idents.insert(id);
+                self.idents.insert(id.ident.clone());
             }
         }
 

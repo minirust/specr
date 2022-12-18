@@ -1,8 +1,4 @@
-use std::collections::HashSet;
-
-use syn::*;
-use quote::ToTokens;
-use crate::Module;
+use crate::prelude::*;
 
 mod wrap;
 use wrap::wrap_variant_elements;
@@ -26,18 +22,17 @@ mod fix;
 ///
 #[derive(Hash, PartialEq, Eq)]
 struct VariantElement {
-    variant: String,
+    variant: Ident,
     idx: ElementIdx,
 }
 
 /// Indexes an enum variant, either by-name, or by argument position.
 #[derive(Hash, PartialEq, Eq)]
 enum ElementIdx {
-    Named(String),
+    Named(Ident),
     Unnamed(usize),
 }
 
-// TODO support generic enums.
 pub fn typerec(mut mods: Vec<Module>) -> Vec<Module> {
     let elements = wrap_variant_elements(&mut mods);
     fix::fix(&mut mods, &elements);

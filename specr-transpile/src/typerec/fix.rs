@@ -1,6 +1,3 @@
-use syn::visit_mut::*;
-use syn::token::Colon;
-
 use crate::typerec::*;
 
 pub(in crate::typerec) fn fix(mods: &mut [Module], elements: &HashSet<VariantElement>) {
@@ -22,10 +19,10 @@ impl VisitMut for Visitor<'_> {
             let p = extract_variant(&i.path);
             if p == e.variant {
                 for f in &mut i.fields {
-                    let m = format!("{}", f.member.to_token_stream());
-                    if &m == name {
+                    let Member::Named(m) = &f.member else { continue };
+                    if m == name {
                         // this solves the case `Variant { x }`.
-                        f.colon_token = Some(Colon::default());
+                        f.colon_token = Some(Default::default());
 
                         wrap_expr(&mut f.expr);
                     }
@@ -54,18 +51,15 @@ impl VisitMut for Visitor<'_> {
 
     // `Foo { x } => { ... }` ==> `Foo { x } => { let x = x.get(); ... }`
     fn visit_arm_mut(&mut self, i: &mut Arm) {
-        let idents = pat_idents::pat_idents(&i.pat, self.elements);
-
-        // TODO use quote for stuff like this:
-        let mut s = String::from("{");
-        for id in idents {
-            s.push_str(&format!("let {id} = {id}.get();"));
-        }
-        s.push_str(&format!("{}", i.body.to_token_stream()));
-        s.push_str("}");
-        let new_body = parse_str::<Expr>(&s).unwrap();
-
-        i.body = Box::new(new_body);
+        let idents: Vec<_> = pat_idents::pat_idents(&i.pat, self.elements).into_iter().collect();
+        let body = &i.body;
+        let body = quote! {
+            {
+                #( let #idents = #idents.get(); )*
+                #body
+            }
+        };
+        i.body = Box::new(parse2(body).unwrap());
 
         visit_arm_mut(self, i);
     }
@@ -73,17 +67,16 @@ impl VisitMut for Visitor<'_> {
 
 // wraps an Expr in specr::hidden::GcCow::new(_)
 fn wrap_expr(expr: &mut Expr) {
-    let e = format!("specr::hidden::GcCow::new({})", expr.to_token_stream());
-    let e = parse_str::<Expr>(&e).unwrap();
-    *expr = e;
+    let e = quote! {
+        specr::hidden::GcCow::new(#expr)
+    };
+    *expr = parse2(e).unwrap();
 }
 
 // extract the last segment (i.e. the enum Variant) from a path
 // `Foo::Bar` => `Bar`
-pub(in crate::typerec) fn extract_variant(p: &Path) -> String {
+pub(in crate::typerec) fn extract_variant(p: &Path) -> Ident {
     let p = p.segments.iter().last().unwrap(); 
-    let p = format!("{}", p.to_token_stream());
-
-    p
+    p.ident.clone()
 }
 

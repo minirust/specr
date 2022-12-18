@@ -36,15 +36,15 @@ fn wrap_enum(it_enum: &mut ItemEnum) -> HashSet<VariantElement> {
             if let Some(j) = f.attrs.iter().position(is_indirection_attr) {
                 f.attrs.remove(j);
 
-                let wrapped_ty = format!("specr::hidden::GcCow<{}>", f.ty.to_token_stream());
-                let wrapped_ty = parse_str::<Type>(&wrapped_ty).unwrap();
-                f.ty = wrapped_ty;
+                let t = &f.ty;
+                let wrapped_ty = quote! { specr::hidden::GcCow<#t> };
+                f.ty = parse2(wrapped_ty).unwrap();
 
                 let idx = match &f.ident {
-                    Some(id) => ElementIdx::Named(format!("{}", id)),
+                    Some(id) => ElementIdx::Named(id.clone()),
                     None => ElementIdx::Unnamed(i),
                 };
-                let variant = format!("{}", variant.ident);
+                let variant = variant.ident.clone();
                 elements.insert(VariantElement { variant, idx });
             }
             

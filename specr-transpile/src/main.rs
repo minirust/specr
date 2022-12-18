@@ -21,14 +21,13 @@ use source::Module;
 
 pub mod prelude {
     pub use crate::source::Module;
+    pub use std::collections::HashSet;
     pub use quote::{quote, format_ident, ToTokens};
     pub use syn::*;
-    pub use syn::token::{Brace, Match};
     pub use syn::visit_mut::*;
     pub use syn::visit::*;
     pub use proc_macro2::{TokenStream, TokenTree, Span};
     pub use syn::punctuated::Punctuated;
-
 }
 use prelude::*;
 

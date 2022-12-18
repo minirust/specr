@@ -175,9 +175,9 @@ fn merge_implementations(fwd_decl: FwdDeclaration, impls: Vec<ImplItemMethod>) -
     iim.block.stmts = vec![
         Stmt::Expr(Expr::Match(ExprMatch {
             attrs: Vec::new(),
-            match_token: Match::default(),
+            match_token: Default::default(),
             expr: match_expr,
-            brace_token: Brace::default(),
+            brace_token: Default::default(),
             arms,
         }))
     ];
