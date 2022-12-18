@@ -17,8 +17,6 @@ use std::fs;
 use std::path::{PathBuf, Path};
 use std::process::Command;
 
-use source::Module;
-
 pub mod prelude {
     pub use crate::source::Module;
     pub use std::collections::HashSet;

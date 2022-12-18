@@ -1,6 +1,16 @@
 use crate::prelude::*;
 use std::mem;
 
+/// Resolve `argmatches` from the source code, by converting them to a match.
+/// See the README for more information.
+pub fn argmatch(mut mods: Vec<Module>) -> Vec<Module> {
+    for m in mods.iter_mut() {
+        m.ast = argmatch_ast(m.ast.clone());
+    }
+
+    mods
+}
+
 struct FwdDeclaration {
     // stores all generic parameters etc. of the surrounding impl block
     // but empty_ii.items is empty, so it's an empty impl block.
@@ -9,16 +19,8 @@ struct FwdDeclaration {
     // stores the actual method forward declaration
     iim: ImplItemMethod,
 
-    match_ident: String,
+    match_ident: String, // TODO should this be `Ident`?
     match_idx: usize,
-}
-
-pub fn argmatch(mut mods: Vec<Module>) -> Vec<Module> {
-    for m in mods.iter_mut() {
-        m.ast = argmatch_ast(m.ast.clone());
-    }
-
-    mods
 }
 
 fn argmatch_ast(mut arg: syn::File) -> syn::File {
@@ -82,7 +84,7 @@ fn extract_fwd_decls(arg: &mut syn::File) -> Vec<FwdDeclaration> {
     for i in &mut arg.items {
         if let Item::Impl(x) = i {
             let mut old_items: Vec<syn::ImplItem> = Vec::new();
-            mem::swap(&mut x.items, &mut old_items);
+            mem::swap(&mut x.items, &mut old_items); // TODO don't use mem::swap for this.
 
             let mut new_items: Vec<syn::ImplItem> = Vec::new();
 

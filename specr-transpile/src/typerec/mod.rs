@@ -6,6 +6,14 @@ use wrap::wrap_variant_elements;
 mod pat_idents;
 mod fix;
 
+/// Resolves infinite type recursion problems in enums by wrapping with `GcCow<_>`.
+pub fn typerec(mut mods: Vec<Module>) -> Vec<Module> {
+    let elements = wrap_variant_elements(&mut mods);
+    fix::fix(&mut mods, &elements);
+
+    mods
+}
+
 /// Specifies an Element of some enum Variant.
 /// Note that this does not know the name of the enum.
 ///
@@ -31,11 +39,4 @@ struct VariantElement {
 enum ElementIdx {
     Named(Ident),
     Unnamed(usize),
-}
-
-pub fn typerec(mut mods: Vec<Module>) -> Vec<Module> {
-    let elements = wrap_variant_elements(&mut mods);
-    fix::fix(&mut mods, &elements);
-
-    mods
 }

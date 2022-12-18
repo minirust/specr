@@ -1,7 +1,5 @@
 use crate::prelude::*;
 
-use std::collections::HashSet;
-
 /// Sadly, let-else patterns are recognized by syn only as Stmt::Semi(Expr::Verbatim(_)), so our other stages cannot correctly work on them.
 /// Hence we translate let-else ourselves.
 pub fn let_else(mut ast: syn::File) -> syn::File {

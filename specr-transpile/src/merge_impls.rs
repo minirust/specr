@@ -1,6 +1,6 @@
-use syn::*;
-use quote::ToTokens;
+use crate::prelude::*;
 
+///
 pub fn merge(mut ast: syn::File) -> syn::File {
     let mut ii_list: Vec<&mut ItemImpl> = 
         ast.items.iter_mut()

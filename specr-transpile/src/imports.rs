@@ -1,5 +1,6 @@
 use crate::prelude::*;
 
+/// Prepends implicit imports to each module.
 pub fn add_imports(mut mods: Vec<Module>) -> Vec<Module> {
     let imports: Vec<Ident> = mods.iter()
                                   .map(|m| format_ident!("{}", &m.name))
