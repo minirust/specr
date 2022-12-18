@@ -116,8 +116,7 @@ fn translate_int_ty(int_ty: &rs::IntTy) -> IntType {
     use rs::IntTy::*;
 
     let size = match int_ty {
-        // TODO look at TargetDataLayout for Isize.
-        Isize => 8,
+        Isize => 8, // this is fixed as 8, to be compatible with BasicMemory.
         I8 => 1,
         I16 => 2,
         I32 => 4,
@@ -134,7 +133,7 @@ fn translate_uint_ty(uint_ty: &rs::UintTy) -> IntType {
     use rs::UintTy::*;
 
     let size = match uint_ty {
-        Usize => 8, // TODO this is not generally 8.
+        Usize => 8, // this is fixed as 8, to be compatible with BasicMemory.
         U8 => 1,
         U16 => 2,
         U32 => 4,

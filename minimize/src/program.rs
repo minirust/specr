@@ -72,15 +72,18 @@ fn mk_start_fn(entry: FnName) -> Function {
     }
 }
 
-/// contains read-only data regarding the current function.
+/// data regarding the currently translated function.
 pub struct FnCtxt<'tcx> {
+    /// This is the only field mutated during translation.
+    /// Upon function call, the callees DefId + SubstsRef will be mapped to a fresh `FnName`.
+    pub fnname_map: HashMap<(rs::DefId, rs::SubstsRef<'tcx>), FnName>,
     pub localname_map: HashMap<rs::Local, LocalName>,
     pub bbname_map: HashMap<rs::BasicBlock, BbName>,
-    pub fnname_map: HashMap<(rs::DefId, rs::SubstsRef<'tcx>), FnName>,
     pub tcx: rs::TyCtxt<'tcx>,
     pub body: rs::Body<'tcx>,
 }
 
+// TODO implement non-mem::swap solution
 fn translate_body<'tcx>(body: rs::Body<'tcx>, fnname_map_arg: &mut HashMap<(rs::DefId, rs::SubstsRef<'tcx>), FnName>, tcx: rs::TyCtxt<'tcx>) -> Function {
     let mut fnname_map = Default::default();
     std::mem::swap(&mut fnname_map, fnname_map_arg);
@@ -112,7 +115,6 @@ fn translate_body<'tcx>(body: rs::Body<'tcx>, fnname_map_arg: &mut HashMap<(rs::
         locals.insert(*localname, translate_local(local_decl, tcx));
     }
 
-    // TODO fix preventable clones.
     let mut fcx = FnCtxt {
         localname_map,
         bbname_map: bbname_map.clone(),
@@ -123,7 +125,7 @@ fn translate_body<'tcx>(body: rs::Body<'tcx>, fnname_map_arg: &mut HashMap<(rs::
 
     // convert mirs BBs to minirust.
     let mut blocks = Map::default();
-    for (id, bbname) in bbname_map.clone() {
+    for (id, bbname) in bbname_map {
         let bb_data = &body.basic_blocks[id];
         blocks.insert(bbname, translate_bb(bb_data, &mut fcx));
     }
@@ -155,8 +157,7 @@ fn translate_body<'tcx>(body: rs::Body<'tcx>, fnname_map_arg: &mut HashMap<(rs::
 fn translate_local<'tcx>(local: &rs::LocalDecl<'tcx>, tcx: rs::TyCtxt<'tcx>) -> PlaceType {
     let ty = translate_ty(local.ty, tcx);
 
-    // TODO is this `empty` ParamEnv correct? probably not.
-    // The generic args of the function need to be in scope here.
+    // generics have already been resolved before, so `ParamEnv::empty()` is correct.
     let a = rs::ParamEnv::empty().and(local.ty);
     let layout = tcx.layout_of(a).unwrap().layout;
     let align = layout.align().pref;

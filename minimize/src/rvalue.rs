@@ -132,7 +132,7 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
             }
         },
         rs::Rvalue::Cast(rs::CastKind::PointerFromExposedAddress, operand, ty) => {
-            // TODO untested so far!
+            // TODO untested so far! (Can't test because of `predict`)
             let operand = translate_operand(operand, fcx);
             let Type::Ptr(ptr_ty) = translate_ty(*ty, fcx.tcx) else { panic!() };
 
@@ -157,23 +157,9 @@ pub fn translate_operand<'tcx>(operand: &rs::Operand<'tcx>, fcx: &mut FnCtxt<'tc
                     let constant = match ty {
                         Type::Int(int_ty) => {
                             let val = val.try_to_scalar_int().unwrap();
-
-                            use Signedness::*;
-                            let bits = int_to_usize(int_ty.size.bits());
-                            // TODO is there no better way to get the value from a ScalarInt?
-                            let int: Int = match (int_ty.signed, bits) {
-                                (Signed, 8) => val.try_to_i8().unwrap().into(),
-                                (Signed, 16) => val.try_to_i16().unwrap().into(),
-                                (Signed, 32) => val.try_to_i32().unwrap().into(),
-                                (Signed, 64) => val.try_to_i64().unwrap().into(),
-                                (Signed, 128) => val.try_to_i128().unwrap().into(),
-
-                                (Unsigned, 8) => val.try_to_u8().unwrap().into(),
-                                (Unsigned, 16) => val.try_to_u16().unwrap().into(),
-                                (Unsigned, 32) => val.try_to_u32().unwrap().into(),
-                                (Unsigned, 64) => val.try_to_u64().unwrap().into(),
-                                (Unsigned, 128) => val.try_to_u128().unwrap().into(),
-                                _ => panic!("unsupported integer type encountered!"),
+                            let int: Int = match int_ty.signed {
+                                Signed => val.try_to_int(val.size()).unwrap().into(),
+                                Unsigned => val.try_to_uint(val.size()).unwrap().into(),
                             };
                             Constant::Int(int)
                         },

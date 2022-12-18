@@ -76,8 +76,6 @@ pub fn addr_of(target: PlaceExpr, ty: Type) -> ValueExpr {
     }
 }
 
-// TODO do BinOp & UnOp.
-
 pub fn neg<T: TypeConv>(v: ValueExpr) -> ValueExpr {
     let Type::Int(t) = T::get_type() else {
         panic!("int operator received non-int type!");
