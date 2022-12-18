@@ -151,7 +151,8 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
 pub fn translate_operand<'tcx>(operand: &rs::Operand<'tcx>, fcx: &mut FnCtxt<'tcx>) -> ValueExpr {
     match operand {
         rs::Operand::Constant(box c) => {
-            match c.literal {
+            let kind = c.literal.eval(fcx.tcx, rs::ParamEnv::empty());
+            match kind {
                 rs::ConstantKind::Val(val, ty) => {
                     let ty = translate_ty(ty, fcx.tcx);
                     let constant = match ty {
