@@ -1,6 +1,7 @@
 use crate::prelude::*;
 
-pub fn autobounds(mut ast: syn::File) -> syn::File {
+/// Adds the implicit `T: Obj` bound at all relevant places.
+pub fn auto_obj_bound(mut ast: syn::File) -> syn::File {
     for i in ast.items.iter_mut() {
         match i {
             Item::Struct(s) => {
@@ -57,7 +58,8 @@ pub fn add_bound(g: &mut Generics) {
 }
 
 pub fn add_bound_punct<T: Default>(punct: &mut Punctuated<TypeParamBound, T>) {
-    let b: TraitBound = parse_str("specr::hidden::Obj").unwrap();
+    let b = quote! { specr::hidden::Obj };
+    let b: TraitBound = parse2(b).unwrap();
     let b: TypeParamBound = b.into();
     punct.push(b);
 }

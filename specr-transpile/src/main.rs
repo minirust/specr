@@ -8,7 +8,7 @@ mod merge_impls;
 mod source;
 mod typerec;
 mod auto_derive;
-mod autobounds;
+mod auto_obj_bound;
 mod index;
 mod gccompat_impl;
 
@@ -105,8 +105,8 @@ fn compile(mods: Vec<Module>) {
         let ast = auto_derive::auto_derive(ast);
         let ast = index::index(ast);
         let ast = gccompat_impl::gccompat_impl(ast);
-        // autobounds needs to be after gccompat_impl so that the impls are generated with coorect bounds.
-        let ast = autobounds::autobounds(ast);
+        // auto_obj_bound needs to be after gccompat_impl so that the impls are generated with coorect bounds.
+        let ast = auto_obj_bound::auto_obj_bound(ast);
 
         // write AST back to Rust file.
         let code = ast.into_token_stream().to_string();
