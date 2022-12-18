@@ -68,6 +68,6 @@ pub fn exit() -> Terminator {
     }
 }
 
-pub fn ret() -> Terminator {
+pub fn return_() -> Terminator {
     Terminator::Return
 }
