@@ -1,16 +1,17 @@
 use crate::prelude::*;
 
+/// Adds `impl GcCompat for _` for all user-defined types.
 pub fn gccompat_impl(mut ast: syn::File) -> syn::File {
     let mut i = 0;
     while i < ast.items.len() {
         match &ast.items[i] {
             Item::Struct(s) => {
                 ast.items.insert(i+1, impl_for_struct(s));
-                i += 1;
+                i += 1; // skip the Item you have just inserted.
             },
             Item::Enum(e) => {
                 ast.items.insert(i+1, impl_for_enum(e));
-                i += 1;
+                i += 1; // skip the Item you have just inserted.
             },
             _ => {},
         };
@@ -20,6 +21,7 @@ pub fn gccompat_impl(mut ast: syn::File) -> syn::File {
     ast
 }
 
+/// Generates `impl GcCompat for _`-Item for a struct.
 fn impl_for_struct(s: &ItemStruct) -> Item {
     let mut named: Vec<&Ident> = Vec::new();
     let mut unnamed: Vec<Index> = Vec::new();
@@ -58,6 +60,7 @@ fn impl_for_struct(s: &ItemStruct) -> Item {
     syn::parse2(ts).unwrap()
 }
 
+/// Generates `impl GcCompat for _`-Item for an enum.
 fn impl_for_enum(e: &ItemEnum) -> Item {
     // contains the correct match-arm for each variant.
     let var_arms: Vec<TokenStream> = e.variants.iter().map(|v| {
