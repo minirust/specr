@@ -10,10 +10,6 @@ pub enum Endianness {
 }
 pub use Endianness::*;
 
-fn to_u8(b: Int) -> u8 {
-    int_to_usize(b) as u8
-}
-
 impl Endianness {
     /// If `signed == Signed`, the data is interpreted as two's complement.
     pub fn decode(self, signed: Signedness, bytes: List<u8>) -> Int {
@@ -53,7 +49,7 @@ impl Endianness {
         // first byte.
         let j = size.bytes() - 1;
         let byte = (int >> (j*8)) % 256;
-        let mut byte = to_u8(byte);
+        let mut byte = byte.try_to_u8().unwrap();
         if is_neg {
             byte |= 0b1000_0000;
         }
@@ -64,7 +60,7 @@ impl Endianness {
         let mut j = size.bytes() - 2;
         while j >= 0 {
             let byte = (int >> (j*8)) % 256;
-            let byte = to_u8(byte);
+            let byte = byte.try_to_u8().unwrap();
             bytes.push(byte);
 
             j -= 1;
@@ -98,7 +94,7 @@ mod tests {
                     BigEndian => i.to_be_bytes(),
                     LittleEndian => i.to_le_bytes(),
                 };
-                assert_eq!(crate::int_to_usize(bytes_a.len()), bytes_b.len());
+                assert_eq!(bytes_a.len().try_to_usize(), Some(bytes_b.len()));
                 assert!(bytes_a.iter().zip(bytes_b).all(|(a, b)| a == b));
             }
         }

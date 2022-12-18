@@ -24,12 +24,12 @@ impl<T: Obj> List<T> {
     }
 
     pub fn mutate_at<O: Obj>(&mut self, i: Int, f: impl FnOnce(&mut T) -> O) -> O {
-        let i = int_to_usize(i);
+        let i = i.try_to_usize().expect("List::mutate_at: index out of range of `usize`!");
         self.0.mutate(|v| f(&mut v[i]))
     }
 
     pub fn get(&self, i: Int) -> Option<T> {
-        let i = int_to_usize(i);
+        let i = i.try_to_usize().expect("List::get: index out of range of `usize`!");
         self.0.call_ref_unchecked(|v| v.get(i).cloned())
     }
 
@@ -67,8 +67,8 @@ impl<T: Obj> List<T> {
     }
 
     pub fn subslice_with_length(&self, start: Int, length: Int) -> List<T> {
-        let start = int_to_usize(start);
-        let length = int_to_usize(length);
+        let start = start.try_to_usize().expect("List::subslice_with_length: `start` out of range of `usize`!");
+        let length = length.try_to_usize().expect("List::subslice_with_length: `length` out of range of `usize`!");
 
         // exclusive end
         let end = start + length;
@@ -86,8 +86,8 @@ impl<T: Obj> List<T> {
             panic!("`write_subslice_at_index`: trying to write out of range!");
         }
 
-        let start = int_to_usize(start);
-        let end = int_to_usize(end);
+        let start = start.try_to_usize().expect("List::subslice_with_length: `start` out of range of `usize`!");
+        let end = end.try_to_usize().expect("List::subslice_with_length: `end` out of range of `usize`!");
 
         self.0.call_mut1_unchecked(src.0, |s, o| {
             let a = s.clone().slice(0..start);

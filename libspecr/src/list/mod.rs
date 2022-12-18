@@ -11,7 +11,7 @@ pub struct List<T: Obj>(pub GcCow<IMVector<T>>);
 pub macro list {
     () => { List::new() },
     ($start:expr $(,$a:expr)*) => { [$start $(,$a)* ].into_iter().collect::<List<_>>() },
-    ($a:expr ; $b:expr) => { list_from_elem($a, Int::from($b)) },
+    ($a:expr ; $b:expr) => { List::from_elem($a, Int::from($b)) },
 }
 
 impl<T: Obj> GcCompat for IMVector<T> {

@@ -1,27 +1,31 @@
 use crate::*;
 
+use num_traits::ToPrimitive;
+
 mod obj;
 pub use obj::*;
 
 // The GcCow primites are only accessible through the `hidden` module.
 pub use crate::gccow::{GcCow, GcCompat, mark_and_sweep, run_sequential};
 
-// TODO this function panics in some cases. I should handle those cases.
-pub fn int_to_usize(b: Int) -> usize {
-    let (sign, digits) = b.ext().to_u64_digits();
-    if sign == num_bigint::Sign::Minus {
-        panic!("cannot convert negative number to usize");
-    }
-    if digits.len() > 1 {
-        panic!("number too large to fit into usize!");
+impl Int {
+    #[doc(hidden)]
+    pub fn try_to_usize(self) -> Option<usize> {
+        self.ext().to_usize()
     }
 
-    *digits.get(0).unwrap_or(&0) as usize
+    #[doc(hidden)]
+    pub fn try_to_u8(self) -> Option<u8> {
+        self.ext().to_u8()
+    }
 }
 
-pub fn list_from_elem<T: Obj>(elem: T, n: Int) -> List<T> {
-    let n = int_to_usize(n);
-    let v: im::vector::Vector<T> = std::iter::repeat(elem).take(n).collect();
+impl<T: Obj> List<T> {
+    #[doc(hidden)]
+    pub fn from_elem(elem: T, n: Int) -> List<T> {
+        let n = n.try_to_usize().expect("invalid number of elements in List::from_elem");
+        let v: im::vector::Vector<T> = std::iter::repeat(elem).take(n).collect();
 
-    List(GcCow::new(v))
+        List(GcCow::new(v))
+    }
 }
