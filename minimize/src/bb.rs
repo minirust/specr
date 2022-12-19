@@ -47,6 +47,22 @@ fn translate_terminator<'tcx>(terminator: &rs::Terminator<'tcx>, fcx: &mut FnCtx
         rs::TerminatorKind::Assert { target, .. } => { // Assert is IGNORED as of now.
             Terminator::Goto(fcx.bb_name_map[&target])
         }
+        rs::TerminatorKind::SwitchInt { discr, targets, switch_ty: _ } => {
+            assert!(discr.ty(&fcx.body, fcx.tcx).is_bool()); // for now we only support bool branching.
+
+            let condition = translate_operand(discr, fcx);
+            let then_block = targets.target_for_value(1);
+            let then_block = fcx.bb_name_map[&then_block];
+
+            let else_block = targets.target_for_value(0);
+            let else_block = fcx.bb_name_map[&else_block];
+
+            Terminator::If {
+                condition,
+                then_block,
+                else_block,
+            }
+        }
         x => {
             dbg!(x);
             todo!()

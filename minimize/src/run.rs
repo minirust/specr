@@ -14,7 +14,8 @@ pub fn run_program(prog: Program) -> Outcome {
     fn run_impl<M: Memory>(mut machine: Machine<M>) -> NdResult<!> {
         loop {
             machine.step()?;
-            mark_and_sweep(&machine);
+            // TODO re-add this with faster Gc.
+            // mark_and_sweep(&machine);
         }
     }
 
