@@ -171,6 +171,13 @@ pub fn translate_operand<'tcx>(operand: &rs::Operand<'tcx>, fcx: &mut FnCtxt<'tc
                         Type::Bool => {
                             Constant::Bool(val.try_to_bool().unwrap())
                         }
+                        Type::Ptr(_) => {
+                            let _val = val.try_to_scalar()
+                                         .unwrap()
+                                         .to_pointer(&fcx.tcx)
+                                         .unwrap();
+                            panic!("minirust doesn't yet support constant pointers!")
+                        },
                         x => {
                             dbg!(x);
                             todo!()
