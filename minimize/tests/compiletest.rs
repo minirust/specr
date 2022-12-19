@@ -16,7 +16,7 @@ fn cfg(path: &str) -> ui_test::Config {
         path_filter: Vec::new(),
         dependencies_crate_manifest_path: None,
         dependency_builder: ui_test::DependencyBuilder::default(),
-        quiet: true,
+        quiet: false,
         num_test_threads: std::thread::available_parallelism().unwrap(),
     }
 }
