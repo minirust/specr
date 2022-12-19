@@ -8,13 +8,12 @@ mod impls;
 mod trait_passthrough;
 
 use std::marker::PhantomData;
-use std::sync::Mutex;
 
 use internal::*;
 
 // this trait shall be implemented for each type of minirust.
 // It is required in order to contain `GcCow`, and to be the generic param to `GcCow`.
-pub trait GcCompat: Send + Sync + 'static {
+pub trait GcCompat: 'static {
     // writes the gc'd objs, that `self` points to, into `buffer`.
     fn points_to(&self, buffer: &mut HashSet<usize>);
     fn as_any(&self) -> &dyn Any;
@@ -24,6 +23,9 @@ pub struct GcCow<T> {
     idx: usize,
     phantom: PhantomData<T>,
 }
+
+impl<T> !Send for GcCow<T> {}
+impl<T> !Sync for GcCow<T> {}
 
 impl<T> Clone for GcCow<T> {
     fn clone(&self) -> Self {
@@ -35,34 +37,11 @@ impl<T> Clone for GcCow<T> {
 impl<T> Copy for GcCow<T> {}
 
 fn with_gc<O>(f: impl FnOnce(&GcState) -> O) -> O {
-    let st = GC_STATE.try_read().unwrap();
-    f(&*st)
+    GC_STATE.with(|st| f(&*st.borrow()))
 }
 
 fn with_gc_mut<O>(f: impl FnOnce(&mut GcState) -> O) -> O {
-    let mut st = GC_STATE.try_write().unwrap();
-    f(&mut *st)
-}
-
-pub static SEQUENTIAL_LOCK: Mutex<()> = Mutex::new(());
-
-/// This function is used to syncronize tests.
-///
-/// Per default, tests run in parallel, which might cause tests to `mark_and_sweep` the other tests' objects.
-/// Hence tests should be run inside of this function.
-pub fn run_sequential(f: impl FnOnce()) {
-    let _lock = match SEQUENTIAL_LOCK.lock() {
-        Ok(x) => x,
-        Err(x) => x.into_inner(), // ignore poison.
-    };
-
-    // pre cleanup for the case that someone poisoned `SEQUENTIAL_LOCK` in an uncleared state.
-    mark_and_sweep(HashSet::new());
-
-    f();
-
-    // post cleanup
-    mark_and_sweep(HashSet::new());
+    GC_STATE.with(|st| f(&mut *st.borrow_mut()))
 }
 
 pub fn mark_and_sweep(roots: HashSet<usize>) {

@@ -17,62 +17,60 @@ fn no_preserve_padding() {
     // _2 = load(_2).offset(1)
     // _3 = *_2;
 
-    run_sequential(|| {
-        let pair_ty = tuple_ty(&[
-                (size(0), u8::get_type()),
-                (size(2), u16::get_type())
-            ], size(4));
-        let pair_pty = ptype(pair_ty, align(2));
+    let pair_ty = tuple_ty(&[
+            (size(0), u8::get_type()),
+            (size(2), u16::get_type())
+        ], size(4));
+    let pair_pty = ptype(pair_ty, align(2));
 
-        let union_ty = union_ty(&[
-                (size(0), pair_ty),
-                (size(0), u32::get_type()),
-            ], size(4));
-        let union_pty = ptype(union_ty, align(4));
+    let union_ty = union_ty(&[
+            (size(0), pair_ty),
+            (size(0), u32::get_type()),
+        ], size(4));
+    let union_pty = ptype(union_ty, align(4));
 
-        let locals = vec![
-            union_pty,
-            pair_pty,
-            <*const u8>::get_ptype(),
-            <u8>::get_ptype(),
-        ];
+    let locals = vec![
+        union_pty,
+        pair_pty,
+        <*const u8>::get_ptype(),
+        <u8>::get_ptype(),
+    ];
 
-        let stmts = vec![
-            live(0),
-            live(1),
-            live(2),
-            live(3),
-            assign(
-                field(local(0), 1),
-                const_int::<u32>(0)
-            ),
-            assign(
+    let stmts = vec![
+        live(0),
+        live(1),
+        live(2),
+        live(3),
+        assign(
+            field(local(0), 1),
+            const_int::<u32>(0)
+        ),
+        assign(
+            local(1),
+            load(field(local(0), 0))
+        ),
+        assign(
+            local(2),
+            addr_of(
                 local(1),
-                load(field(local(0), 0))
+                <*const u8>::get_type(),
             ),
-            assign(
-                local(2),
-                addr_of(
-                    local(1),
-                    <*const u8>::get_type(),
-                ),
-            ),
-            assign(
-                local(2),
-                ptr_offset(
-                    load(local(2)),
-                    const_int::<u32>(1),
-                    InBounds::Yes,
-                )
-            ),
-            assign(
-                local(3),
-                load(deref(load(local(2)), <u8>::get_ptype())),
-            ),
-        ];
+        ),
+        assign(
+            local(2),
+            ptr_offset(
+                load(local(2)),
+                const_int::<u32>(1),
+                InBounds::Yes,
+            )
+        ),
+        assign(
+            local(3),
+            load(deref(load(local(2)), <u8>::get_ptype())),
+        ),
+    ];
 
-        let p = small_program(&locals, &stmts);
-        dump_program(&p);
-        assert_ub(p, "load at type PlaceType { ty: Int(IntType { signed: Unsigned, size: Size { raw: Int(Small(1)) } }), align: Align { raw: Int(Small(1)) } } but the data in memory violates the validity invariant");
-    });
+    let p = small_program(&locals, &stmts);
+    dump_program(&p);
+    assert_ub(p, "load at type PlaceType { ty: Int(IntType { signed: Unsigned, size: Size { raw: Int(Small(1)) } }), align: Align { raw: Int(Small(1)) } } but the data in memory violates the validity invariant");
 }

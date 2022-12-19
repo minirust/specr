@@ -23,31 +23,27 @@ impl<T> OptionExt<T> for Option<T> {
 fn option_ext_test() {
     use crate::*;
 
-    run_sequential(|| {
-        use crate::*;
+    struct In;
+    struct Out;
+    struct Error;
 
-        struct In;
-        struct Out;
-        struct Error;
+    let ok: fn(In) -> NdResult<Out, Error> = |_: In| NdResult(Ok(Out));
+    let err: fn(In) -> NdResult<Out, Error> = |_: In| NdResult(Err(Error));
 
-        let ok: fn(In) -> NdResult<Out, Error> = |_: In| NdResult(Ok(Out));
-        let err: fn(In) -> NdResult<Out, Error> = |_: In| NdResult(Err(Error));
-
-        assert!(matches!(
-            Some(In).try_map(ok),
-            NdResult(Ok(Some(Out)))
-        ));
-        assert!(matches!(
-            None.try_map(ok),
-            NdResult(Ok(None))
-        ));
-        assert!(matches!(
-            Some(In).try_map(err),
-            NdResult(Err(Error))
-        ));
-        assert!(matches!(
-            None.try_map(err),
-            NdResult(Ok(None))
-        ));
-    });
+    assert!(matches!(
+        Some(In).try_map(ok),
+        NdResult(Ok(Some(Out)))
+    ));
+    assert!(matches!(
+        None.try_map(ok),
+        NdResult(Ok(None))
+    ));
+    assert!(matches!(
+        Some(In).try_map(err),
+        NdResult(Err(Error))
+    ));
+    assert!(matches!(
+        None.try_map(err),
+        NdResult(Ok(None))
+    ));
 }

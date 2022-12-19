@@ -44,20 +44,18 @@ impl Distribution<Int> for IntDistribution {
 
 #[test]
 fn test_int_distr() {
-    run_sequential(|| {
-        let mut rng = rand::thread_rng();
-        for (start, end, divisor) in [(0, 8, 4), (2, 5, 4), (0, 3, 3), (1, 4, 3)] {
-            let distr = IntDistribution {
-                start: start.into(),
-                end: end.into(),
-                divisor: divisor.into(),
-            };
-            for _ in 0..20 {
-                let v = distr.sample(&mut rng);
-                assert!(v >= distr.start);
-                assert!(v < distr.end);
-                assert!(v % distr.divisor == 0);
-            }
+    let mut rng = rand::thread_rng();
+    for (start, end, divisor) in [(0, 8, 4), (2, 5, 4), (0, 3, 3), (1, 4, 3)] {
+        let distr = IntDistribution {
+            start: start.into(),
+            end: end.into(),
+            divisor: divisor.into(),
+        };
+        for _ in 0..20 {
+            let v = distr.sample(&mut rng);
+            assert!(v >= distr.start);
+            assert!(v < distr.end);
+            assert!(v % distr.divisor == 0);
         }
-    });
+    }
 }

@@ -12,8 +12,6 @@ fn mk_never_fn() -> Function {
 
 #[test]
 fn return_from_never_fn() {
-    run_sequential(|| {
-        let p = program(&[mk_main_fn(), mk_never_fn()]);
-        assert_ub(p, "Return from a function that does not have a return local");
-    });
+    let p = program(&[mk_main_fn(), mk_never_fn()]);
+    assert_ub(p, "Return from a function that does not have a return local");
 }

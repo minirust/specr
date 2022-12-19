@@ -155,22 +155,20 @@ mod tests {
 
     #[test]
     fn test_modulo() {
-        run_sequential(|| {
-            for s in [Signed, Unsigned] {
-                for bits in [16, 32, 64] {
-                    let size = Size::from_bits_const(bits);
-                    let m = Int::from(2).pow(Int::from(bits));
+        for s in [Signed, Unsigned] {
+            for bits in [16, 32, 64] {
+                let size = Size::from_bits_const(bits);
+                let m = Int::from(2).pow(Int::from(bits));
 
-                    for base in [-m*2, -m, Int::ZERO, m, m*2] {
-                        for offset1 in [-m/2, Int::ZERO, m/2] {
-                            for offset2 in [-3, -2, -1, 0, 1, 2, 3] {
-                                let x = base + offset1 + offset2;
-                                test_modulo_helper(x, s, size);
-                            }
+                for base in [-m*2, -m, Int::ZERO, m, m*2] {
+                    for offset1 in [-m/2, Int::ZERO, m/2] {
+                        for offset2 in [-3, -2, -1, 0, 1, 2, 3] {
+                            let x = base + offset1 + offset2;
+                            test_modulo_helper(x, s, size);
                         }
                     }
                 }
             }
-        });
+        }
     }
 }

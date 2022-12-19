@@ -1,7 +1,7 @@
 use crate::{*, gccow::*};
 
 use std::marker::PhantomData;
-use std::sync::RwLock;
+use std::cell::RefCell;
 
 impl<T: GcCompat> GcCompat for GcCow<T> {
     fn points_to(&self, buffer: &mut HashSet<usize>) {
@@ -10,13 +10,15 @@ impl<T: GcCompat> GcCompat for GcCow<T> {
     fn as_any(&self) -> &dyn Any { self }
 }
 
-pub struct GcState {
+pub(crate) struct GcState {
     pub objs: SparseVec<Box<dyn GcCompat>>,
 }
 
-// Note that there exists only one instance of `GC_STATE`.
-// Hence tests using `mark_and_sweep` should not be run in parallel!
-pub static GC_STATE: RwLock<GcState> = RwLock::new(GcState::new());
+// Note that each thread has it's own GC_STATE.
+// You cannot share/send Garbage collected objects over threads.
+thread_local! {
+    pub(crate) static GC_STATE: RefCell<GcState> = RefCell::new(GcState::new());
+}
 
 impl GcState {
     pub const fn new() -> GcState {

@@ -102,20 +102,18 @@ mod tests {
 
     #[test]
     fn test_endianness_encode() {
-        run_sequential(|| {
-            for num in [i32::MIN, i32::MIN+1, -1024, -41, -2, -1, 0, 1, 2, 42, i32::MAX-1, i32::MAX] {
-                test_encode!(i32, num);
-            }
-            for num in [i64::MIN, i64::MIN+1, -1024, -41, -2, -1, 0, 1, 2, 42, i64::MAX-1, i64::MAX] {
-                test_encode!(i64, num);
-            }
-            for num in [0, 1, 2, 42, u32::MAX-1, u32::MAX] {
-                test_encode!(u32, num);
-            }
-            for num in [0, 1, 2, 42, u64::MAX-1, u64::MAX] {
-                test_encode!(u64, num);
-            }
-        });
+        for num in [i32::MIN, i32::MIN+1, -1024, -41, -2, -1, 0, 1, 2, 42, i32::MAX-1, i32::MAX] {
+            test_encode!(i32, num);
+        }
+        for num in [i64::MIN, i64::MIN+1, -1024, -41, -2, -1, 0, 1, 2, 42, i64::MAX-1, i64::MAX] {
+            test_encode!(i64, num);
+        }
+        for num in [0, 1, 2, 42, u32::MAX-1, u32::MAX] {
+            test_encode!(u32, num);
+        }
+        for num in [0, 1, 2, 42, u64::MAX-1, u64::MAX] {
+            test_encode!(u64, num);
+        }
     }
 
     macro test_decode {
@@ -142,19 +140,17 @@ mod tests {
 
     #[test]
     fn test_endianness_decode() {
-        run_sequential(|| {
-            for num in [i32::MIN, i32::MIN+1, -1024, -41, -2, -1, 0, 1, 2, 42, i32::MAX-1, i32::MAX] {
-                test_decode!(i32, num);
-            }
-            for num in [i64::MIN, i64::MIN+1, -1024, -41, -2, -1, 0, 1, 2, 42, i64::MAX-1, i64::MAX] {
-                test_decode!(i64, num);
-            }
-            for num in [0, 1, 2, 42, u32::MAX-1, u32::MAX] {
-                test_decode!(u32, num);
-            }
-            for num in [0, 1, 2, 42, u64::MAX-1, u64::MAX] {
-                test_decode!(u64, num);
-            }
-        });
+        for num in [i32::MIN, i32::MIN+1, -1024, -41, -2, -1, 0, 1, 2, 42, i32::MAX-1, i32::MAX] {
+            test_decode!(i32, num);
+        }
+        for num in [i64::MIN, i64::MIN+1, -1024, -41, -2, -1, 0, 1, 2, 42, i64::MAX-1, i64::MAX] {
+            test_decode!(i64, num);
+        }
+        for num in [0, 1, 2, 42, u32::MAX-1, u32::MAX] {
+            test_decode!(u32, num);
+        }
+        for num in [0, 1, 2, 42, u64::MAX-1, u64::MAX] {
+            test_decode!(u64, num);
+        }
     }
 }

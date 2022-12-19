@@ -6,6 +6,7 @@
 #![feature(decl_macro)]
 #![feature(never_type)]
 #![feature(iterator_try_collect)]
+#![feature(negative_impls)]
 
 use std::collections::HashSet;
 use std::any::Any;
@@ -70,7 +71,7 @@ use obj::*;
 #[doc(hidden)]
 pub mod hidden {
     pub use crate::obj::*;
-    pub use crate::gccow::{GcCow, GcCompat, mark_and_sweep, run_sequential};
+    pub use crate::gccow::{GcCow, GcCompat, mark_and_sweep};
 }
 
 pub use crate::nondet::*;

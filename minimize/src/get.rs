@@ -4,7 +4,7 @@ use crate::*;
 use rustc_interface::{Queries, interface::Compiler};
 use rustc_driver::{RunCompiler, Compilation, Callbacks};
 
-pub fn get_mini(file: String) -> Program {
+pub fn get_mini(file: String, callback: impl FnOnce(Program) + Send + Copy) {
     if !Path::new(&file).exists() {
         eprintln!("You need to define some `file.rs` in order to run `minimize`.");
         std::process::exit(1);
@@ -34,18 +34,16 @@ pub fn get_mini(file: String) -> Program {
         "-Cdebug-assertions=off".to_string(),
 
     ];
-    let mut cb = Cb(None);
-    RunCompiler::new(&args, &mut cb).run().unwrap();
-    cb.0.unwrap()
+    RunCompiler::new(&args, &mut Cb { callback }).run().unwrap();
 }
 
-struct Cb(Option<Program>);
+struct Cb<F: FnOnce(Program) + Send + Copy> { callback: F }
 
-impl Callbacks for Cb {
+impl<F: FnOnce(Program) + Send + Copy> Callbacks for Cb<F> {
     fn after_analysis<'tcx>(&mut self, _compiler: &Compiler, queries: &'tcx Queries<'tcx>) -> Compilation {
         queries.global_ctxt().unwrap().take().enter(|arg| {
             let prog = translate_program(arg);
-            self.0 = Some(prog);
+            (self.callback)(prog);
         });
 
         Compilation::Stop
