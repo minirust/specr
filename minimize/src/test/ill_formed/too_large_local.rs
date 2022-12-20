@@ -9,5 +9,5 @@ fn too_large_local() {
     let stmts = &[];
 
     let prog = small_program(locals, stmts);
-    assert_unwell(prog);
+    assert_ill_formed(prog);
 }

@@ -71,7 +71,7 @@ fn main() {
             dump_program(&prog);
         } else {
             match run_program(prog) {
-                Outcome::Unwell => eprintln!("ERR: program not well-formed."),
+                Outcome::IllFormed => eprintln!("ERR: program not well-formed."),
                 Outcome::Stop => { /* silent exit. */ },
                 Outcome::Ub(err) => eprintln!("UB: {}", err),
             }

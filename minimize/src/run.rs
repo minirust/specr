@@ -5,7 +5,7 @@ use GcCompat;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum Outcome {
-    Unwell, // program not well-formed
+    IllFormed, // program not well-formed
     Stop, // program stopped normally
     Ub(String), // program raised UB
 }
@@ -20,7 +20,7 @@ pub fn run_program(prog: Program) -> Outcome {
     }
 
     let Some(machine) = Machine::<BasicMemory>::new(prog) else {
-        return Outcome::Unwell;
+        return Outcome::IllFormed;
     };
     mark_and_sweep(&machine);
 

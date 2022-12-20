@@ -11,5 +11,5 @@ fn type_mismatch() {
         ),
     ];
     let p = small_program(locals, stmts);
-    assert_unwell(p);
+    assert_ill_formed(p);
 }

@@ -3,5 +3,5 @@ use crate::test::*;
 #[test]
 fn no_main() {
     let p = program(&[]);
-    assert_unwell(p);
+    assert_ill_formed(p);
 }
