@@ -18,7 +18,7 @@ use im::HashMap as IMHashMap;
 use im::Vector as IMVector;
 
 extern crate gccompat_derive;
-pub use gccompat_derive::GcCompat;
+use gccompat_derive::GcCompat;
 
 mod int;
 pub use int::*;
@@ -65,8 +65,8 @@ mod mutability;
 mod signedness;
 use signedness::*;
 
-mod gccow;
-use gccow::*;
+mod gc;
+use gc::*;
 
 mod obj;
 use obj::*;
@@ -74,7 +74,7 @@ use obj::*;
 #[doc(hidden)]
 pub mod hidden {
     pub use crate::obj::*;
-    pub use crate::gccow::{GcCow, GcCompat, mark_and_sweep};
+    pub use crate::gc::{GcCow, GcCompat, mark_and_sweep, clear};
 }
 
 pub use crate::nondet::*;
