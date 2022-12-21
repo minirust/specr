@@ -224,6 +224,7 @@ dependencies = [
 name = "gen-minirust"
 version = "0.1.0"
 dependencies = [
+ "gccompat-derive",
  "libspecr",
 ]
 

@@ -10,7 +10,6 @@ mod typerec;
 mod auto_derive;
 mod auto_obj_bound;
 mod index;
-mod gccompat_impl;
 
 
 use std::fs;
@@ -70,6 +69,7 @@ fn create_cargo_toml() {
                 \n\
                 [dependencies]\n\
                 libspecr = { path = \"../libspecr\" }
+                gccompat-derive = { path = \"../gccompat-derive\" }
                ";
     fs::write("../gen-minirust/Cargo.toml", &toml).unwrap();
 }
@@ -102,8 +102,6 @@ fn compile(mods: Vec<Module>) {
         let ast = merge_impls::merge(ast);
         let ast = auto_derive::auto_derive(ast);
         let ast = index::index(ast);
-        let ast = gccompat_impl::gccompat_impl(ast);
-        // auto_obj_bound needs to be after gccompat_impl so that the impls are generated with coorect bounds.
         let ast = auto_obj_bound::auto_obj_bound(ast);
 
         // write AST back to Rust file.

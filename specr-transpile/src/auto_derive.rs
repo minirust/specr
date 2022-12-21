@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-static TRAITS: &[&str] = &["Clone", "Copy", "Debug", "PartialEq", "Eq", "Hash"];
+static TRAITS: &[&str] = &["Clone", "Copy", "Debug", "PartialEq", "Eq", "Hash", "GcCompat"];
 
 /// Adds `#[derive(_)]` for all missing traits in `TRAITS`.
 pub fn auto_derive(mut ast: syn::File) -> syn::File {
