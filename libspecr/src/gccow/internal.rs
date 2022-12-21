@@ -31,8 +31,22 @@ impl GcState {
         GcCow { idx, phantom: PhantomData }
     }
 
+    // returns bytes
+    fn memory_consumption(&self) -> usize {
+        // sum up the objects sizes
+        self.objs.iter().map(|x| x.size()).sum::<usize>()
+
+        // each object additionally requires a fat pointer pointing to it.
+        + self.objs.capacity() * std::mem::size_of::<Box<dyn GcCompat>>()
+    }
+
     pub fn mark_and_sweep(&mut self, roots: HashSet<usize>) {
-        // `objs` which are found to be reachable from `roots`, but they're children were not yet added.
+        // don't cleanup, if you have less than 1MB allocated.
+        if self.memory_consumption() < 1000 * 1000 {
+            return;
+        }
+
+        // `objs` which are found to be reachable from `roots`, but their children were not yet added.
         let mut open = roots;
 
         // `objs` which are found to be reachable from `roots`, whose children have already been added.

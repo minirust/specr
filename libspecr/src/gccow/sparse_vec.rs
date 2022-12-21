@@ -45,4 +45,12 @@ impl<T> SparseVec<T> {
     pub fn len(&self) -> usize {
         self.data.len() - self.nones.len()
     }
+
+    pub fn capacity(&self) -> usize {
+        self.data.len()
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item=&T> {
+        self.data.iter().filter_map(|x| x.as_ref())
+    }
 }
