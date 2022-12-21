@@ -9,15 +9,8 @@ use std::ops::{Add, Mul};
 ///
 /// Note that the `Size` type has no upper-bound.
 /// Users needs check whether a given `Size` is too large for their Machine themselves.
-#[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Debug, Hash)]
+#[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Debug, Hash, GcCompat)]
 pub struct Size { raw: Int }
-
-impl GcCompat for Size {
-    fn points_to(&self, m: &mut HashSet<usize>) {
-        self.raw.points_to(m);
-    }
-    fn as_any(&self) -> &dyn Any { self }
-}
 
 impl Size {
     pub const ZERO: Size = Size { raw: Int::ZERO };

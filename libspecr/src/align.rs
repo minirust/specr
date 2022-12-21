@@ -2,15 +2,8 @@ use crate::*;
 
 /// This type is basically a copy of the `Align` type in the Rust compiler.
 /// See [Align](https://doc.rust-lang.org/nightly/nightly-rustc/rustc_target/abi/struct.Align.html).
-#[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Debug, Hash)]
+#[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Debug, Hash, GcCompat)]
 pub struct Align { raw: Int }
-
-impl GcCompat for Align {
-    fn points_to(&self, m: &mut HashSet<usize>) {
-        self.raw.points_to(m);
-    }
-    fn as_any(&self) -> &dyn Any { self }
-}
 
 impl Align {
     pub const ONE: Align = Align { raw: Int::ONE };

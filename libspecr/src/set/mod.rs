@@ -3,16 +3,9 @@ use crate::*;
 mod func;
 mod iter;
 
-#[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq, Debug, GcCompat)]
 /// Garbage-collected hash set implementing `Copy`.
 pub struct Set<T: Obj>(pub(crate) GcCow<IMHashSet<T>>);
-
-impl<T: Obj> GcCompat for Set<T> {
-    fn points_to(&self, m: &mut HashSet<usize>) {
-        self.0.points_to(m);
-    }
-    fn as_any(&self) -> &dyn Any { self }
-}
 
 impl<T: Obj> GcCompat for IMHashSet<T> {
     fn points_to(&self, m: &mut HashSet<usize>) {

@@ -3,7 +3,7 @@ use crate::*;
 mod iter;
 mod func;
 
-#[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq, Debug, GcCompat)]
 /// Garbage-collected `Vec`-like datastructure implementing `Copy`.
 pub struct List<T: Obj>(pub(crate) GcCow<IMVector<T>>);
 
@@ -23,17 +23,9 @@ impl<T: Obj> GcCompat for IMVector<T> {
     fn as_any(&self) -> &dyn Any { self }
 }
 
-impl<T: Obj> GcCompat for List<T> {
-    fn points_to(&self, m: &mut HashSet<usize>) {
-        self.0.points_to(m);
-    }
-    fn as_any(&self) -> &dyn Any { self }
-}
-
 // This is not #[derive]d, as this would wrongly require T: Default.
 impl<T: Obj> Default for List<T> {
     fn default() -> Self {
         Self(Default::default())
     }
 }
-

@@ -3,16 +3,9 @@ use crate::*;
 mod func;
 mod iter;
 
-#[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq, Debug, GcCompat)]
 /// Garbage-collected hash map implementing `Copy`.
 pub struct Map<K: Obj, V: Obj>(pub(crate) GcCow<IMHashMap<K, V>>);
-
-impl<K: Obj, V: Obj> GcCompat for Map<K, V> {
-    fn points_to(&self, m: &mut HashSet<usize>) {
-        self.0.points_to(m);
-    }
-    fn as_any(&self) -> &dyn Any { self }
-}
 
 impl<K: Obj, V: Obj> GcCompat for IMHashMap<K, V> {
     fn points_to(&self, m: &mut HashSet<usize>) {

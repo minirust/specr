@@ -13,7 +13,7 @@ macro_rules! empty_gccompat {
     };
 }
 
-empty_gccompat!((), bool, u8, i8, u16, i16, u32, i32, u64, i64, usize, isize);
+empty_gccompat!((), bool, u8, i8, u16, i16, u32, i32, u64, i64, u128, i128, usize, isize, std::string::String, Infallible, ExtInt);
 
 impl<A, B> GcCompat for (A, B) where A: GcCompat, B: GcCompat {
     fn points_to(&self, m: &mut HashSet<usize>) {
@@ -41,10 +41,5 @@ impl<T: GcCompat, E: GcCompat> GcCompat for Result<T, E> {
             Err(x) => x.points_to(m),
         }
     }
-    fn as_any(&self) -> &dyn Any { self }
-}
-
-impl GcCompat for Infallible {
-    fn points_to(&self, _m: &mut HashSet<usize>) {}
     fn as_any(&self) -> &dyn Any { self }
 }

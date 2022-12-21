@@ -1,26 +1,20 @@
-use crate::prelude::*;
+// #![feature(proc_macro_quote)]
 
-// TODO deprecate this in favor of gccompat-derive.
+extern crate proc_macro;
 
-/// Adds `impl GcCompat for _` for all user-defined types.
-pub fn gccompat_impl(mut ast: syn::File) -> syn::File {
-    let mut i = 0;
-    while i < ast.items.len() {
-        match &ast.items[i] {
-            Item::Struct(s) => {
-                ast.items.insert(i+1, impl_for_struct(s));
-                i += 1; // skip the Item you have just inserted.
-            },
-            Item::Enum(e) => {
-                ast.items.insert(i+1, impl_for_enum(e));
-                i += 1; // skip the Item you have just inserted.
-            },
-            _ => {},
-        };
-        i += 1;
+use proc_macro::TokenStream as TokenStream1;
+use proc_macro2::TokenStream as TokenStream2;
+use quote::{format_ident, quote, ToTokens};
+use syn::*;
+
+#[proc_macro_derive(GcCompat)]
+pub fn gccompat_derive(input: TokenStream1) -> TokenStream1 { 
+    let i: syn::Item = parse(input).unwrap();
+    match &i {
+        Item::Struct(s) => impl_for_struct(s).to_token_stream().into(),
+        Item::Enum(e) => impl_for_enum(e).to_token_stream().into(),
+        _ => panic!("#[derive(GcCompat)] applied to invalid item!"),
     }
-
-    ast
 }
 
 /// Generates `impl GcCompat for _`-Item for a struct.
@@ -42,11 +36,11 @@ fn impl_for_struct(s: &ItemStruct) -> Item {
     };
 
     let name = &s.ident;
-    let g = generics_trim_default(&s.generics);
+    let g = generics_base(&s.generics);
     let tg = generics_trim(&g);
 
     let ts = quote! {
-        impl #g specr::hidden::GcCompat for #name #tg {
+        impl #g GcCompat for #name #tg {
             fn as_any(&self) -> &dyn std::any::Any { self }
             #[allow(unused_variables)]
             fn points_to(&self, s: &mut std::collections::HashSet<usize>) {
@@ -65,7 +59,7 @@ fn impl_for_struct(s: &ItemStruct) -> Item {
 /// Generates `impl GcCompat for _`-Item for an enum.
 fn impl_for_enum(e: &ItemEnum) -> Item {
     // contains the correct match-arm for each variant.
-    let var_arms: Vec<TokenStream> = e.variants.iter().map(|v| {
+    let var_arms: Vec<TokenStream2> = e.variants.iter().map(|v| {
         let ident = &v.ident;
         match &v.fields {
             Fields::Named(n) => {
@@ -91,11 +85,11 @@ fn impl_for_enum(e: &ItemEnum) -> Item {
     }).collect();
 
     let enum_ident = &e.ident;
-    let g = generics_trim_default(&e.generics);
+    let g = generics_base(&e.generics);
     let tg = generics_trim(&g);
 
     let ts = quote! {
-        impl #g specr::hidden::GcCompat for #enum_ident #tg {
+        impl #g GcCompat for #enum_ident #tg {
             fn as_any(&self) -> &dyn std::any::Any { self }
             #[allow(unused_variables)]
             fn points_to(&self, s: &mut std::collections::HashSet<usize>) {
@@ -109,15 +103,20 @@ fn impl_for_enum(e: &ItemEnum) -> Item {
     syn::parse2(ts).unwrap()
 }
 
-// removes defaults from generics
-// <T : Clone = ()> -> <T : Clone>
-fn generics_trim_default(g: &Generics) -> Generics {
+fn gccompat_bound() -> TypeParamBound {
+    parse2(quote! { GcCompat }).unwrap()
+}
+
+// removes defaults from generics, and adds GcCompat to the bounds.
+// <T : Clone = ()> -> <T : Clone + GcCompat>
+fn generics_base(g: &Generics) -> Generics {
     let mut g = g.clone();
     g.params = g.params.iter().map(|p| {
         match p {
             GenericParam::Type(t) => {
                 let mut t = t.clone();
                 t.default = None;
+                t.bounds.push(gccompat_bound());
 
                 GenericParam::Type(t)
             },
@@ -149,3 +148,4 @@ fn generics_trim(g: &Generics) -> Generics {
 
     g
 }
+

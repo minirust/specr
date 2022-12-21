@@ -17,6 +17,9 @@ use im::HashSet as IMHashSet;
 use im::HashMap as IMHashMap;
 use im::Vector as IMVector;
 
+extern crate gccompat_derive;
+pub use gccompat_derive::GcCompat;
+
 mod int;
 pub use int::*;
 
