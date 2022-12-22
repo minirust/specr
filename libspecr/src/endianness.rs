@@ -116,6 +116,39 @@ mod tests {
         }
     }
 
+    macro test_encode_limit {
+        ($ty:ty) => {
+            #[allow(unused_comparisons)]
+            let signed = match <$ty>::MIN < 0 {
+                true => Signed,
+                false => Unsigned,
+            };
+            let size = Size::from_bits(<$ty>::BITS);
+
+            for endian in [BigEndian, LittleEndian] {
+                assert!(endian.encode(signed, size, Int::from(<$ty>::MAX)).is_some());
+                assert!(endian.encode(signed, size, Int::from(<$ty>::MAX) + 1).is_none());
+
+                assert!(endian.encode(signed, size, Int::from(<$ty>::MIN)).is_some());
+                assert!(endian.encode(signed, size, Int::from(<$ty>::MIN) - 1).is_none());
+            }
+        }
+    }
+
+    #[test]
+    fn test_endianness_encode_limit() {
+        test_encode_limit!(u8);
+        test_encode_limit!(i8);
+        test_encode_limit!(u16);
+        test_encode_limit!(i16);
+        test_encode_limit!(u32);
+        test_encode_limit!(i32);
+        test_encode_limit!(u64);
+        test_encode_limit!(i64);
+        test_encode_limit!(u128);
+        test_encode_limit!(i128);
+    }
+
     macro test_decode {
         ($ty:ty, $num:expr) => {
             let i: $ty = $num;
