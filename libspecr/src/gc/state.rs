@@ -1,11 +1,23 @@
 use crate::*;
 
+// mark_and_sweep won't cleanup, if you didn't allocate at least LEEWAY_MEMORY bytes since the last cleanup.
+const LEEWAY_MEMORY : usize = 1000 * 1000; // 1MB
+
 pub type GcBox = Box<dyn GcCompat>;
 pub struct GcState {
     data: Vec<Option<GcBox>>,
 
     // indices where `data` has `None` entries.
     nones: Vec<usize>,
+
+    // How much memory is used right now (in bytes)
+    // We don't count std::mem::size_of::<GcState>, nor the heap-allocated data directly behind `data` or `nones`.
+    // because those things are not reduced when doing mark and sweep.
+    // We only count the size within the `GcBox`es.
+    current_memory: usize,
+
+    // How much memory was used right after the last mark and sweep (in bytes)
+    last_memory: usize,
 }
 
 impl GcState {
@@ -13,6 +25,8 @@ impl GcState {
         Self {
             data: Vec::new(),
             nones: Vec::new(),
+            current_memory: 0,
+            last_memory: 0,
         }
     }
 
@@ -32,6 +46,7 @@ impl GcState {
             }
         };
 
+        self.current_memory += obj.size();
         self.data[idx] = Some(obj);
 
         idx
@@ -55,22 +70,18 @@ impl GcState {
         self.data.len() - self.nones.len()
     }
 
+    #[allow(unused)]
     pub fn capacity(&self) -> usize {
         self.data.len()
     }
 
-    // returns bytes
-    fn memory_consumption(&self) -> usize {
-        // sum up the objects sizes
+    fn full_memory_consumption(&self) -> usize {
         self.data.iter().map(|x| x.size()).sum::<usize>()
-
-        // each object additionally requires a fat pointer pointing to it.
-        + self.capacity() * std::mem::size_of::<Box<dyn GcCompat>>()
     }
 
     pub fn mark_and_sweep(&mut self, roots: HashSet<usize>) {
-        // don't cleanup, if you have less than 1MB allocated.
-        if self.memory_consumption() < 1000 * 1000 {
+        // don't cleanup, if you didn't allocate at least LEEWAY_MEMORY bytes since the last cleanup.
+        if self.current_memory < self.last_memory + LEEWAY_MEMORY {
             return;
         }
 
@@ -103,5 +114,8 @@ impl GcState {
                 self.nones.push(i);
             }
         }
+
+        self.current_memory = self.full_memory_consumption();
+        self.last_memory = self.current_memory;
     }
 }
