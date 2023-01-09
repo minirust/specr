@@ -7,6 +7,7 @@
 #![feature(never_type)]
 #![feature(iterator_try_collect)]
 #![feature(negative_impls)]
+#![feature(step_trait)]
 
 use std::collections::HashSet;
 use std::any::Any;
