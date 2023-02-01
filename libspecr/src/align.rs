@@ -10,9 +10,22 @@ impl Align {
 
     /// align is rounded up to the next power of two.
     pub fn from_bytes(align: impl Into<Int>) -> Align {
-        let align = align.into();
-        let raw = align.next_power_of_two();
+        let raw = align.into().next_power_of_two();
+        Align { raw }
+    }
 
+    pub const fn from_bytes_const(align: u64) -> Align {
+        let raw = Int::from(align.next_power_of_two());
+        Align { raw }
+    }
+
+    pub fn from_bits(align: impl Into<Int>) -> Align {
+        let raw = (align.into() / 8).next_power_of_two();
+        Align { raw }
+    }
+
+    pub const fn from_bits_const(align: u64) -> Align {
+        let raw = Int::from((align / 8).next_power_of_two());
         Align { raw }
     }
 
