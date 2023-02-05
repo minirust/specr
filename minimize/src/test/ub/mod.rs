@@ -6,3 +6,6 @@ mod ptr_partial_overwrite;
 mod uninit_read;
 mod call_missing_fn;
 mod return_from_never_fn;
+mod too_large_alloc;
+mod double_free;
+mod use_after_free;

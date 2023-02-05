@@ -138,6 +138,8 @@ fn dump_terminator(t: Terminator) {
                 Intrinsic::Exit => "exit",
                 Intrinsic::PrintStdout => "print",
                 Intrinsic::PrintStderr => "eprint",
+                Intrinsic::Allocate => "allocate",
+                Intrinsic::Deallocate => "deallocate",
             };
             dump_call(callee, arguments, ret, next_block);
         },

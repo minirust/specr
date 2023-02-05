@@ -59,6 +59,24 @@ pub fn eprint(arg: ValueExpr, next: u32) -> Terminator {
     }
 }
 
+pub fn allocate(size: ValueExpr, align: ValueExpr, ret_place: PlaceExpr, next: u32) -> Terminator {
+    Terminator::CallIntrinsic {
+        intrinsic: Intrinsic::Allocate,
+        arguments: list![size, align],
+        ret: Some(ret_place),
+        next_block: Some(BbName(Name::new(next))),
+    }
+}
+
+pub fn deallocate(ptr: ValueExpr, size: ValueExpr, align: ValueExpr, next: u32) -> Terminator {
+    Terminator::CallIntrinsic {
+        intrinsic: Intrinsic::Deallocate,
+        arguments: list![ptr, size, align],
+        ret: None,
+        next_block: Some(BbName(Name::new(next))),
+    }
+}
+
 pub fn exit() -> Terminator {
     Terminator::CallIntrinsic {
         intrinsic: Intrinsic::Exit,
