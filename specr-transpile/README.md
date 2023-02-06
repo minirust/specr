@@ -60,8 +60,8 @@ impl Foo {
 }
 
 impl Foo {
-    fn foo(&self, x: Some(a)) -> i32 { a }
-    fn foo(&self, x: None) -> i32 { 0 }
+    fn foo(&self, Some(a): Option<i32>) -> i32 { a }
+    fn foo(&self, None: Option<i32>) -> i32 { 0 }
 }
 ```
 Argmatch can also be applied to `self`.
