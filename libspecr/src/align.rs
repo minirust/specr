@@ -9,24 +9,26 @@ impl Align {
     pub const ONE: Align = Align { raw: Int::ONE };
 
     /// align is rounded up to the next power of two.
-    pub fn from_bytes(align: impl Into<Int>) -> Align {
-        let raw = align.into().next_power_of_two();
-        Align { raw }
+    pub fn from_bytes(align: impl Into<Int>) -> Option<Align> {
+        let raw = align.into();
+        if raw.is_power_of_two() {
+            Some(Align { raw })
+        } else { None }
     }
 
-    pub const fn from_bytes_const(align: u64) -> Align {
-        let raw = Int::from(align.next_power_of_two());
-        Align { raw }
+    pub const fn from_bytes_const(align: u64) -> Option<Align> {
+        if align.is_power_of_two() {
+            let raw = Int::from(align);
+            Some(Align { raw })
+        } else { None }
     }
 
-    pub fn from_bits(align: impl Into<Int>) -> Align {
-        let raw = (align.into() / 8).next_power_of_two();
-        Align { raw }
+    pub fn from_bits(align: impl Into<Int>) -> Option<Align> {
+        Align::from_bytes(align.into() / 8)
     }
 
-    pub const fn from_bits_const(align: u64) -> Align {
-        let raw = Int::from((align / 8).next_power_of_two());
-        Align { raw }
+    pub const fn from_bits_const(align: u64) -> Option<Align> {
+        Align::from_bytes_const(align / 8)
     }
 
     pub fn bytes(self) -> Int {
@@ -41,7 +43,8 @@ impl Align {
             .map(|trailing| {
                 let bytes = Int::from(2).pow(trailing);
 
-                Align::from_bytes(bytes)
+                // `bytes = 2 ^ trailing`, hence bytes is a power of two and this unwrap() cannot fail.
+                Align::from_bytes(bytes).unwrap()
             })
     }
 
