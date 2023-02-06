@@ -94,16 +94,8 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
             let count = Int::from(operands.len());
             let ty = translate_ty(*ty, fcx.tcx);
             let ty = Type::Array { elem: GcCow::new(ty), count };
-            let ops: List<_> = operands.iter().map(|x| {
-                let op = translate_operand(x, fcx);
-                let ValueExpr::Constant(c, _) = op else {
-                    panic!("non-constants in array-expr not supported!");
-                };
-
-                c
-            }).collect();
-            let c = Constant::Tuple(ops);
-            ValueExpr::Constant(c, ty)
+            let ops: List<_> = operands.iter().map(|x| translate_operand(x, fcx)).collect();
+            ValueExpr::Tuple(ops, ty)
         },
         rs::Rvalue::CopyForDeref(place) => {
             ValueExpr::Load {
@@ -165,8 +157,8 @@ pub fn translate_operand<'tcx>(operand: &rs::Operand<'tcx>, fcx: &mut FnCtxt<'tc
                             Constant::Int(int)
                         },
                         // unit type `()`
-                        Type::Tuple { fields, .. } if fields.is_empty() => {
-                            Constant::Tuple(List::new())
+                        Type::Tuple { fields, .. } if fields.is_empty() => { // TODO are other tuples supported correctly?
+                            return ValueExpr::Tuple(List::new(), Type::Tuple { fields: List::new(), size: Size::ZERO })
                         }
                         Type::Bool => {
                             Constant::Bool(val.try_to_bool().unwrap())

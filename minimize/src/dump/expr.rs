@@ -26,12 +26,6 @@ fn constant_to_string(c: Constant) -> String {
     match c {
         Constant::Int(int) => int.to_string(),
         Constant::Bool(b) => b.to_string(),
-        Constant::Tuple(l) => {
-            let l: Vec<_> = l.iter().map(constant_to_string).collect();
-            let l = l.join(", ");
-
-            format!("({l})")
-        },
         c => format!("{:?}", c),
     }
 }
@@ -39,6 +33,17 @@ fn constant_to_string(c: Constant) -> String {
 pub fn value_expr_to_string(v: ValueExpr) -> String {
     match v {
         ValueExpr::Constant(c, _ty) => constant_to_string(c),
+        ValueExpr::Tuple(l, t) => {
+            let (lparen, rparen) = match t {
+                Type::Array { .. } => ('[', ']'),
+                Type::Tuple { .. } => ('(', ')'),
+                _ => panic!(),
+            };
+            let l: Vec<_> = l.iter().map(value_expr_to_string).collect();
+            let l = l.join(", ");
+
+            format!("{lparen}{l}{rparen}")
+        },
         ValueExpr::Load { destructive: _, source } => {
             let source = source.get();
             let source = place_expr_to_string(source);

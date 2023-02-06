@@ -19,7 +19,7 @@ fn invalid_offset() {
             const_array(&[
                 const_int::<i32>(42),
                 const_int::<i32>(24),
-            ]),
+            ], <i32>::get_type()),
         ),
         assign(
             field(local(1), 0),
