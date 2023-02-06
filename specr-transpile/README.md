@@ -1,7 +1,7 @@
 # specr-transpile
 
 specr-transpile helps building a `minirust` interpreter.
-It does that by transpiling the Pseudorust code to actual Rust code.
+It does that by transpiling the specr lang code to actual Rust code.
 
 The code is WIP, highly unstable.
 
@@ -67,7 +67,7 @@ impl Foo {
 Argmatch can also be applied to `self`.
 
 ### Forward declarations
-Forward declarations in PseudoRust are method implementations missing their code block `{ ... }`.
+Forward declarations in specr lang are method implementations missing their code block `{ ... }`.
 
 Example:
 ```rust

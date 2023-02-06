@@ -1,7 +1,7 @@
 use crate::*;
 
-/// A PseudoRust object.
-/// Most of the types used in PseudoRust (std lib types and user-defined types)
+/// A specr lang object.
+/// Most of the types used in specr lang (std lib types and user-defined types)
 /// will implement this trait.
 ///
 /// A notable exception is closures.

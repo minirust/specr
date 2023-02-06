@@ -47,7 +47,7 @@ fn mk_mod(basename: &str, modname: &str) -> Option<Module> {
         let name = format!("{dirname}/{name}");
 
         let fcode = fs::read_to_string(name).unwrap();
-        let fcode = filter_pseudo_rust(&*fcode);
+        let fcode = filter_specr_lang(&*fcode);
         code.push_str(&*fcode);
     }
 
@@ -72,7 +72,7 @@ fn mk_mod(basename: &str, modname: &str) -> Option<Module> {
 
 // this filters out the code blocks ```rust <code> ```
 // it will ignore ```rust,ignore <code> ``` blocks
-fn filter_pseudo_rust(mut s: &str) -> String {
+fn filter_specr_lang(mut s: &str) -> String {
     const OFFSET1: usize = "\n```rust\n".len();
     const OFFSET2: usize = "\n```\n".len();
 

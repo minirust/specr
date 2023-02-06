@@ -3,7 +3,7 @@
 This repository contains a bunch of crates used to work with minirust.
 Note that these are still WIP.
 
-First, there is `specr-transpile`, which converts the PseudoRust code to actual Rust code, see [here](https://github.com/memoryleak47/minirust-tooling/blob/main/specr-transpile/README.md) if you are interested in this process.
+First, there is `specr-transpile`, which converts the specr lang code to actual Rust code, see [here](https://github.com/memoryleak47/minirust-tooling/blob/main/specr-transpile/README.md) if you are interested in this process.
 
 The `minirust` code has to lie in `./minirust` within this repository, whereas the generated Rust-code will be written to `./gen-minirust` by `specr-transpile`.
 
