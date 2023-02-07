@@ -24,10 +24,13 @@ impl Align {
     }
 
     pub fn from_bits(align: impl Into<Int>) -> Option<Align> {
-        Align::from_bytes(align.into() / 8)
+        let align = align.into();
+        if align % 8 != 0 { return None; }
+        Align::from_bytes(align / 8)
     }
 
     pub const fn from_bits_const(align: u64) -> Option<Align> {
+        if align % 8 != 0 { return None; }
         Align::from_bytes_const(align / 8)
     }
 
