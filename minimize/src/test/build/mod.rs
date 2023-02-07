@@ -19,7 +19,7 @@ mod ty_conv;
 pub use ty_conv::*;
 
 pub fn align(bytes: u32) -> Align {
-    Align::from_bytes(bytes)
+    Align::from_bytes(bytes).unwrap()
 }
 
 pub fn size(bytes: u32) -> Size {

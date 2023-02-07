@@ -174,5 +174,5 @@ pub fn arg_abi() -> ArgAbi {
 }
 
 pub fn translate_align(align: rs::Align) -> Align {
-    Align::from_bytes(align.bytes())
+    Align::from_bytes(align.bytes()).unwrap()
 }

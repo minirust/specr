@@ -30,7 +30,7 @@ macro_rules! type_conv_impl {
                 Type::Int(IntType { signed: $signed, size: Size::from_bytes($size)})
             }
             fn get_align() -> Align {
-                Align::from_bytes($align)
+                align($align)
             }
             fn get_size() -> Size {
                 Size::from_bytes($size)
