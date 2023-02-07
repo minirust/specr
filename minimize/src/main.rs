@@ -19,6 +19,7 @@ mod rs {
 }
 
 extern crate gen_minirust;
+extern crate minisyntax;
 
 pub use gen_minirust::lang::*;
 pub use gen_minirust::mem::*;
@@ -32,6 +33,9 @@ pub use std::format;
 pub use std::string::String;
 pub use gen_minirust::prelude::NdResult;
 
+pub use minisyntax::run::*;
+pub use minisyntax::dump::dump_program;
+
 mod program;
 use program::*;
 
@@ -44,17 +48,8 @@ use bb::*;
 mod rvalue;
 use rvalue::*;
 
-mod dump;
-use dump::dump_program;
-
-mod run;
-use run::*;
-
 mod get;
 use get::get_mini;
-
-#[cfg(test)]
-mod test;
 
 use std::collections::HashMap;
 use std::path::Path;

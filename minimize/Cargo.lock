@@ -324,7 +324,15 @@ name = "minimize"
 version = "0.1.0"
 dependencies = [
  "gen-minirust",
+ "minisyntax",
  "ui_test",
+]
+
+[[package]]
+name = "minisyntax"
+version = "0.1.0"
+dependencies = [
+ "gen-minirust",
 ]
 
 [[package]]

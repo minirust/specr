@@ -1,5 +1,5 @@
 [package]
-name = "minimize"
+name = "minisyntax"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,11 +7,3 @@ edition = "2021"
 
 [dependencies]
 gen-minirust = { path = "../gen-minirust" }
-minisyntax = { path = "../minisyntax"}
-
-[dev-dependencies]
-ui_test = "0.5"
-
-[[test]]
-name = "compiletest"
-harness = false
