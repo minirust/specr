@@ -15,41 +15,35 @@ pub struct Size { raw: Int }
 impl Size {
     pub const ZERO: Size = Size { raw: Int::ZERO };
 
-    /// Rounds `bits` up to the next-higher byte boundary, if `bits` is
-    /// not a multiple of 8.
-    /// Will panic if `bits` is negative.
-    pub fn from_bits(bits: impl Into<Int>) -> Size {
+    /// Returns None, if `bits` is negative or not divisible by 8.
+    pub fn from_bits(bits: impl Into<Int>) -> Option<Size> {
         let bits = bits.into();
+        if bits % 8 != 0 { return None; };
+        if bits < 0 { return None; }
 
-        if bits < 0 {
-            panic!("attempting to create negative Size");
-        }
-
-        let raw = bits.div_ceil(8);
-        Size { raw }
+        let raw = bits / 8;
+        Some(Size { raw })
     }
 
-    /// variation of `from_bits` for const contexts.
-    /// Cannot fail since the input is unsigned.
-    pub const fn from_bits_const(bits: u64) -> Size {
-        let bytes = bits.div_ceil(8);
+    /// Variation of `from_bits` for const contexts.
+    /// Returns None, if `bits` is not divisible by 8.
+    pub const fn from_bits_const(bits: u64) -> Option<Size> {
+        if bits % 8 != 0 { return None; }
+        let bytes = bits / 8;
         let raw = Int::from(bytes);
-        Size { raw }
+        Some(Size { raw })
     }
 
-    /// Will panic if `bytes` is negative.
-    pub fn from_bytes(bytes: impl Into<Int>) -> Size {
+    /// Returns None, if `bits` is negative.
+    pub fn from_bytes(bytes: impl Into<Int>) -> Option<Size> {
         let bytes = bytes.into();
+        if bytes < 0 { return None; }
 
-        if bytes < 0 {
-            panic!("attempting to create negative Size");
-        }
-
-        Size { raw: bytes }
+        Some(Size { raw: bytes })
     }
 
-    /// variation of `from_bytes` for const contexts.
-    /// Cannot fail since the input is unsigned.
+    /// Variation of `from_bytes` for const contexts.
+    /// Cannot fail since the input is unsigned, and already in bytes.
     pub const fn from_bytes_const(bytes: u64) -> Size {
         let raw = Int::from(bytes);
         Size { raw }
@@ -67,7 +61,7 @@ impl Add for Size {
     type Output = Size;
     fn add(self, rhs: Size) -> Size {
         let b = self.bytes() + rhs.bytes();
-        Size::from_bytes(b)
+        Size::from_bytes(b).unwrap()
     }
 }
 
@@ -75,7 +69,7 @@ impl Mul<Int> for Size {
     type Output = Size;
     fn mul(self, rhs: Int) -> Size {
         let b = self.bytes() * rhs;
-        Size::from_bytes(b)
+        Size::from_bytes(b).unwrap()
     }
 }
 
@@ -83,7 +77,7 @@ impl Mul<Size> for Int {
     type Output = Size;
     fn mul(self, rhs: Size) -> Size {
         let b = self * rhs.bytes();
-        Size::from_bytes(b)
+        Size::from_bytes(b).unwrap()
     }
 }
 
