@@ -26,6 +26,8 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 [[package]]
 name = "gccompat-derive"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c60b71523f110db88b7dc82130ad243ab281e168739c79ac72843f8dffb1f739"
 dependencies = [
  "proc-macro2",
  "quote",

@@ -1,5 +1,6 @@
 [package]
 name = "libspecr"
+description = "standard library for specr lang"
 version = "0.1.0"
 edition = "2021"
 repository = "https://github.com/memoryleak47/minirust-tooling"
@@ -13,4 +14,4 @@ num-traits = "0.2.15"
 num-integer = "0.1.45"
 im = "15.1.0"
 rand = "0.8.5"
-gccompat-derive = { path = "../gccompat-derive/" }
+gccompat-derive = "0.1.0"
