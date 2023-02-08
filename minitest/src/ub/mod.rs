@@ -9,3 +9,4 @@ mod return_from_never_fn;
 mod too_large_alloc;
 mod double_free;
 mod use_after_free;
+mod dealloc_inv_ptr;

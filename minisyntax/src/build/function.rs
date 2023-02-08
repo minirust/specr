@@ -62,3 +62,39 @@ pub fn block(statements: &[Statement], terminator: Terminator) -> BasicBlock {
         terminator,
     }
 }
+
+// like `block`, but a sometimes nicer API.
+pub fn block2(l: &[&dyn ToStmtTerm]) -> BasicBlock {
+    let StmtTerm::Term(term) = l.last().unwrap().to_stmt_term() else { panic!() };
+    let mut stmts = Vec::new();
+    for x in &l[0..l.len() - 1] {
+        let StmtTerm::Stmt(stmt) = x.to_stmt_term() else { panic!() };
+        stmts.push(stmt);
+    }
+
+    BasicBlock {
+        statements: stmts.iter().copied().collect(),
+        terminator: term,
+    }
+}
+
+pub enum StmtTerm {
+    Stmt(Statement),
+    Term(Terminator),
+}
+
+pub trait ToStmtTerm {
+    fn to_stmt_term(&self) -> StmtTerm;
+}
+
+impl ToStmtTerm for Statement {
+    fn to_stmt_term(&self) -> StmtTerm {
+        StmtTerm::Stmt(*self)
+    }
+}
+
+impl ToStmtTerm for Terminator {
+    fn to_stmt_term(&self) -> StmtTerm {
+        StmtTerm::Term(*self)
+    }
+}
