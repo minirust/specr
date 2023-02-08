@@ -11,3 +11,4 @@ mod double_free;
 mod use_after_free;
 mod dealloc_inv_ptr;
 mod dealloc_not_begin;
+mod div_zero;
