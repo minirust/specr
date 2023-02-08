@@ -15,3 +15,4 @@ mod div_zero;
 mod alloc;
 mod dealloc;
 mod print;
+mod unreachable;
