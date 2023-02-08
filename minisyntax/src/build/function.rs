@@ -36,7 +36,10 @@ pub fn function(ret: Ret, num_args: usize, locs: &[PlaceType], bbs: &[BasicBlock
     }).collect();
 
     let ret = match ret {
-        Ret::Yes => Some((LocalName(Name::new(0)), ArgAbi::Register)),
+        Ret::Yes => {
+            assert!(locs.len() > 0);
+            Some((LocalName(Name::new(0)), ArgAbi::Register))
+        }
         Ret::No => None,
     };
 
