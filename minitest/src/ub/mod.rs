@@ -14,3 +14,4 @@ mod dealloc_not_begin;
 mod div_zero;
 mod alloc;
 mod dealloc;
+mod print;

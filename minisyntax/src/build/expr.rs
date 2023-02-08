@@ -19,10 +19,13 @@ pub fn const_tuple(args: &[ValueExpr], ty: Type) -> ValueExpr {
 
 // doesn't support zero-length arrays, as their type wouldn't be clear.
 pub fn const_array(args: &[ValueExpr], elem_ty: Type) -> ValueExpr {
-    assert!(args.len() > 0);
-
     let ty = array_ty(elem_ty, args.len());
     ValueExpr::Tuple(args.iter().cloned().collect(), ty)
+}
+
+// returns () or [].
+pub fn const_unit() -> ValueExpr {
+    ValueExpr::Tuple(Default::default(), <()>::get_type())
 }
 
 // non-destructive load.
