@@ -84,7 +84,7 @@ fn create_lib(mods: &[Module]) {
         #![feature(is_some_and)]
         #![feature(const_option)]
         #[allow(unused_imports)]
-        #[macro_use] pub extern crate libspecr as specr;
+        #[macro_use] pub extern crate libspecr;
         #( #[allow(unused_imports)] #[macro_use] pub mod #mods; )*
     };
     let code = code.to_string();

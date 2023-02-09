@@ -37,7 +37,7 @@ fn wrap_enum(it_enum: &mut ItemEnum) -> HashSet<VariantElement> {
                 f.attrs.remove(j);
 
                 let t = &f.ty;
-                let wrapped_ty = quote! { specr::hidden::GcCow<#t> };
+                let wrapped_ty = quote! { libspecr::hidden::GcCow<#t> };
                 f.ty = parse2(wrapped_ty).unwrap();
 
                 let idx = match &f.ident {

@@ -13,7 +13,7 @@ struct Visitor<'a> {
 
 impl VisitMut for Visitor<'_> {
     // fixup named enum variant construction:
-    // `Variant { x: 2 }` ==> `Variant { x: specr::hidden::GcCow::new(2) }`
+    // `Variant { x: 2 }` ==> `Variant { x: libspecr::hidden::GcCow::new(2) }`
     fn visit_expr_struct_mut(&mut self, i: &mut ExprStruct) {
         for e in self.elements {
             let ElementIdx::Named(name) = &e.idx else { continue };
@@ -36,7 +36,7 @@ impl VisitMut for Visitor<'_> {
     }
 
     // fixup unnamed enum variant construction:
-    // `Some(2)` ==> `Some(specr::hidden::GcCow::new(2))`
+    // `Some(2)` ==> `Some(libspecr::hidden::GcCow::new(2))`
     fn visit_expr_call_mut(&mut self, i: &mut ExprCall) {
         for e in self.elements {
             let ElementIdx::Unnamed(idx) = &e.idx else { continue };
@@ -69,10 +69,10 @@ impl VisitMut for Visitor<'_> {
     }
 }
 
-// wraps an Expr in specr::hidden::GcCow::new(_)
+// wraps an Expr in libspecr::hidden::GcCow::new(_)
 fn wrap_expr(expr: &mut Expr) {
     let e = quote! {
-        specr::hidden::GcCow::new(#expr)
+        libspecr::hidden::GcCow::new(#expr)
     };
     *expr = parse2(e).unwrap();
 }

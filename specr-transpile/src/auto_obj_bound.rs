@@ -58,7 +58,7 @@ pub fn add_bound(g: &mut Generics) {
 }
 
 pub fn add_bound_punct<T: Default>(punct: &mut Punctuated<TypeParamBound, T>) {
-    let b = quote! { specr::hidden::Obj };
+    let b = quote! { libspecr::hidden::Obj };
     let b: TraitBound = parse2(b).unwrap();
     let b: TypeParamBound = b.into();
     punct.push(b);
