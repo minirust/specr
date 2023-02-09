@@ -82,6 +82,27 @@ fn alloc_align_err() {
 }
 
 #[test]
+fn alloc_size_err() {
+    let locals = [ <*const i32>::get_ptype() ];
+
+    let b0 = block2(&[
+        &live(0),
+        &Terminator::CallIntrinsic {
+            intrinsic: Intrinsic::Allocate,
+            arguments: list![const_int::<isize>(-1), const_int::<usize>(4)], // -1 is not a valid size!
+            ret: Some(local(0)),
+            next_block: Some(BbName(Name::new(1))),
+        },
+    ]);
+    let b1 = block2(&[&exit()]);
+
+    let f = function(Ret::No, 0, &locals, &[b0, b1]);
+    let p = program(&[f]);
+    dump_program(&p);
+    assert_ub(p, "invalid size for `Intrinsic::Allocate`: negative size");
+}
+
+#[test]
 fn alloc_wrongarg1() {
     let locals = [ <*const i32>::get_ptype() ];
 

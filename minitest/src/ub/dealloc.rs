@@ -69,6 +69,30 @@ fn dealloc_align_err() {
 }
 
 #[test]
+fn dealloc_size_err() {
+    let locals = [ <*const i32>::get_ptype() ];
+
+    let b0 = block2(&[
+        &live(0),
+        &allocate(const_int::<usize>(4), const_int::<usize>(4), local(0), 1)
+    ]);
+    let b1 = block2(&[
+        &Terminator::CallIntrinsic {
+            intrinsic: Intrinsic::Deallocate,
+            arguments: list![load(local(0)), const_int::<isize>(-1), const_int::<usize>(4)], // -1 is not a valid size!
+            ret: None,
+            next_block: Some(BbName(Name::new(2))),
+        },
+    ]);
+    let b2 = block2(&[&exit()]);
+
+    let f = function(Ret::No, 0, &locals, &[b0, b1, b2]);
+    let p = program(&[f]);
+    dump_program(&p);
+    assert_ub(p, "invalid size for `Intrinsic::Deallocate`: negative size");
+}
+
+#[test]
 fn dealloc_wrongarg1() {
     let locals = [ <*const i32>::get_ptype() ];
 
