@@ -157,7 +157,7 @@ mod tests {
     fn test_modulo() {
         for s in [Signed, Unsigned] {
             for bits in [16, 32, 64] {
-                let size = Size::from_bits_const(bits);
+                let size = Size::from_bits_const(bits).unwrap();
                 let m = Int::from(2).pow(Int::from(bits));
 
                 for base in [-m*2, -m, Int::ZERO, m, m*2] {

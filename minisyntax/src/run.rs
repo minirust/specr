@@ -42,5 +42,5 @@ pub fn run_program(prog: Program) -> Outcome {
 fn mark_and_sweep<M: Memory>(machine: &Machine<M>) {
     let mut set = HashSet::new();
     machine.points_to(&mut set);
-    gen_minirust::specr::hidden::mark_and_sweep(set);
+    gen_minirust::libspecr::hidden::mark_and_sweep(set);
 }

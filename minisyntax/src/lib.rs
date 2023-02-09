@@ -6,9 +6,9 @@ pub use gen_minirust::lang::*;
 pub use gen_minirust::mem::*;
 pub use gen_minirust::prelude::*;
 
-pub use gen_minirust::specr::*;
-pub use gen_minirust::specr::prelude::*;
-pub use gen_minirust::specr::hidden::*;
+pub use gen_minirust::libspecr::*;
+pub use gen_minirust::libspecr::prelude::*;
+pub use gen_minirust::libspecr::hidden::*;
 
 pub use std::format;
 pub use std::string::String;

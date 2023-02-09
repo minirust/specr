@@ -23,7 +23,7 @@ pub fn align(bytes: u32) -> Align {
 }
 
 pub fn size(bytes: u32) -> Size {
-    Size::from_bytes(bytes)
+    Size::from_bytes(bytes).unwrap()
 }
 
 /// generates a small program, only having one basic block.

@@ -59,7 +59,7 @@ pub fn translate_ty<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> Type {
 
             // TODO this is just one large chunk.
             // see https://github.com/rust-lang/unsafe-code-guidelines/issues/354
-            let chunks = list![(Size::from_bytes(0), size)];
+            let chunks = list![(Size::from_bytes_const(0), size)];
 
             Type::Union {
                 fields,
@@ -125,7 +125,7 @@ fn translate_int_ty(int_ty: &rs::IntTy) -> IntType {
     };
 
     let signed = Signedness::Signed;
-    let size = Size::from_bytes(size);
+    let size = Size::from_bytes_const(size);
     IntType { signed, size }
 }
 
@@ -142,10 +142,10 @@ fn translate_uint_ty(uint_ty: &rs::UintTy) -> IntType {
     };
 
     let signed = Signedness::Unsigned;
-    let size = Size::from_bytes(size);
+    let size = Size::from_bytes_const(size);
     IntType { signed, size }
 }
 
 fn translate_size(size: rs::Size) -> Size {
-    Size::from_bytes(size.bytes())
+    Size::from_bytes_const(size.bytes())
 }

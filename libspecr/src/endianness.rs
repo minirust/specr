@@ -86,7 +86,7 @@ mod tests {
                 true => Signed,
                 false => Unsigned,
             };
-            let size = Size::from_bits(<$ty>::BITS);
+            let size = Size::from_bits(<$ty>::BITS).unwrap();
 
             for endian in [BigEndian, LittleEndian] {
                 let bytes_a = endian.encode(signed, size, Int::from(i)).unwrap();
@@ -123,7 +123,7 @@ mod tests {
                 true => Signed,
                 false => Unsigned,
             };
-            let size = Size::from_bits(<$ty>::BITS);
+            let size = Size::from_bits(<$ty>::BITS).unwrap();
 
             for endian in [BigEndian, LittleEndian] {
                 assert!(endian.encode(signed, size, Int::from(<$ty>::MAX)).is_some());

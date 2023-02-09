@@ -221,10 +221,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "gccompat-derive"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c60b71523f110db88b7dc82130ad243ab281e168739c79ac72843f8dffb1f739"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "gen-minirust"
 version = "0.1.0"
 dependencies = [
- "gccompat-derive",
+ "gccompat-derive 0.1.0",
  "libspecr",
 ]
 
@@ -303,9 +314,9 @@ checksum = "db6d7e329c562c5dfab7a46a2afabc8b987ab9a4834c9d1ca04dc54c1546cef8"
 
 [[package]]
 name = "libspecr"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
- "gccompat-derive",
+ "gccompat-derive 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "im",
  "num-bigint",
  "num-integer",

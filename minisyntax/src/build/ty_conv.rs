@@ -27,13 +27,13 @@ macro_rules! type_conv_impl {
     ($ty:ty, $signed:expr, $size:expr, $align:expr) => {
         impl TypeConv for $ty {
             fn get_type() -> Type {
-                Type::Int(IntType { signed: $signed, size: Size::from_bytes($size)})
+                Type::Int(IntType { signed: $signed, size: size($size)})
             }
             fn get_align() -> Align {
                 align($align)
             }
             fn get_size() -> Size {
-                Size::from_bytes($size)
+                size($size)
             }
         }
     }
