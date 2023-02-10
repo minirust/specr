@@ -21,6 +21,88 @@ pub fn translate_mutbl(mutbl: rs::Mutability) -> Mutability {
     }
 }
 
+// TODO it would be nicer to access this from Minirust itself.
+fn ty_size(ty: Type) -> Size {
+    use Type::*;
+    match ty {
+        Int(int_type) => int_type.size,
+        Bool => Size::from_bytes_const(1),
+        Ptr(_) => BasicMemory::PTR_SIZE,
+        Tuple { size, .. } | Union { size, .. } | Enum { size, .. } => size,
+        Array { elem, count } => ty_size(elem.get()) * count,
+    }
+}
+
+// The `markers` object stores a bool for each byte within the size of a union.
+// Such a bool is `true` if the corresponding byte should be part of a chunk (i.e. it contains actual data),
+// and it's false it this byte is just padding.
+//
+// marks any non-padding bytes used by `ty` as `true`.
+fn mark_used_bytes(ty: Type, markers: &mut [bool]) {
+    match ty {
+        Type::Int(int_ty) => mark_size(int_ty.size, markers),
+        Type::Bool => mark_size(Size::from_bytes_const(1), markers),
+        Type::Ptr(_) => mark_size(BasicMemory::PTR_SIZE, markers),
+        Type::Tuple { fields, .. } | Type::Union { fields, .. } => {
+            for (offset, ty) in fields {
+                let offset = offset.bytes().try_to_usize().unwrap();
+                mark_used_bytes(ty, &mut markers[offset..]);
+            }
+        },
+        Type::Array { elem, count } => {
+            let elem = elem.get();
+            for i in Int::ZERO..count {
+                let offset = i * ty_size(elem);
+                let offset = offset.bytes().try_to_usize().unwrap();
+                mark_used_bytes(elem, &mut markers[offset..]);
+            }
+        }
+        Type::Enum { .. } => panic!("unsupported!"),
+    }
+}
+
+// marks all bytes from 0..size as true.
+fn mark_size(size: Size, markers: &mut [bool]) {
+    for i in Int::ZERO..size.bytes() {
+        let i = i.try_to_usize().unwrap();
+        markers[i] = true;
+    }
+}
+
+// see https://github.com/rust-lang/unsafe-code-guidelines/issues/354
+fn calc_chunks(fields: Fields, size: Size) -> List<(Size, Size)> {
+    let s = size.bytes().try_to_usize().unwrap();
+    let mut markers = vec![false; s];
+    for (offset, ty) in fields {
+        let offset = offset.bytes().try_to_usize().unwrap();
+        mark_used_bytes(ty, &mut markers[offset..]);
+    }
+
+    let mut chunks = Vec::new();
+    let mut current_chunk_start: Option<usize> = None;
+
+    // this garantees that markers stops with false,
+    // and the last chunk will be added.
+    markers.push(false);
+
+    for (i, b) in markers.iter().enumerate() {
+        match (b, &current_chunk_start) {
+            (true, None) => {
+                current_chunk_start = Some(i);
+            },
+            (false, Some(s)) => {
+                let start = Size::from_bytes(*s).unwrap();
+                let length = Size::from_bytes(i - *s).unwrap();
+                chunks.push((start, length));
+                current_chunk_start = None;
+            },
+            _ => {},
+        }
+    }
+
+    chunks.into_iter().collect()
+}
+
 pub fn translate_ty<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> Type {
     match ty.kind() {
         rs::TyKind::Bool => Type::Bool,
@@ -56,10 +138,7 @@ pub fn translate_ty<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> Type {
         },
         rs::TyKind::Adt(adt_def, sref) if adt_def.is_union() => {
             let (fields, size) = translate_adt_fields(ty, *adt_def, sref, tcx);
-
-            // TODO this is just one large chunk.
-            // see https://github.com/rust-lang/unsafe-code-guidelines/issues/354
-            let chunks = list![(Size::from_bytes_const(0), size)];
+            let chunks = calc_chunks(fields, size);
 
             Type::Union {
                 fields,
