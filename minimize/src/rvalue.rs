@@ -133,6 +133,21 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
                 operand: GcCow::new(operand),
             }
         },
+        rs::Rvalue::Repeat(op, c) => {
+            let c = c.try_eval_usize(fcx.tcx, rs::ParamEnv::empty()).unwrap();
+            let c = Int::from(c);
+
+            let elem_ty = translate_ty(op.ty(&fcx.body, fcx.tcx), fcx.tcx);
+            let op = translate_operand(op, fcx);
+
+            let ty = Type::Array {
+                elem: GcCow::new(elem_ty),
+                count: c,
+            };
+
+            let ls = list![op; c];
+            ValueExpr::Tuple(ls, ty)
+        }
         x => {
             dbg!(x);
             todo!()
