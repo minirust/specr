@@ -19,7 +19,7 @@ struct FwdDeclaration {
     // stores the actual method forward declaration
     iim: ImplItemMethod,
 
-    match_ident: String, // TODO should this be `Ident`?
+    match_ident: Ident,
     match_idx: usize,
 }
 
@@ -34,7 +34,7 @@ fn argmatch_ast(mut arg: syn::File) -> syn::File {
     arg
 }
 
-fn get_argmatch_attr(attrs: &mut Vec<Attribute>) -> Option</*match ident: */ String> {
+fn get_argmatch_attr(attrs: &mut Vec<Attribute>) -> Option<Ident> {
     for i in 0..attrs.len() {
         let attr = &attrs[i];
         let segments: Vec<String> = attr.path.segments
@@ -45,7 +45,7 @@ fn get_argmatch_attr(attrs: &mut Vec<Attribute>) -> Option</*match ident: */ Str
         if l == "specr" && r == "argmatch" {
             let Some(tok) = attr.tokens.clone().into_iter().next() else { continue };
             let TokenTree::Group(g) = tok else { continue };
-            let match_ident = format!("{}", g.stream());
+            let match_ident = format_ident!("{}", g.stream().to_string());
             attrs.remove(i);
             return Some(match_ident);
         }
@@ -65,7 +65,9 @@ fn get_fwd_decl(ii: &ItemImpl, iim: &mut ImplItemMethod) -> Option<FwdDeclaratio
     } else {
         iim.sig.inputs.iter().position(|arg| {
             let FnArg::Typed(pat_ty) = arg else { return false };
-            format!("{}", pat_ty.pat.to_token_stream()) == match_ident
+            let Pat::Ident(pi) = &*pat_ty.pat else { return false };
+
+            pi.ident == match_ident
         }).expect("Cannot find argmatch match_idx")
     };
 
@@ -139,7 +141,7 @@ fn extract_implementations(fwd_decl: &FwdDeclaration, arg: &mut syn::File) -> Ve
 }
 
 fn merge_implementations(fwd_decl: FwdDeclaration, impls: Vec<ImplItemMethod>) -> ItemImpl {
-    let match_ident = Ident::new(&fwd_decl.match_ident, Span::call_site());
+    let match_ident = fwd_decl.match_ident;
 
     let match_expr = Box::new(Expr::Path(ExprPath {
         attrs: Vec::new(),
