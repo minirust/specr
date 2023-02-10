@@ -140,49 +140,51 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
     })
 }
 
-pub fn translate_operand<'tcx>(operand: &rs::Operand<'tcx>, fcx: &mut FnCtxt<'tcx>) -> ValueExpr {
-    match operand {
-        rs::Operand::Constant(box c) => {
-            let kind = c.literal.eval(fcx.tcx, rs::ParamEnv::empty());
-            match kind {
-                rs::ConstantKind::Val(val, ty) => {
-                    let ty = translate_ty(ty, fcx.tcx);
-                    let constant = match ty {
-                        Type::Int(int_ty) => {
-                            let val = val.try_to_scalar_int().unwrap();
-                            let int: Int = match int_ty.signed {
-                                Signed => val.try_to_int(val.size()).unwrap().into(),
-                                Unsigned => val.try_to_uint(val.size()).unwrap().into(),
-                            };
-                            Constant::Int(int)
-                        },
-                        // unit type `()`
-                        Type::Tuple { fields, .. } if fields.is_empty() => { // TODO are other tuples supported correctly?
-                            return ValueExpr::Tuple(List::new(), Type::Tuple { fields: List::new(), size: Size::ZERO })
-                        }
-                        Type::Bool => {
-                            Constant::Bool(val.try_to_bool().unwrap())
-                        }
-                        Type::Ptr(_) => {
-                            let _val = val.try_to_scalar()
-                                         .unwrap()
-                                         .to_pointer(&fcx.tcx)
-                                         .unwrap();
-                            panic!("minirust doesn't yet support constant pointers!")
-                        },
-                        x => {
-                            dbg!(x);
-                            todo!()
-                        }
+pub fn translate_const<'tcx>(c: &rs::Constant<'tcx>, fcx: &mut FnCtxt<'tcx>) -> ValueExpr {
+    let kind = c.literal.eval(fcx.tcx, rs::ParamEnv::empty());
+    match kind {
+        rs::ConstantKind::Val(val, ty) => {
+            let ty = translate_ty(ty, fcx.tcx);
+            let constant = match ty {
+                Type::Int(int_ty) => {
+                    let val = val.try_to_scalar_int().unwrap();
+                    let int: Int = match int_ty.signed {
+                        Signed => val.try_to_int(val.size()).unwrap().into(),
+                        Unsigned => val.try_to_uint(val.size()).unwrap().into(),
                     };
-                    ValueExpr::Constant(constant, ty)
+                    Constant::Int(int)
+                },
+                // unit type `()`
+                Type::Tuple { fields, .. } if fields.is_empty() => { // TODO are other tuples supported correctly?
+                    return ValueExpr::Tuple(List::new(), Type::Tuple { fields: List::new(), size: Size::ZERO })
                 }
+                Type::Bool => {
+                    Constant::Bool(val.try_to_bool().unwrap())
+                }
+                Type::Ptr(_) => {
+                    let _val = val.try_to_scalar()
+                                 .unwrap()
+                                 .to_pointer(&fcx.tcx)
+                                 .unwrap();
+                    panic!("minirust doesn't yet support constant pointers!")
+                },
                 x => {
                     dbg!(x);
                     todo!()
                 }
-            }
-        },
+            };
+            ValueExpr::Constant(constant, ty)
+        }
+        x => {
+            dbg!(x);
+            todo!()
+        }
+    }
+}
+
+pub fn translate_operand<'tcx>(operand: &rs::Operand<'tcx>, fcx: &mut FnCtxt<'tcx>) -> ValueExpr {
+    match operand {
+        rs::Operand::Constant(box c) => translate_const(c, fcx),
         rs::Operand::Copy(place) => {
             ValueExpr::Load {
                 destructive: false,
