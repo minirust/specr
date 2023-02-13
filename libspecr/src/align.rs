@@ -6,9 +6,11 @@ use crate::*;
 pub struct Align { raw: Int }
 
 impl Align {
+    /// The `1 byte` alignment.
     pub const ONE: Align = Align { raw: Int::ONE };
 
-    /// align is rounded up to the next power of two.
+    /// Constructs `Align` with `align` many bytes.
+    /// Returns `None`, if `align` is not a power of two.
     pub fn from_bytes(align: impl Into<Int>) -> Option<Align> {
         let raw = align.into();
         if raw.is_power_of_two() {
@@ -16,6 +18,7 @@ impl Align {
         } else { None }
     }
 
+    /// Variation of `from_bytes` for const contexts.
     pub const fn from_bytes_const(align: u64) -> Option<Align> {
         if align.is_power_of_two() {
             let raw = Int::from(align);
@@ -23,17 +26,21 @@ impl Align {
         } else { None }
     }
 
+    /// Constructs `Align` with `align` many bits.
+    /// Returns `None`, if `align` is not divisible by 8, or if `align/8` is no power of two.
     pub fn from_bits(align: impl Into<Int>) -> Option<Align> {
         let align = align.into();
         if align % 8 != 0 { return None; }
         Align::from_bytes(align / 8)
     }
 
+    /// Variation of `from_bits` for const contexts.
     pub const fn from_bits_const(align: u64) -> Option<Align> {
         if align % 8 != 0 { return None; }
         Align::from_bytes_const(align / 8)
     }
 
+    /// The number of bytes of `self`.
     pub fn bytes(self) -> Int {
         self.raw
     }

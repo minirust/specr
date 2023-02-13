@@ -27,10 +27,12 @@ fn with_gc_mut<O>(f: impl FnOnce(&mut GcState) -> O) -> O {
     GC_STATE.with(|st| f(&mut *st.borrow_mut()))
 }
 
+/// clears every object not recursively reachable from `roots`.
 pub fn mark_and_sweep(roots: HashSet<usize>) {
     with_gc_mut(|st| st.mark_and_sweep(roots) );
 }
 
+/// clears all objects from the garbage collector.
 pub fn clear() {
     with_gc_mut(|st| st.clear() );
 }

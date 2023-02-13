@@ -1,6 +1,7 @@
 use crate::int::*;
 
 impl Int {
+    /// Returns true, if `self` is a power of two. `false` otherwise.
     pub fn is_power_of_two(self) -> bool {
         let ext = self.ext();
         if let Some(uint) = ext.to_biguint() {
@@ -8,6 +9,7 @@ impl Int {
         } else { false }
     }
 
+    /// Returns the smallest power of two greater than or equal to self.
     pub fn next_power_of_two(self) -> Int {
         // faster implementation idea:
         //
@@ -36,6 +38,7 @@ impl Int {
         Self::wrap(ExtInt::from(n))
     }
 
+    /// Computes the absolute value of self.
     pub fn abs(self) -> Int {
         if self < 0 {
             self * -1i32
@@ -44,11 +47,14 @@ impl Int {
         }
     }
 
+    /// Checked integer division.
+    /// Returns `None`, if and only if `other == 0`.
     pub fn checked_div(self, other: Int) -> Option<Int> {
         if other == 0 { return None; }
         Some(self / other)
     }
 
+    /// Raises `self` to the power of `other`.
     pub fn pow(self, other: Int) -> Int {
         fn ext_pow(x: &ExtInt, other: &ExtInt) -> ExtInt {
             use num_traits::{Zero, One};
@@ -73,12 +79,14 @@ impl Int {
         Self::wrap(ext_pow(&self.ext(), &other.ext()))
     }
 
+    /// Returns the number of least-significant bits that are zero, or None if the entire number is zero.
     pub fn trailing_zeros(self) -> Option<Int> {
         self.ext()
             .trailing_zeros()
             .map(|x| x.into())
     }
 
+    /// Divides `self` by `other` and rounds up the result.
     pub fn div_ceil(self, other: impl Into<Int>) -> Int {
         use num_integer::Integer;
 

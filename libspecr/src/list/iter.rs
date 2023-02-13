@@ -5,6 +5,7 @@ use std::iter::FromIterator;
 use im::vector::ConsumingIter;
 
 impl<T: Obj> List<T> {
+    /// An ordered iterator over all elements of `List`.
     pub fn iter(&self) -> ConsumingIter<T> {
         self.into_iter()
     }

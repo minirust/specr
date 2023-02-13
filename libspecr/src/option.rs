@@ -1,7 +1,10 @@
 use std::ops::*;
 
-/// Extension trait to implement `try_map`.
+/// Extension trait to implement `try_map` on Options.
 pub trait OptionExt<T> {
+    /// applies the fallible function `f` to the inner value of `self`, and transposes the result.
+    /// Given `f: T -> Result<O, Err>`,
+    /// we have `try_map(f): Option<T> -> Result<Option<O>, Err>`
     fn try_map<O, E>(self, f: impl FnOnce(T) -> E) -> <<E as Try>::Residual as Residual<Option<O>>>::TryType
         where E: Try<Output=O>,
               <E as Try>::Residual: Residual<Option<O>>;

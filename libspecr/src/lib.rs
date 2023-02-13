@@ -1,3 +1,7 @@
+//! `libspecr` is the standard library of specr lang.
+
+#![warn(missing_docs)]
+
 #![feature(int_roundings)]
 #![feature(const_trait_impl)]
 #![feature(try_trait_v2)]

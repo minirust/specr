@@ -2,16 +2,20 @@ use crate::*;
 
 use std::convert::Infallible;
 
-// this trait shall be implemented for each type of minirust.
-// It is required in order to contain `GcCow`, and to be the generic param to `GcCow`.
+/// `GcCompat` expresses that a type is compatible with the garbage collector.
+/// It is required in order to contain `GcCow`, and to be the generic param to `GcCow`.
 pub trait GcCompat: GcCompatTrivial {
-    // writes the gc'd objs, that `self` points to, into `buffer`.
+    /// Writes the gc'd objs, that `self` directly points to, into `buffer`.
     fn points_to(&self, buffer: &mut HashSet<usize>);
+
+    /// converts self to `Any`.
     fn as_any(&self) -> &dyn Any;
 }
 
-// a supertrait of GcCompat which can be automatically implemented for most types.
+/// a supertrait of GcCompat which can be automatically implemented for most types.
 pub trait GcCompatTrivial: 'static {
+    /// equal to `std::mem::size_of<Self>()`.
+    /// But this does not require the non-"object safe" bound `Sized`.
     fn size(&self) -> usize;
 }
 

@@ -5,6 +5,7 @@ use crate::int::*;
 ///
 /// This is implemented for primitive integer types, and usable in `const`-contexts.
 pub trait ToInt {
+    /// Converts `self` to `Int`.
     fn to_int(self) -> Int;
 }
 

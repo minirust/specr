@@ -3,6 +3,7 @@ use crate::*;
 use im::hashmap::ConsumingIter;
 
 impl<K: Obj, V: Obj> Map<K, V> {
+    /// Returns an iterator over all (key, value) pairs.
     pub fn iter(self) -> ConsumingIter<(K, V)> {
         self.into_iter()
     }

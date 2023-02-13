@@ -30,7 +30,9 @@ impl<T: ~const ToInt> const From<T> for Int {
 }
 
 impl Int {
+    /// The number 0
     pub const ZERO: Int = Int::from(0);
+    /// The number 1
     pub const ONE: Int = Int::from(1);
 
     pub(crate) fn ext(self) -> ExtInt {

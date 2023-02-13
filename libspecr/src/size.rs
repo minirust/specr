@@ -13,6 +13,7 @@ use std::ops::{Add, Mul};
 pub struct Size { raw: Int }
 
 impl Size {
+    /// The "0 bytes" size.
     pub const ZERO: Size = Size { raw: Int::ZERO };
 
     /// Returns None, if `bits` is negative or not divisible by 8.
@@ -49,9 +50,13 @@ impl Size {
         Size { raw }
     }
 
+    /// The number of bytes of `self`
     pub fn bytes(self) -> Int { self.raw }
+
+    /// The number of bits of `self`
     pub fn bits(self) -> Int { self.raw * 8 }
 
+    /// Returns whether `self` is `Size::ZERO`
     pub fn is_zero(&self) -> bool {
         self.bytes() == 0
     }

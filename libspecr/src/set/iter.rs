@@ -3,6 +3,7 @@ use crate::*;
 use im::hashset::ConsumingIter;
 
 impl<T: Obj> Set<T> {
+    /// An iterator over all elements of self.
     pub fn iter(self) -> ConsumingIter<T> {
         self.into_iter()
     }
