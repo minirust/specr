@@ -68,10 +68,11 @@ pub fn value_expr_to_string(v: ValueExpr) -> String {
         },
         ValueExpr::BinOp { operator: BinOp::Int(int_op, int_ty), left, right } => {
             let int_op = match int_op {
-                BinOpInt::Add => "+",
-                BinOpInt::Sub => "-",
-                BinOpInt::Mul => "*",
-                BinOpInt::Div => "/",
+                BinOpInt::Add => '+',
+                BinOpInt::Sub => '-',
+                BinOpInt::Mul => '*',
+                BinOpInt::Div => '/',
+                BinOpInt::Rem => '%',
             };
 
             let int_ty = int_type_to_string(int_ty);

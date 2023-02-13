@@ -61,7 +61,7 @@ fn mark_used_bytes(ty: Type, markers: &mut [bool]) {
         Type::Array { elem, count } => {
             let elem = elem.get();
             for i in Int::ZERO..count {
-                let offset = i * ty_size(elem);
+                let offset = i * elem.size::<BasicMemory>();
                 let offset = offset.bytes().try_to_usize().unwrap();
                 mark_used_bytes(elem, &mut markers[offset..]);
             }
@@ -77,16 +77,3 @@ fn mark_size(size: Size, markers: &mut [bool]) {
         markers[i] = true;
     }
 }
-
-// TODO it would be nicer to access this from Minirust itself.
-fn ty_size(ty: Type) -> Size {
-    use Type::*;
-    match ty {
-        Int(int_type) => int_type.size,
-        Bool => Size::from_bytes_const(1),
-        Ptr(_) => BasicMemory::PTR_SIZE,
-        Tuple { size, .. } | Union { size, .. } | Enum { size, .. } => size,
-        Array { elem, count } => ty_size(elem.get()) * count,
-    }
-}
-
