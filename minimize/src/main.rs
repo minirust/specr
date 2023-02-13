@@ -51,6 +51,9 @@ use rvalue::*;
 mod get;
 use get::get_mini;
 
+mod chunks;
+use chunks::calc_chunks;
+
 use std::collections::HashMap;
 use std::path::Path;
 
