@@ -41,7 +41,7 @@ struct Cb<F: FnOnce(Program) + Send + Copy> { callback: F }
 
 impl<F: FnOnce(Program) + Send + Copy> Callbacks for Cb<F> {
     fn after_analysis<'tcx>(&mut self, _compiler: &Compiler, queries: &'tcx Queries<'tcx>) -> Compilation {
-        queries.global_ctxt().unwrap().take().enter(|arg| {
+        queries.global_ctxt().unwrap().enter(|arg| {
             let prog = translate_program(arg);
             (self.callback)(prog);
         });

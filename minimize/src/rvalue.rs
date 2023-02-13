@@ -99,12 +99,27 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
 
             ValueExpr::AddrOf { target, ptr_ty }
         },
-        rs::Rvalue::Aggregate(box rs::AggregateKind::Array(ty), operands) => {
-            let count = Int::from(operands.len());
-            let ty = translate_ty(*ty, fcx.tcx);
-            let ty = Type::Array { elem: GcCow::new(ty), count };
-            let ops: List<_> = operands.iter().map(|x| translate_operand(x, fcx)).collect();
-            ValueExpr::Tuple(ops, ty)
+        rs::Rvalue::Aggregate(box agg, operands) => {
+            let ty = rv.ty(&fcx.body, fcx.tcx);
+            let ty = translate_ty(ty, fcx.tcx);
+            match ty {
+                Type::Union { .. } => {
+                    let rs::AggregateKind::Adt(_, _, _, _, Some(field_idx)) = agg else { panic!() };
+                    assert_eq!(operands.len(), 1);
+                    let expr = translate_operand(&operands[0], fcx);
+                    ValueExpr::Union {
+                        field: (*field_idx).into(),
+                        expr: GcCow::new(expr),
+                        union_ty: ty,
+                    }
+                },
+                Type::Tuple { .. } | Type::Array { .. } => {
+                    let ops: List<_> = operands.iter().map(|x| translate_operand(x, fcx)).collect();
+                    ValueExpr::Tuple(ops, ty)
+                },
+                Type::Enum { .. } => todo!(),
+                _ => panic!("invalid aggregate type!"),
+            }
         },
         rs::Rvalue::CopyForDeref(place) => {
             ValueExpr::Load {
