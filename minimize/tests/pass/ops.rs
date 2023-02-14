@@ -9,4 +9,12 @@ fn main() {
     print(black_box(55) - 13);
     print(black_box(7) * 6);
     print(black_box(504) / 12);
+    print(black_box(112) % 70);
+
+    print(black_box(10) > 2);
+    print(black_box(10) >= 2);
+    print(black_box(10) < 2);
+    print(black_box(10) <= 2);
+    print(black_box(10) == 2);
+    print(black_box(10) != 2);
 }
