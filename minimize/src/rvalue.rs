@@ -17,29 +17,38 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
 
             use rs::BinOp::*;
             let op = if *bin_op == Offset {
-                BinOp::PtrOffset {
-                    inbounds: true // TODO is rs::BinOp::Offset always `inbounds`?
-                }
+                BinOp::PtrOffset { inbounds: true }
             } else { // everything else right-now is a int op!
-                let op_int = match bin_op {
-                    Add => BinOpInt::Add,
-                    Sub => BinOpInt::Sub,
-                    Mul => BinOpInt::Mul,
-                    Div => BinOpInt::Div,
-                    Lt => return None, // This is IGNORED. It's generated in bounds checking.
-                    Eq => return None, // This is IGNORED. It's generated in div-zero checking.
+
+                let op = |x| {
+                    let Type::Int(int_ty) = translate_ty(lty, fcx.tcx) else {
+                        panic!("arithmetic operation with non-int type unsupported!");
+                    };
+
+                    BinOp::Int(x, int_ty)
+                };
+                let rel = |x| BinOp::IntRel(x);
+
+                match bin_op {
+                    Add => op(BinOpInt::Add),
+                    Sub => op(BinOpInt::Sub),
+                    Mul => op(BinOpInt::Mul),
+                    Div => op(BinOpInt::Div),
+                    Rem => op(BinOpInt::Rem),
+
+                    Lt => rel(IntRel::Lt),
+                    Le => rel(IntRel::Le),
+                    Gt => rel(IntRel::Gt),
+                    Ge => rel(IntRel::Ge),
+                    Eq => rel(IntRel::Eq),
+                    Ne => rel(IntRel::Ne),
+
                     BitAnd => return None,
                     x => {
                         dbg!(x);
                         todo!("unsupported BinOp")
                     },
-                };
-
-                let Type::Int(int_ty) = translate_ty(lty, fcx.tcx) else {
-                    panic!("arithmetic operation with non-int type unsupported!");
-                };
-
-                BinOp::Int(op_int, int_ty)
+                }
             };
 
             ValueExpr::BinOp {

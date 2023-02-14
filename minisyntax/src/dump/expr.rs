@@ -83,6 +83,21 @@ pub fn value_expr_to_string(v: ValueExpr) -> String {
 
             format!("{l} {int_op} {r}")
         },
+        ValueExpr::BinOp { operator: BinOp::IntRel(rel), left, right } => {
+            let rel = match rel {
+                IntRel::Lt => "<",
+                IntRel::Le => "<=",
+                IntRel::Gt => ">",
+                IntRel::Ge => ">=",
+                IntRel::Eq => "==",
+                IntRel::Ne => "!=",
+            };
+
+            let l = value_expr_to_string(left.get());
+            let r = value_expr_to_string(right.get());
+
+            format!("{l} {rel} {r}")
+        },
         v => format!("{:?}", v)
     }
 }
