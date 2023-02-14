@@ -100,7 +100,7 @@ fn translate_body<'tcx>(body: rs::Body<'tcx>, fn_name_map: FnNameMap<'tcx>, tcx:
 
     // bb with id 0 is the start block:
     // see https://doc.rust-lang.org/stable/nightly-rustc/src/rustc_middle/mir/mod.rs.html#1014-1042
-    let start = BbName(Name::new(0));
+    let rs_start = BbName(Name::new(0));
 
     // associate names for each mir Local.
     let mut local_name_map: HashMap<rs::Local, LocalName> = HashMap::new();
@@ -117,6 +117,23 @@ fn translate_body<'tcx>(body: rs::Body<'tcx>, fn_name_map: FnNameMap<'tcx>, tcx:
         locals.insert(*local_name, translate_local(local_decl, tcx));
     }
 
+    // the number of locals which are implicitly storage live.
+    let free_argc = body.arg_count + 1;
+
+    // add init basic block
+    let init_bb = BbName(Name::new(bb_name_map.len() as u32));
+
+    // this block allocates all "always_storage_live_locals",
+    // except for those which are implicitly storage live in Minirust;
+    // like the return local and function args.
+    let init_blk = BasicBlock {
+        statements: rs::always_storage_live_locals(&body).iter()
+                        .map(|loc| local_name_map[&loc])
+                        .filter(|LocalName(i)| i.get() as usize >= free_argc)
+                        .map(Statement::StorageLive).collect(),
+        terminator: Terminator::Goto(rs_start),
+    };
+
     let mut fcx = FnCtxt {
         local_name_map,
         bb_name_map: bb_name_map.clone(),
@@ -131,6 +148,7 @@ fn translate_body<'tcx>(body: rs::Body<'tcx>, fn_name_map: FnNameMap<'tcx>, tcx:
         let bb_data = &body.basic_blocks[id];
         blocks.insert(bb_name, translate_bb(bb_data, &mut fcx));
     }
+    blocks.insert(init_bb, init_blk);
 
     // "The first local is the return value pointer, followed by arg_count locals for the function arguments, followed by any user-declared variables and temporaries."
     // - https://doc.rust-lang.org/stable/nightly-rustc/rustc_middle/mir/struct.Body.html
@@ -150,7 +168,7 @@ fn translate_body<'tcx>(body: rs::Body<'tcx>, fn_name_map: FnNameMap<'tcx>, tcx:
         args,
         ret,
         blocks,
-        start
+        start: init_bb,
     };
 
     (f, fn_name_map)
