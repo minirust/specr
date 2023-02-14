@@ -142,6 +142,15 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
                 operand: GcCow::new(operand),
             }
         },
+        rs::Rvalue::Cast(rs::CastKind::PtrToPtr, operand, ty) => {
+            let operand = translate_operand(operand, fcx);
+            let Type::Ptr(ptr_ty) = translate_ty(*ty, fcx.tcx) else { panic!() };
+
+            ValueExpr::UnOp {
+                operator: UnOp::Ptr2Ptr(ptr_ty),
+                operand: GcCow::new(operand),
+            }
+        },
         rs::Rvalue::Repeat(op, c) => {
             let c = c.try_eval_usize(fcx.tcx, rs::ParamEnv::empty()).unwrap();
             let c = Int::from(c);
