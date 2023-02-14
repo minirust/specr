@@ -112,7 +112,13 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
                 source: GcCow::new(translate_place(place, fcx)),
             }
         },
-        rs::Rvalue::Len(..) => return None, // This is IGNORED. It's generated due to bounds checking.
+        rs::Rvalue::Len(place) => {
+            // as slices are unsupported as of now, we only need to care for arrays.
+            let ty = place.ty(&fcx.body, fcx.tcx).ty;
+            let Type::Array { elem: _, count } = translate_ty(ty, fcx.tcx) else { panic!() };
+            use crate::minisyntax::build::TypeConv;
+            ValueExpr::Constant(Constant::Int(count), <usize>::get_type())
+        }
         rs::Rvalue::Cast(rs::CastKind::IntToInt, operand, ty) => {
             let operand = translate_operand(operand, fcx);
             let Type::Int(int_ty) = translate_ty(*ty, fcx.tcx) else {
