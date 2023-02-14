@@ -85,7 +85,7 @@ pub mod hidden {
 pub use crate::nondet::*;
 pub use crate::name::*;
 
-/// The items from this module are automatically imported into minirust.
+/// The items from this module are automatically imported.
 pub mod prelude {
     pub use crate::ret;
     pub use crate::Align;
