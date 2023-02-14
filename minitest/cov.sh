@@ -23,7 +23,7 @@ llvm-cov show -Xdemangler=rustfilt \
   --ignore-filename-regex='minitest' \
   --ignore-filename-regex='minisyntax' \
   --ignore-filename-regex='libspecr' \
-  --show-instantiations | less -R
+  --show-instantiations=false | less -R
 
 rm out.profdata
 (cd ..; rm -f $(find -name "*.profraw"))
