@@ -33,6 +33,9 @@ pub fn get_mini(file: String, callback: impl FnOnce(Program) + Send + Copy) {
         // But this generates annoying checked operators containing Asserts.
         "-Cdebug-assertions=off".to_string(),
 
+        // This removes Resume and similar stuff
+        "-Cpanic=abort".to_string(),
+
     ];
     RunCompiler::new(&args, &mut Cb { callback }).run().unwrap();
 }
