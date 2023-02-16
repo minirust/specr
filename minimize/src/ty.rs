@@ -143,6 +143,6 @@ fn translate_uint_ty(uint_ty: &rs::UintTy) -> IntType {
     IntType { signed, size }
 }
 
-fn translate_size(size: rs::Size) -> Size {
+pub fn translate_size(size: rs::Size) -> Size {
     Size::from_bytes_const(size.bytes())
 }

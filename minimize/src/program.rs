@@ -193,8 +193,16 @@ pub fn calc_abis<'tcx>(def_id: rs::DefId, substs_ref: rs::SubstsRef<'tcx>, tcx: 
 }
 
 // TODO extend when Minirust has a more sophisticated ArgAbi
-pub fn translate_arg_abi<'a, T>(_arg_abi: &rs::ArgAbi<'a, T>) -> ArgAbi {
-    ArgAbi::Register
+pub fn translate_arg_abi<'a, T>(arg_abi: &rs::ArgAbi<'a, T>) -> ArgAbi {
+    if let rs::PassMode::Direct(attrs) = arg_abi.mode {
+        if attrs.regular.intersects(rs::ArgAttribute::InReg) {
+            return ArgAbi::Register;
+        }
+    }
+
+    let size = arg_abi.layout.size;
+    let align = arg_abi.layout.align.abi;
+    ArgAbi::Stack(translate_size(size), translate_align(align))
 }
 
 fn translate_local<'tcx>(local: &rs::LocalDecl<'tcx>, tcx: rs::TyCtxt<'tcx>) -> PlaceType {
