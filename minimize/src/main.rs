@@ -14,7 +14,7 @@ extern crate rustc_mir_dataflow;
 
 mod rs {
     pub use rustc_hir::def_id::DefId;
-    pub use rustc_target::abi::{Size, Align};
+    pub use rustc_target::abi::{Size, Align, call::{FnAbi, ArgAbi}};
     pub use rustc_middle::mir::*;
     pub use rustc_middle::ty::*;
     pub use rustc_mir_dataflow::storage::always_storage_live_locals;

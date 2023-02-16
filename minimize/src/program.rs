@@ -19,10 +19,8 @@ pub fn translate_program<'tcx>(tcx: rs::TyCtxt<'tcx>) -> Program {
                                             .find(|(_, f)| **f == fn_name)
                                             .map(|(r, _)| r)
                                             .unwrap();
-        let body = tcx.optimized_mir(def_id);
-        let body = tcx.subst_and_normalize_erasing_regions(substs_ref, rs::ParamEnv::empty(), body.clone());
 
-        let (f, m) = translate_body(body, fn_name_map, tcx);
+        let (f, m) = translate_body(*def_id, substs_ref, fn_name_map, tcx);
         fmap.insert(fn_name, f);
         fn_name_map = m;
     }
@@ -89,7 +87,10 @@ pub struct FnCtxt<'tcx> {
 
 /// translates a function body.
 /// Any fn calls occuring during this translation will be added to the `FnNameMap`.
-fn translate_body<'tcx>(body: rs::Body<'tcx>, fn_name_map: FnNameMap<'tcx>, tcx: rs::TyCtxt<'tcx>) -> (Function, FnNameMap<'tcx>) {
+fn translate_body<'tcx>(def_id: rs::DefId, substs_ref: rs::SubstsRef<'tcx>, fn_name_map: FnNameMap<'tcx>, tcx: rs::TyCtxt<'tcx>) -> (Function, FnNameMap<'tcx>) {
+    let body = tcx.optimized_mir(def_id);
+    let body = tcx.subst_and_normalize_erasing_regions(substs_ref, rs::ParamEnv::empty(), body.clone());
+
     // associate names for each mir BB.
     let mut bb_name_map: HashMap<rs::BasicBlock, BbName> = HashMap::new();
     for bb_id in body.basic_blocks.indices() {
@@ -150,15 +151,17 @@ fn translate_body<'tcx>(body: rs::Body<'tcx>, fn_name_map: FnNameMap<'tcx>, tcx:
     }
     blocks.insert(init_bb, init_blk);
 
+    let (ret_abi, arg_abis) = calc_abis(def_id, substs_ref, tcx);
+
     // "The first local is the return value pointer, followed by arg_count locals for the function arguments, followed by any user-declared variables and temporaries."
     // - https://doc.rust-lang.org/stable/nightly-rustc/rustc_middle/mir/struct.Body.html
-    let ret = Some((LocalName(Name::new(0)), arg_abi()));
+    let ret = Some((LocalName(Name::new(0)), ret_abi));
 
     let mut args = List::default();
-    for i in 0..fcx.body.arg_count {
+    for (i, arg_abi) in arg_abis.iter().enumerate() {
         let i = i+1; // this starts counting with 1, as id 0 is the return value of the function.
         let local_name = LocalName(Name::new(i as _));
-        args.push((local_name, arg_abi()));
+        args.push((local_name, arg_abi));
     }
 
     let fn_name_map = fcx.fn_name_map;
@@ -174,6 +177,26 @@ fn translate_body<'tcx>(body: rs::Body<'tcx>, fn_name_map: FnNameMap<'tcx>, tcx:
     (f, fn_name_map)
 }
 
+pub fn calc_abis<'tcx>(def_id: rs::DefId, substs_ref: rs::SubstsRef<'tcx>, tcx: rs::TyCtxt<'tcx>) -> (/*ret:*/ ArgAbi, /*args:*/ List<ArgAbi>) {
+    let ty = tcx.type_of(def_id);
+    let fn_sig = ty.fn_sig(tcx);
+    let ty_list = substs_ref.try_as_type_list().unwrap();
+    let fn_abi = if ty_list.is_empty() {
+        tcx.fn_abi_of_fn_ptr(rs::ParamEnv::empty().and((fn_sig, ty_list))).unwrap()
+    } else {
+        let inst = tcx.resolve_instance(rs::ParamEnv::empty().and((def_id, substs_ref))).unwrap().unwrap();
+        tcx.fn_abi_of_instance(rs::ParamEnv::empty().and((inst, rs::List::empty()))).unwrap()
+    };
+    let ret = translate_arg_abi(&fn_abi.ret);
+    let args = fn_abi.args.iter().map(|x| translate_arg_abi(x)).collect();
+    (ret, args)
+}
+
+// TODO extend when Minirust has a more sophisticated ArgAbi
+pub fn translate_arg_abi<'a, T>(_arg_abi: &rs::ArgAbi<'a, T>) -> ArgAbi {
+    ArgAbi::Register
+}
+
 fn translate_local<'tcx>(local: &rs::LocalDecl<'tcx>, tcx: rs::TyCtxt<'tcx>) -> PlaceType {
     let ty = translate_ty(local.ty, tcx);
 
@@ -186,10 +209,6 @@ fn translate_local<'tcx>(local: &rs::LocalDecl<'tcx>, tcx: rs::TyCtxt<'tcx>) -> 
     PlaceType { ty, align }
 }
 
-// TODO implement this when ArgAbi is somewhat complete.
-pub fn arg_abi() -> ArgAbi {
-    ArgAbi::Register
-}
 
 pub fn translate_align(align: rs::Align) -> Align {
     Align::from_bytes(align.bytes()).unwrap()

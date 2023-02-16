@@ -71,9 +71,9 @@ fn translate_terminator<'tcx>(terminator: &rs::Terminator<'tcx>, fcx: &mut FnCtx
 }
 
 fn translate_call<'tcx>(fcx: &mut FnCtxt<'tcx>, func: &rs::Operand<'tcx>, args: &[rs::Operand<'tcx>], destination: &rs::Place<'tcx>, target: &Option<rs::BasicBlock>) -> Terminator {
-    let rs::Operand::Constant(box f) = func else { panic!() };
-    let rs::ConstantKind::Val(_, f) = f.literal else { panic!() };
-    let rs::TyKind::FnDef(f, substs_ref) = f.kind() else { panic!() };
+    let rs::Operand::Constant(box f1) = func else { panic!() };
+    let rs::ConstantKind::Val(_, f2) = f1.literal else { panic!() };
+    let rs::TyKind::FnDef(f, substs_ref) = f2.kind() else { panic!() };
     let key = (*f, *substs_ref);
 
     if fcx.tcx.crate_name(f.krate).as_str() == "intrinsics" {
@@ -90,6 +90,9 @@ fn translate_call<'tcx>(fcx: &mut FnCtxt<'tcx>, func: &rs::Operand<'tcx>, args: 
             next_block: target.as_ref().map(|t| fcx.bb_name_map[t]),
         }
     } else {
+        let (ret_abi, arg_abis) = calc_abis(*f, substs_ref, fcx.tcx);
+        let args: List<_> = args.iter().map(|op| translate_operand(op, fcx)).collect();
+
         if !fcx.fn_name_map.contains_key(&key) {
             let fn_name = fcx.fn_name_map.len();
             let fn_name = FnName(Name::new(fn_name as _));
@@ -97,8 +100,8 @@ fn translate_call<'tcx>(fcx: &mut FnCtxt<'tcx>, func: &rs::Operand<'tcx>, args: 
         }
         Terminator::Call {
             callee: fcx.fn_name_map[&key],
-            arguments: args.iter().map(|x| (translate_operand(x, fcx), arg_abi())).collect(),
-            ret: Some((translate_place(&destination, fcx), arg_abi())),
+            arguments: args.zip(arg_abis),
+            ret: Some((translate_place(&destination, fcx), ret_abi)),
             next_block: target.as_ref().map(|t| fcx.bb_name_map[t]),
         }
     }
