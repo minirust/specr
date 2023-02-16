@@ -80,12 +80,14 @@ fn translate_call<'tcx>(fcx: &mut FnCtxt<'tcx>, func: &rs::Operand<'tcx>, args: 
             "print" => Intrinsic::PrintStdout,
             "eprint" => Intrinsic::PrintStderr,
             "exit" => Intrinsic::Exit,
+            "allocate" => Intrinsic::Allocate,
+            "deallocate" => Intrinsic::Deallocate,
             name => panic!("unsupported intrinsic `{}`", name),
         };
         Terminator::CallIntrinsic {
             intrinsic,
             arguments: args.iter().map(|x| translate_operand(x, fcx)).collect(),
-            ret: None,
+            ret: Some(translate_place(&destination, fcx)),
             next_block: target.as_ref().map(|t| fcx.bb_name_map[t]),
         }
     } else {
