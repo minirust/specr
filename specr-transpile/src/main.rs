@@ -31,13 +31,14 @@ pub mod prelude {
 }
 use prelude::*;
 
-fn exists(s: &str) -> bool {
-    Path::new(s).exists()
+fn exists<T: AsRef<Path>>(t: T) -> bool {
+    t.as_ref().exists()
 }
 
-fn mkdir(name: &str) {
+fn mkdir<T: AsRef<Path>>(t: T) {
+    let name = t.as_ref();
     if !exists(name) {
-        let err_str = format!("Could not create directory \"{}\"", name);
+        let err_str = format!("Could not create directory \"{}\"", name.to_string_lossy().as_ref());
         fs::create_dir(name).expect(&err_str);
     }
 }
@@ -45,28 +46,27 @@ fn mkdir(name: &str) {
 fn main() {
     let config = Config::load();
 
-    if !exists(&config.input) {
-        eprintln!("You need to be in the `specr-transpile` folder in order to run it.!");
-        eprintln!("Further `{}` needs to be added to the repository root", config.input);
+    if !exists(&config.input_path()) {
+        eprintln!("Input `{}` not found!", &config.input);
         std::process::exit(1);
     }
 
-    mkdir(&config.output);
-    mkdir(&format!("{}/src", config.output));
+    mkdir(&config.output_path());
+    mkdir(&config.output_path().join("src"));
 
-    let mods = source::fetch(&config.input);
+    let mods = source::fetch(&config.input_path());
     create_cargo_toml(&config);
     create_lib(&mods, &config);
     compile(mods, &config);
 
     Command::new("cargo")
-        .args(&["fmt", "--manifest-path", &format!("{}/Cargo.toml", config.output)])
+        .args(&["fmt", "--manifest-path", config.output_path().join("Cargo.toml").to_string_lossy().as_ref()])
         .output()
         .unwrap();
 }
 
 fn create_cargo_toml(config: &Config) {
-    let package_name = config.output.split("/").last().unwrap();
+    let package_name = config.crate_name();
     let toml = format!("[package]\n\
                 name = \"{}\"\n\
                 version = \"0.1.0\"\n\
@@ -76,7 +76,7 @@ fn create_cargo_toml(config: &Config) {
                 libspecr = \"0.1.4\"\n\
                 gccompat-derive = \"0.1.0\"\n\
                ", package_name);
-    fs::write(&format!("{}/Cargo.toml", config.output), &toml).unwrap();
+    fs::write(config.output_path().join("Cargo.toml"), &toml).unwrap();
 }
 
 fn create_lib(mods: &[Module], config: &Config) {
@@ -91,7 +91,7 @@ fn create_lib(mods: &[Module], config: &Config) {
         #( #[allow(unused_imports)] #[macro_use] pub mod #mods; )*
     };
     let code = code.to_string();
-    fs::write(&format!("{}/src/lib.rs", config.output), &code).unwrap();
+    fs::write(config.output_path().join("src").join("lib.rs"), &code).unwrap();
 }
 
 fn compile(mods: Vec<Module>, config: &Config) {
@@ -111,7 +111,7 @@ fn compile(mods: Vec<Module>, config: &Config) {
         // write AST back to Rust file.
         let code = ast.into_token_stream().to_string();
         let filename = format!("{}.rs", m.name);
-        let p: PathBuf = [&config.output, "src", &filename].iter().collect();
+        let p: PathBuf = config.output_path().join("src").join(filename);
         fs::write(&p, &code).unwrap();
     }
 }

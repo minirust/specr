@@ -1,13 +1,22 @@
 # specr-transpile
 
-specr-transpile helps building a `minirust` interpreter.
-It does that by transpiling the specr lang code to actual Rust code.
+specr-transpile converts specr lang code to Rust code.
+Run it with `cargo r <config-file>`.
 
-The code is WIP, highly unstable.
+## config file
+
+The config file is a newline-separated list of statements.
+
+Each statement is either
+
+- `input <path>`: where to look for the input .md files.
+- `output <path>`: where to generate the output crate.
+- `attr <attribute>`: give additional rust crate attributes, like `attr #![feature(never_type)]`
 
 ## Current transformations
 
 ### Enum Indirection
+
 If you have an enum with infinite size due to type recursion,
 you might want to add an indirection as follows:
 ```rust

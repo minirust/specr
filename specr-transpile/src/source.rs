@@ -1,6 +1,7 @@
 /// This module gets the source code of MiniRust.
 
 use std::fs;
+use std::path::Path;
 
 pub struct Module {
     pub name: String,
@@ -8,7 +9,7 @@ pub struct Module {
 }
 
 /// looks for subdirs in the directory `folder`, and converts them to a module.
-pub fn fetch(folder: &str) -> Vec<Module> {
+pub fn fetch(folder: &Path) -> Vec<Module> {
     let mut mods = Vec::new();
 
     for d in fs::read_dir(folder).unwrap() {
@@ -17,10 +18,10 @@ pub fn fetch(folder: &str) -> Vec<Module> {
         if ty.is_dir() {
             let name = d.file_name().into_string().unwrap();
 
-            // exlucde ".git" from the module candidates.
+            // exclude ".git" from the module candidates.
             if name == ".git" { continue; }
 
-            if let Some(m) = mk_mod(folder, &*name) {
+            if let Some(m) = mk_mod(folder.to_string_lossy().as_ref(), &*name) {
                 mods.push(m);
             }
         }
@@ -34,6 +35,7 @@ pub fn fetch(folder: &str) -> Vec<Module> {
 }
 
 // returns None if the module doesn't contain any source code.
+// TODO use Rusts Path API for this.
 fn mk_mod(basename: &str, modname: &str) -> Option<Module> {
     let mut code = String::new();
     let dirname = format!("{basename}/{modname}");
