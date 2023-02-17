@@ -76,6 +76,7 @@ fn create_cargo_toml() {
 
 fn create_lib(mods: &[Module]) {
     let mods: Vec<Ident> = mods.iter().map(|x| format_ident!("{}", x.name)).collect();
+    // TODO those features should probably be configurable
     let code = quote! {
         #![recursion_limit = "256"]
         #![feature(yeet_expr)]
@@ -83,6 +84,7 @@ fn create_lib(mods: &[Module]) {
         #![feature(iterator_try_collect)]
         #![feature(is_some_and)]
         #![feature(const_option)]
+        #![feature(try_blocks)]
         #[allow(unused_imports)]
         #[macro_use] pub extern crate libspecr;
         #( #[allow(unused_imports)] #[macro_use] pub mod #mods; )*
