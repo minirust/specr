@@ -43,40 +43,40 @@ fn mkdir(name: &str) {
 }
 
 fn main() {
-    let cfg = Config::load();
+    let config = Config::load();
 
-    // setup "gen-minirust" directory.
-    if !exists("../minirust") {
+    if !exists(&config.input) {
         eprintln!("You need to be in the `specr-transpile` folder in order to run it.!");
-        eprintln!("Further `minirust` needs to be added to the repository root (for example by using `./clone-minirust.sh`)");
+        eprintln!("Further `{}` needs to be added to the repository root", config.input);
         std::process::exit(1);
     }
 
-    mkdir("../gen-minirust");
-    mkdir("../gen-minirust/src");
+    mkdir(&config.output);
+    mkdir(&format!("{}/src", config.output));
 
-    let mods = source::fetch("../minirust");
-    create_cargo_toml();
-    create_lib(&mods, &cfg);
-    compile(mods);
+    let mods = source::fetch(&config.input);
+    create_cargo_toml(&config);
+    create_lib(&mods, &config);
+    compile(mods, &config);
 
     Command::new("cargo")
-        .args(&["fmt", "--manifest-path", "../gen-minirust/Cargo.toml"])
+        .args(&["fmt", "--manifest-path", &format!("{}/Cargo.toml", config.output)])
         .output()
         .unwrap();
 }
 
-fn create_cargo_toml() {
-    let toml = "[package]\n\
-                name = \"gen-minirust\"\n\
+fn create_cargo_toml(config: &Config) {
+    let package_name = config.output.split("/").last().unwrap();
+    let toml = format!("[package]\n\
+                name = \"{}\"\n\
                 version = \"0.1.0\"\n\
                 edition = \"2021\"\n\
                 \n\
                 [dependencies]\n\
-                libspecr = { path = \"../libspecr\" }
-                gccompat-derive = { path = \"../gccompat-derive\" }
-               ";
-    fs::write("../gen-minirust/Cargo.toml", &toml).unwrap();
+                libspecr = {{ path = \"../libspecr\" }}
+                gccompat-derive = {{ path = \"../gccompat-derive\" }}
+               ", package_name);
+    fs::write(&format!("{}/Cargo.toml", config.output), &toml).unwrap();
 }
 
 fn create_lib(mods: &[Module], config: &Config) {
@@ -91,10 +91,10 @@ fn create_lib(mods: &[Module], config: &Config) {
         #( #[allow(unused_imports)] #[macro_use] pub mod #mods; )*
     };
     let code = code.to_string();
-    fs::write("../gen-minirust/src/lib.rs", &code).unwrap();
+    fs::write(&format!("{}/src/lib.rs", config.output), &code).unwrap();
 }
 
-fn compile(mods: Vec<Module>) {
+fn compile(mods: Vec<Module>, config: &Config) {
     let mods = imports::add_imports(mods);
     // argmatch needs to be before typerec, as argmatch generates new match blocks!
     let mods = argmatch::argmatch(mods);
@@ -111,7 +111,7 @@ fn compile(mods: Vec<Module>) {
         // write AST back to Rust file.
         let code = ast.into_token_stream().to_string();
         let filename = format!("{}.rs", m.name);
-        let p: PathBuf = ["..", "gen-minirust", "src", &filename].iter().collect();
+        let p: PathBuf = [&config.output, "src", &filename].iter().collect();
         fs::write(&p, &code).unwrap();
     }
 }
