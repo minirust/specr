@@ -45,6 +45,11 @@ impl<T: Obj> List<T> {
         self.0.call_ref_unchecked(|v| v.get(i).cloned())
     }
 
+    /// Sets the `i`th element of the list.
+    pub fn set(&mut self, i: Int, t: T) {
+        self.mutate_at(i, |r| { *r = t; } )
+    }
+
     /// The indexing operator:
     /// specr translates `a[b]` to `a.index_at(b)`.
     pub fn index_at(&self, i: impl Into<Int>) -> T {
