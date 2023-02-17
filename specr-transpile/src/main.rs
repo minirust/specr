@@ -11,6 +11,7 @@ mod auto_derive;
 mod auto_obj_bound;
 mod index;
 
+mod config;
 
 use std::fs;
 use std::path::{PathBuf, Path};
@@ -18,6 +19,8 @@ use std::process::Command;
 
 pub mod prelude {
     pub use crate::source::Module;
+    pub use crate::config::Config;
+
     pub use std::collections::HashSet;
     pub use quote::{quote, format_ident, ToTokens};
     pub use syn::*;
@@ -40,6 +43,8 @@ fn mkdir(name: &str) {
 }
 
 fn main() {
+    let cfg = Config::load();
+
     // setup "gen-minirust" directory.
     if !exists("../minirust") {
         eprintln!("You need to be in the `specr-transpile` folder in order to run it.!");
@@ -52,7 +57,7 @@ fn main() {
 
     let mods = source::fetch("../minirust");
     create_cargo_toml();
-    create_lib(&mods);
+    create_lib(&mods, &cfg);
     compile(mods);
 
     Command::new("cargo")
@@ -74,17 +79,13 @@ fn create_cargo_toml() {
     fs::write("../gen-minirust/Cargo.toml", &toml).unwrap();
 }
 
-fn create_lib(mods: &[Module]) {
+fn create_lib(mods: &[Module], config: &Config) {
     let mods: Vec<Ident> = mods.iter().map(|x| format_ident!("{}", x.name)).collect();
-    // TODO those features should probably be configurable
+
+    let attrs = parse_str::<syn::File>(&config.attrs.join("\n")).unwrap();
+
     let code = quote! {
-        #![recursion_limit = "256"]
-        #![feature(yeet_expr)]
-        #![feature(never_type)]
-        #![feature(iterator_try_collect)]
-        #![feature(is_some_and)]
-        #![feature(const_option)]
-        #![feature(try_blocks)]
+        #attrs
         #[allow(unused_imports)]
         #[macro_use] pub extern crate libspecr;
         #( #[allow(unused_imports)] #[macro_use] pub mod #mods; )*
