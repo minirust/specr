@@ -35,7 +35,7 @@ impl Size {
         Some(Size { raw })
     }
 
-    /// Returns None, if `bits` is negative.
+    /// Returns None, if `bytes` is negative.
     pub fn from_bytes(bytes: impl Into<Int>) -> Option<Size> {
         let bytes = bytes.into();
         if bytes < 0 { return None; }
