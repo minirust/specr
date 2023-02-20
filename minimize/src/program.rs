@@ -195,7 +195,8 @@ pub fn calc_abis<'tcx>(def_id: rs::DefId, substs_ref: rs::SubstsRef<'tcx>, tcx: 
 // TODO extend when Minirust has a more sophisticated ArgAbi
 pub fn translate_arg_abi<'a, T>(arg_abi: &rs::ArgAbi<'a, T>) -> ArgAbi {
     if let rs::PassMode::Direct(attrs) = arg_abi.mode {
-        if attrs.regular.intersects(rs::ArgAttribute::InReg) {
+        // FIXME for some reason, this is never true.
+        if attrs.regular.contains(rs::ArgAttribute::InReg) {
             return ArgAbi::Register;
         }
     }
