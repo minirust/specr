@@ -3,7 +3,7 @@ use crate::int::*;
 #[const_trait]
 /// Conversion to `Int`.
 ///
-/// This is implemented for primitive integer types, and usable in `const`-contexts.
+/// This is implemented for primitive integer types and usable in `const`-contexts.
 pub trait ToInt {
     /// Converts `self` to `Int`.
     fn to_int(self) -> Int;

@@ -13,7 +13,7 @@ pub enum Endianness {
 pub use Endianness::*;
 
 impl Endianness {
-    /// If `signed == Signed`, the data is interpreted as two's complement.
+    /// If `signed == Signed` the data is interpreted as two's complement.
     pub fn decode(self, signed: Signedness, bytes: List<u8>) -> Int {
         let mut bytes = bytes;
         if matches!(self, LittleEndian) {
@@ -32,7 +32,7 @@ impl Endianness {
         out
     }
 
-    /// This can fail (return `None`) if the `int` does not fit into `size` bytes,
+    /// This can fail (return `None`) if the `int` does not fit into `size` bytes
     /// or if it is negative and `signed == Unsigned`.
     pub fn encode(self, signed: Signedness, size: Size, int: Int) -> Option<List<u8>> {
         if !int.in_bounds(signed, size) {

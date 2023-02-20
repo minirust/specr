@@ -3,7 +3,7 @@ use crate::*;
 use std::convert::Infallible;
 
 /// `GcCompat` expresses that a type is compatible with the garbage collector.
-/// It is required in order to contain `GcCow`, and to be the generic param to `GcCow`.
+/// It is required in order to contain `GcCow` and to be the generic param to `GcCow`.
 pub trait GcCompat: GcCompatTrivial {
     /// Writes the gc'd objs, that `self` directly points to, into `buffer`.
     fn points_to(&self, buffer: &mut HashSet<usize>);

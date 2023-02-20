@@ -7,7 +7,7 @@ impl<K: Obj, V: Obj> Map<K, V> {
     }
 
     /// Returns the value to the key `k`.
-    /// Returns `None`, if the key `k` is not in the Map.
+    /// Returns `None` if the key `k` is not in the Map.
     pub fn get(&self, k: K) -> Option<V> {
         self.0.call_ref_unchecked(|m| m.get(&k).cloned())
     }
@@ -19,7 +19,7 @@ impl<K: Obj, V: Obj> Map<K, V> {
     }
 
     /// Removes `k` from the map.
-    /// If the pair (k, v)` was in the map, `Some(v)` is returned.
+    /// If the pair (k, v)` was in the map `Some(v)` is returned.
     /// Otherwise `None` is returned.
     pub fn remove(&mut self, k: K) -> Option<V> {
         self.0.mutate(|m| {
@@ -35,7 +35,7 @@ impl<K: Obj, V: Obj> Map<K, V> {
     }
 
     /// Insert a key/value mapping into a map.
-    /// If the map already has a mapping for the given key, the previous value is overwritten.
+    /// If the map already has a mapping for the given key the previous value is overwritten.
     pub fn insert(&mut self, k: K, v: V) -> Option<V> {
         self.0.mutate(|m| {
             m.insert(k, v)

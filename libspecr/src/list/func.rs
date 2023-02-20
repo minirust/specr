@@ -18,18 +18,20 @@ impl<T: Obj> List<T> {
         self.len() == 0
     }
 
-    /// Returns the first element of `self`, or `None` if `self` is empty.
+    /// Returns the first element of `self`
+    /// or `None` if `self` is empty.
     pub fn first(&self) -> Option<T> {
         self.0.call_ref_unchecked(|v| v.front().cloned())
     }
 
-    /// Returns the last element of `self`, or `None` if `self` is empty.
+    /// Returns the last element of `self`
+    /// or `None` if `self` is empty.
     pub fn last(&self) -> Option<T> {
         self.0.call_ref_unchecked(|v| v.last().cloned())
     }
 
     /// Conceptually equivalent to `f(&mut self[i])`.
-    /// Mutates the `i`th element, by giving a mutable ref of it into the function `f`.
+    /// Mutates the `i`th element by giving a mutable ref of it into the function `f`.
     /// The return value of `f` will be returned from `mutate_at`.
     ///
     /// Instead of actual mutation, a new list is allocated, where only the `i`th element is changed.
@@ -139,7 +141,7 @@ impl<T: Obj> List<T> {
         self.iter().all(f)
     }
 
-    /// applies `f` to each element of the list, and returns the outputs as another list.
+    /// applies `f` to each element of the list and returns the outputs as another list.
     pub fn map<O: Obj>(self, f: impl FnMut(T) -> O) -> List<O> {
         self.iter().map(f).collect()
     }
@@ -149,8 +151,8 @@ impl<T: Obj> List<T> {
         self.iter().flat_map(f).collect()
     }
 
-    /// Applies `f` to each element of the list, and returns the successful outputs as another lists.
-    /// If at least one call to `f` failed, it's error is returned instead.
+    /// Applies `f` to each element of the list and returns the successful outputs as another lists.
+    /// If at least one call to `f` failed it's error is returned instead.
     pub fn try_map<O: Obj, E>(self, f: impl FnMut(T) -> E) -> <<E as Try>::Residual as Residual<List<O>>>::TryType
         where E: Try<Output=O>,
               <E as Try>::Residual: Residual<List<O>>,

@@ -24,7 +24,7 @@ impl String {
     }
 }
 
-/// Wrapper around the `std::format` macro, returning `libspecr::String` instead of `std::string::String`.
+/// Wrapper around the `std::format` macro returning `libspecr::String` instead of `std::string::String`.
 pub macro format {
     ($($thing:expr),*) => {
         String::from(

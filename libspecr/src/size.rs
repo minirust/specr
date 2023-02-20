@@ -16,7 +16,7 @@ impl Size {
     /// The "0 bytes" size.
     pub const ZERO: Size = Size { raw: Int::ZERO };
 
-    /// Returns None, if `bits` is negative or not divisible by 8.
+    /// Returns None if `bits` is negative or not divisible by 8.
     pub fn from_bits(bits: impl Into<Int>) -> Option<Size> {
         let bits = bits.into();
         if bits % 8 != 0 { return None; };
@@ -27,7 +27,7 @@ impl Size {
     }
 
     /// Variation of `from_bits` for const contexts.
-    /// Returns None, if `bits` is not divisible by 8.
+    /// Returns None if `bits` is not divisible by 8.
     pub const fn from_bits_const(bits: u64) -> Option<Size> {
         if bits % 8 != 0 { return None; }
         let bytes = bits / 8;
@@ -35,7 +35,7 @@ impl Size {
         Some(Size { raw })
     }
 
-    /// Returns None, if `bytes` is negative.
+    /// Returns None if `bytes` is negative.
     pub fn from_bytes(bytes: impl Into<Int>) -> Option<Size> {
         let bytes = bytes.into();
         if bytes < 0 { return None; }
@@ -44,7 +44,7 @@ impl Size {
     }
 
     /// Variation of `from_bytes` for const contexts.
-    /// Cannot fail since the input is unsigned, and already in bytes.
+    /// Cannot fail since the input is unsigned and already in bytes.
     pub const fn from_bytes_const(bytes: u64) -> Size {
         let raw = Int::from(bytes);
         Size { raw }

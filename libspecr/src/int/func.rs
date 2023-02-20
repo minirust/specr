@@ -1,7 +1,7 @@
 use crate::int::*;
 
 impl Int {
-    /// Returns true, if `self` is a power of two. `false` otherwise.
+    /// Returns true if `self` is a power of two. `false` otherwise.
     pub fn is_power_of_two(self) -> bool {
         let ext = self.ext();
         if let Some(uint) = ext.to_biguint() {
@@ -48,7 +48,7 @@ impl Int {
     }
 
     /// Checked integer division.
-    /// Returns `None`, if and only if `other == 0`.
+    /// Returns `None` if and only if `other == 0`.
     pub fn checked_div(self, other: Int) -> Option<Int> {
         if other == 0 { return None; }
         Some(self / other)
@@ -79,7 +79,8 @@ impl Int {
         Self::wrap(ext_pow(&self.ext(), &other.ext()))
     }
 
-    /// Returns the number of least-significant bits that are zero, or None if the entire number is zero.
+    /// Returns the number of least-significant bits that are zero
+    /// or None if the entire number is zero.
     pub fn trailing_zeros(self) -> Option<Int> {
         self.ext()
             .trailing_zeros()
@@ -94,8 +95,8 @@ impl Int {
     }
 
     /// Returns the unique value that is equal to `self` modulo `2^size.bits()`.
-    /// If `signed == Unsigned`, the result is in the interval `0..2^size.bits()`,
-    /// else it is in the interval `-2^(size.bits()-1) .. 2^(size.bits()-1)`.
+    /// If `signed == Unsigned` the result is in the interval `0..2^size.bits()`.
+    /// Otherwise it is in the interval `-2^(size.bits()-1) .. 2^(size.bits()-1)`.
     ///
     /// `size` must not be zero.
     pub fn modulo(self, signed: Signedness, size: Size) -> Int {

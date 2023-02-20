@@ -10,7 +10,7 @@ impl Align {
     pub const ONE: Align = Align { raw: Int::ONE };
 
     /// Constructs `Align` with `align` many bytes.
-    /// Returns `None`, if `align` is not a power of two.
+    /// Returns `None` if `align` is not a power of two.
     pub fn from_bytes(align: impl Into<Int>) -> Option<Align> {
         let raw = align.into();
         if raw.is_power_of_two() {
@@ -27,7 +27,7 @@ impl Align {
     }
 
     /// Constructs `Align` with `align` many bits.
-    /// Returns `None`, if `align` is not divisible by 8, or if `align/8` is no power of two.
+    /// Returns `None` if `align` is not divisible by 8, or if `align/8` is no power of two.
     pub fn from_bits(align: impl Into<Int>) -> Option<Align> {
         let align = align.into();
         if align % 8 != 0 { return None; }
@@ -47,7 +47,7 @@ impl Align {
 
     /// Computes the best alignment possible for the given offset
     /// (the largest power of two that the offset is a multiple of).
-    /// For an offset of `0`, it returns None.
+    /// For an offset of `0` it returns None.
     pub fn max_for_offset(offset: Size) -> Option<Align> {
         offset.bytes().trailing_zeros()
             .map(|trailing| {
@@ -58,7 +58,7 @@ impl Align {
             })
     }
 
-    /// Lower the alignment, if necessary, such that the given offset
+    /// Lower the alignment if necessary, such that the given offset
     /// is aligned to it (the offset is a multiple of the alignment).
     pub fn restrict_for_offset(self, offset: Size) -> Align {
         Align::max_for_offset(offset)
