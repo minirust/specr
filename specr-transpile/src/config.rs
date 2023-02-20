@@ -19,42 +19,28 @@ impl Config {
     pub fn load() -> Config {
         let [_, ref f] = std::env::args().collect::<Vec<_>>()[..] else {
             eprintln!("Usage:");
-            eprintln!("specr-transpile <specr.cfg>");
+            eprintln!("specr-transpile <specr.toml>");
             eprintln!("");
             panic!("invalid amount of command-line arguments!");
         };
+
         let f = fs::canonicalize(f).unwrap();
         let s = fs::read_to_string(&f).unwrap();
-
         let root = f.parent().unwrap().to_path_buf();
 
-        let mut input = None;
-        let mut output = None;
-        let mut attrs = Vec::new();
-
-        for line in s.lines() {
-            let line = line.trim();
-            if line.is_empty() { continue; }
-
-            if line.starts_with("input ") {
-                assert!(input.is_none());
-                input = Some(line[5..].trim().to_string());
-            }
-
-            if line.starts_with("output ") {
-                assert!(output.is_none());
-                output = Some(line[6..].trim().to_string());
-            }
-
-            if line.starts_with("attr ") {
-                attrs.push(line[4..].to_string());
-            }
-        }
+        let table = s.parse::<toml::Table>().unwrap();
+        let input = table.get("input").expect("`input` missing in config file")
+                         .as_str().expect("`input` is no string!").to_string();
+        let output = table.get("output").expect("`output` missing in config file")
+                         .as_str().expect("`output` is no string!").to_string();
+        let attrs = table.get("attrs")
+                          .map(|v| v.clone().try_into().expect("`attrs` is required to be an array of strings!"))
+                          .unwrap_or_else(Vec::new);
 
         Config {
             root,
-            input: input.unwrap(),
-            output: output.unwrap(),
+            input,
+            output,
             attrs
         }
     }

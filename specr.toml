@@ -1,0 +1,11 @@
+input = "minirust"
+output = "gen-minirust"
+attrs = [
+    '#![recursion_limit = "256"]',
+    '#![feature(yeet_expr)]',
+    '#![feature(never_type)]',
+    '#![feature(iterator_try_collect)]',
+    '#![feature(is_some_and)]',
+    '#![feature(const_option)]',
+    '#![feature(try_blocks)]',
+]
