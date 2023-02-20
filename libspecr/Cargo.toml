@@ -1,10 +1,11 @@
 [package]
 name = "libspecr"
 description = "standard library for specr lang"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 repository = "https://github.com/memoryleak47/minirust-tooling"
 license = "MIT OR Apache-2.0"
+documentation = "https://docs.rs/libspecr"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
