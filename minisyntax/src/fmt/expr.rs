@@ -1,19 +1,19 @@
 use super::*;
 
-pub fn place_expr_to_string(p: PlaceExpr) -> String {
+pub fn place_expr_to_string(p: PlaceExpr, comptypes: &mut Vec<Type>) -> String {
     match p {
         PlaceExpr::Local(l) => local_name_to_string(l),
         PlaceExpr::Deref { operand, .. } => {
-            format!("*{}", value_expr_to_string(operand.get()))
+            format!("*{}", value_expr_to_string(operand.get(), comptypes))
         },
         PlaceExpr::Field { root, field } => {
             let root = root.get();
-            format!("{}.{}", place_expr_to_string(root), field)
+            format!("{}.{}", place_expr_to_string(root, comptypes), field)
         },
         PlaceExpr::Index { root, index } => {
             let root = root.get();
             let index = index.get();
-            format!("{}[{}]", place_expr_to_string(root), value_expr_to_string(index))
+            format!("{}[{}]", place_expr_to_string(root, comptypes), value_expr_to_string(index, comptypes))
         },
     }
 }
@@ -30,7 +30,7 @@ fn constant_to_string(c: Constant) -> String {
     }
 }
 
-pub fn value_expr_to_string(v: ValueExpr) -> String {
+pub fn value_expr_to_string(v: ValueExpr, comptypes: &mut Vec<Type>) -> String {
     match v {
         ValueExpr::Constant(c, _ty) => constant_to_string(c),
         ValueExpr::Tuple(l, t) => {
@@ -39,19 +39,19 @@ pub fn value_expr_to_string(v: ValueExpr) -> String {
                 Type::Tuple { .. } => ('(', ')'),
                 _ => panic!(),
             };
-            let l: Vec<_> = l.iter().map(value_expr_to_string).collect();
+            let l: Vec<_> = l.iter().map(|x| value_expr_to_string(x, comptypes)).collect();
             let l = l.join(", ");
 
             format!("{lparen}{l}{rparen}")
         },
         ValueExpr::Union { field, expr, union_ty } => {
-            let union_ty = type_to_string(union_ty);
-            let expr = value_expr_to_string(expr.get());
+            let union_ty = type_to_string(union_ty, comptypes);
+            let expr = value_expr_to_string(expr.get(), comptypes);
             format!("{union_ty} {{ f{field} : {expr} }}")
         },
         ValueExpr::Load { destructive, source } => {
             let source = source.get();
-            let source = place_expr_to_string(source);
+            let source = place_expr_to_string(source, comptypes);
             let load_name = match destructive {
                 true => "move",
                 false => "load",
@@ -60,12 +60,12 @@ pub fn value_expr_to_string(v: ValueExpr) -> String {
         },
         ValueExpr::AddrOf { target, ptr_ty: PtrType::Raw { .. } } => {
             let target = target.get();
-            let target = place_expr_to_string(target);
+            let target = place_expr_to_string(target, comptypes);
             format!("&raw {target}")
         },
         ValueExpr::AddrOf { target, ptr_ty: PtrType::Ref { mutbl, .. } } => {
             let target = target.get();
-            let target = place_expr_to_string(target);
+            let target = place_expr_to_string(target, comptypes);
             let mutbl = match mutbl {
                 Mutability::Mutable => "mut ",
                 Mutability::Immutable => "",
@@ -76,7 +76,7 @@ pub fn value_expr_to_string(v: ValueExpr) -> String {
             panic!("unsupported ptr_ty for AddrOr!")
         },
         ValueExpr::UnOp { operator, operand } => {
-            let operand = value_expr_to_string(operand.get());
+            let operand = value_expr_to_string(operand.get(), comptypes);
             match operator {
                 UnOp::Int(UnOpInt::Neg, _int_ty) => format!("-{}", operand),
                 UnOp::Int(UnOpInt::Cast, _int_ty) => format!("{} as _", operand),
@@ -97,8 +97,8 @@ pub fn value_expr_to_string(v: ValueExpr) -> String {
             let int_ty = int_type_to_string(int_ty);
             let int_op = format!("{int_op}_{int_ty}");
 
-            let l = value_expr_to_string(left.get());
-            let r = value_expr_to_string(right.get());
+            let l = value_expr_to_string(left.get(), comptypes);
+            let r = value_expr_to_string(right.get(), comptypes);
 
             format!("{l} {int_op} {r}")
         },
@@ -112,8 +112,8 @@ pub fn value_expr_to_string(v: ValueExpr) -> String {
                 IntRel::Ne => "!=",
             };
 
-            let l = value_expr_to_string(left.get());
-            let r = value_expr_to_string(right.get());
+            let l = value_expr_to_string(left.get(), comptypes);
+            let r = value_expr_to_string(right.get(), comptypes);
 
             format!("{l} {rel} {r}")
         },
@@ -122,8 +122,8 @@ pub fn value_expr_to_string(v: ValueExpr) -> String {
                 true => "offset_inbounds",
                 false => "offset_wrapping",
             };
-            let l = value_expr_to_string(left.get());
-            let r = value_expr_to_string(right.get());
+            let l = value_expr_to_string(left.get(), comptypes);
+            let r = value_expr_to_string(right.get(), comptypes);
             format!("{offset_name}({l}, {r})")
         }
     }
