@@ -8,6 +8,9 @@ use std::result::Result;
 mod expr;
 use expr::*;
 
+mod ty;
+use ty::*;
+
 pub fn program_to_string(prog: &Program) -> String {
     let mut s = String::new();
     fmt_program(prog, &mut s).expect("Failed to pretty print program!");
