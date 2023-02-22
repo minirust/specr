@@ -36,7 +36,7 @@ pub use std::string::String;
 pub use gen_minirust::prelude::NdResult;
 
 pub use minisyntax::run::*;
-pub use minisyntax::dump::dump_program;
+pub use minisyntax::fmt::dump_program;
 
 mod program;
 use program::*;

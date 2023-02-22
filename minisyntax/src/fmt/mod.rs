@@ -1,19 +1,36 @@
-use crate::{Program, FnName, Function, Type, PlaceExpr, ValueExpr, Constant, PtrType, Mutability, BinOp, BinOpInt, Statement, Terminator, LocalName, BbName, IntType, BasicBlock, Signed, Unsigned, Intrinsic, List};
 use crate::*;
+
+use std::fmt::Write;
+
+use std::fmt::Error;
+use std::result::Result;
 
 mod expr;
 use expr::*;
 
+pub fn program_to_string(prog: &Program) -> String {
+    let mut s = String::new();
+    fmt_program(prog, &mut s).expect("Failed to pretty print program!");
+    s
+}
+
 pub fn dump_program(prog: &Program) {
+    // TODO fix useless string alloc
+    println!("{}", program_to_string(prog));
+}
+
+pub fn fmt_program(prog: &Program, wr: &mut impl Write) -> Result<(), Error> {
     let mut fns: Vec<(_, _)> = prog.functions.iter().collect();
     fns.sort_by_key(|(k, _)| k.0);
     for (fn_name, f) in fns {
         let start = prog.start == fn_name;
-        dump_function(fn_name, f, start);
+        fmt_function(fn_name, f, start, wr)?;
     }
+
+    Ok(())
 }
 
-fn dump_function(fn_name: FnName, f: Function, start: bool) {
+fn fmt_function(fn_name: FnName, f: Function, start: bool, wr: &mut impl Write) -> Result<(), Error> {
     let start_str = if start {
         "[start] "
     } else { "" };
@@ -30,57 +47,63 @@ fn dump_function(fn_name: FnName, f: Function, start: bool) {
     if let Some((ret, _)) = f.ret {
         ret_ty = type_to_string(f.locals.index_at(ret).ty);
     }
-    println!("{start_str}fn {fn_name}({args}) -> {ret_ty} {{");
+    write!(wr, "{start_str}fn {fn_name}({args}) -> {ret_ty} {{")?;
 
-    // dump locals
+    // fmt locals
     let mut locals: Vec<_> = f.locals.keys().collect();
     locals.sort_by_key(|l| l.0.get());
     for l in locals {
         let ty = f.locals.index_at(l).ty;
-        println!("  let {}: {};", local_name_to_string(l), type_to_string(ty));
+        write!(wr, "  let {}: {};", local_name_to_string(l), type_to_string(ty))?;
     }
 
     let mut blocks: Vec<(_, _)> = f.blocks.iter().collect();
     blocks.sort_by_key(|(k, _)| k.0);
     for (bb_name, bb) in blocks {
         let start = f.start == bb_name;
-        dump_bb(bb_name, bb, start);
+        fmt_bb(bb_name, bb, start, wr)?;
     }
-    println!("}}");
-    println!("");
+    write!(wr, "}}")?;
+    write!(wr, "")?;
+
+    Ok(())
 }
 
-fn dump_bb(bb_name: BbName, bb: BasicBlock, start: bool) {
+fn fmt_bb(bb_name: BbName, bb: BasicBlock, start: bool, wr: &mut impl Write) -> Result<(), Error> {
     if start {
-        println!("  bb{} [start]:", bb_name.0.get());
+        write!(wr, "  bb{} [start]:", bb_name.0.get())?;
     } else {
-        println!("  bb{}:", bb_name.0.get());
+        write!(wr, "  bb{}:", bb_name.0.get())?;
     }
 
     for st in bb.statements.iter() {
-        dump_statement(st);
+        fmt_statement(st, wr)?;
     }
-    dump_terminator(bb.terminator);
+    fmt_terminator(bb.terminator, wr)?;
+
+    Ok(())
 }
 
-fn dump_statement(st: Statement) {
+fn fmt_statement(st: Statement, wr: &mut impl Write) -> Result<(), Error> {
     match st {
         Statement::Assign { destination, source } => {
-            println!("    {} = {};", place_expr_to_string(destination), value_expr_to_string(source));
+            write!(wr, "    {} = {};", place_expr_to_string(destination), value_expr_to_string(source))?
         },
         Statement::Finalize { place, fn_entry } => {
-            println!("    Finalize({}, {});", place_expr_to_string(place), fn_entry);
+            write!(wr, "    Finalize({}, {});", place_expr_to_string(place), fn_entry)?
         },
         Statement::StorageLive(local) => {
-            println!("    StorageLive({});", local_name_to_string(local));
+            write!(wr, "    StorageLive({});", local_name_to_string(local))?
         },
         Statement::StorageDead(local) => {
-            println!("    StorageDead({});", local_name_to_string(local));
+            write!(wr, "    StorageDead({});", local_name_to_string(local))?
         },
     }
+
+    Ok(())
 }
 
-fn dump_call(callee: &str, arguments: List<ValueExpr>, ret: Option<PlaceExpr>, next_block: Option<BbName>) {
+fn fmt_call(callee: &str, arguments: List<ValueExpr>, ret: Option<PlaceExpr>, next_block: Option<BbName>, wr: &mut impl Write) -> Result<(), Error> {
     let args: Vec<_> = arguments.iter().map(value_expr_to_string).collect();
     let args = args.join(", ");
 
@@ -92,27 +115,29 @@ fn dump_call(callee: &str, arguments: List<ValueExpr>, ret: Option<PlaceExpr>, n
     if let Some(next_block) = next_block {
         next = format!(" -> {}", bb_name_to_string(next_block));
     }
-    println!("    {r} = {callee}({args}){next};");
+    write!(wr, "    {r} = {callee}({args}){next};")?;
+
+    Ok(())
 }
 
-fn dump_terminator(t: Terminator) {
+fn fmt_terminator(t: Terminator, wr: &mut impl Write) -> Result<(), Error> {
     match t {
         Terminator::Goto(bb) => {
-            println!("    goto -> {};", bb_name_to_string(bb));
+            write!(wr, "    goto -> {};", bb_name_to_string(bb))?;
         },
         Terminator::If {
             condition,
             then_block,
             else_block,
         } => {
-            println!("    if {} {{", value_expr_to_string(condition));
-            println!("      goto -> {};", bb_name_to_string(then_block));
-            println!("    }} else {{");
-            println!("      goto -> {};", bb_name_to_string(else_block));
-            println!("    }}");
+            write!(wr, "    if {} {{", value_expr_to_string(condition))?;
+            write!(wr, "      goto -> {};", bb_name_to_string(then_block))?;
+            write!(wr, "    }} else {{")?;
+            write!(wr, "      goto -> {};", bb_name_to_string(else_block))?;
+            write!(wr, "    }}")?;
         },
         Terminator::Unreachable => {
-            println!("    unreachable;");
+            write!(wr, "    unreachable;")?;
         }
         Terminator::Call {
             callee,
@@ -123,10 +148,10 @@ fn dump_terminator(t: Terminator) {
             let callee = fn_name_to_string(callee);
             let arguments = arguments.iter().map(|(x, _)| x).collect();
             let ret = ret.map(|(x, _)| x);
-            dump_call(&callee, arguments, ret, next_block);
+            fmt_call(&callee, arguments, ret, next_block, wr)?;
         },
         Terminator::Return => {
-            println!("    return;");
+            write!(wr, "    return;")?;
         },
         Terminator::CallIntrinsic {
             intrinsic,
@@ -141,7 +166,9 @@ fn dump_terminator(t: Terminator) {
                 Intrinsic::Allocate => "allocate",
                 Intrinsic::Deallocate => "deallocate",
             };
-            dump_call(callee, arguments, ret, next_block);
+            fmt_call(callee, arguments, ret, next_block, wr)?;
         },
     }
+
+    Ok(())
 }

@@ -14,6 +14,6 @@ pub use std::format;
 pub use std::string::String;
 pub use gen_minirust::prelude::NdResult;
 
-pub mod dump;
+pub mod fmt;
 pub mod build;
 pub mod run;

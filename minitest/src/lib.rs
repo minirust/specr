@@ -5,7 +5,7 @@ extern crate minisyntax;
 
 pub use minisyntax::run::*;
 pub use minisyntax::build::*;
-pub use minisyntax::dump::*;
+pub use minisyntax::fmt::*;
 
 pub use gen_minirust::lang::*;
 pub use gen_minirust::mem::*;
