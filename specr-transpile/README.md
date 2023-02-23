@@ -75,18 +75,40 @@ impl Foo {
 ```
 Argmatch can also be applied to `self`.
 
-### Forward declarations
-Forward declarations in specr lang are method implementations missing their code block `{ ... }`.
+### Merge Trait Impls
+Whenever a trait implementation is cut into multiple pieces, specr-transpile will merge them back together.
 
 Example:
 ```rust
-impl Foo {
-    fn func(&self);
+trait Foo {
+    fn foo1(&self);
+    fn foo2(&self);
+}
+
+impl Foo for () {
+    fn foo1(&self) { ... }
+}
+
+impl Foo for () { // invalid in Rust!
+    fn foo2(&self) { ... }
 }
 ```
-specr will clear those forward declarations, and will generally provide an implementation for the method itself.
-specr will also implement some methods that have not been forward-declarated, but those should be described in comments.
 
-TODO: explain merge impls or remove it.
+becomes
 
-TODO: explain module structure.
+```rust
+trait Foo {
+    fn foo1(&self);
+    fn foo2(&self);
+}
+
+impl Foo for () {
+    fn foo1(&self) { ... }
+    fn foo2(&self) { ... }
+}
+```
+
+### Module structure and .md files
+specr searches for folders containing markdown files, specr will look in the directory specified by `input` in the config file.
+Each folder will result in one Rust module.
+This happens by filtering out the rust code of each .md file and concatenating them together.
