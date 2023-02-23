@@ -15,7 +15,6 @@ mod config;
 
 use std::fs;
 use std::path::{PathBuf, Path};
-use std::process::Command;
 
 pub mod prelude {
     pub use crate::source::Module;
@@ -58,11 +57,6 @@ fn main() {
     create_cargo_toml(&config);
     create_lib(&mods, &config);
     compile(mods, &config);
-
-    Command::new("cargo")
-        .args(&["fmt", "--manifest-path", config.output_path().join("Cargo.toml").to_string_lossy().as_ref()])
-        .output()
-        .unwrap();
 }
 
 fn create_cargo_toml(config: &Config) {
@@ -86,11 +80,13 @@ fn create_lib(mods: &[Module], config: &Config) {
 
     let code = quote! {
         #attrs
+
         #[allow(unused_imports)]
         #[macro_use] pub extern crate libspecr;
         #( #[allow(unused_imports)] #[macro_use] pub mod #mods; )*
     };
-    let code = code.to_string();
+    let code = parse_str::<syn::File>(&code.to_string()).unwrap();
+    let code = prettyplease::unparse(&code);
     fs::write(config.output_path().join("src").join("lib.rs"), &code).unwrap();
 }
 
@@ -109,7 +105,7 @@ fn compile(mods: Vec<Module>, config: &Config) {
         let ast = auto_obj_bound::auto_obj_bound(ast);
 
         // write AST back to Rust file.
-        let code = ast.into_token_stream().to_string();
+        let code = prettyplease::unparse(&ast);
         let filename = format!("{}.rs", m.name);
         let p: PathBuf = config.output_path().join("src").join(filename);
         fs::write(&p, &code).unwrap();
