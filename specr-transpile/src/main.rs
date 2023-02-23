@@ -61,7 +61,7 @@ fn main() {
 }
 
 fn create_cargo_toml(config: &Config) {
-    let package_name = config.crate_name();
+    let package_name = &config.name;
     let toml = format!("[package]\n\
                 name = \"{}\"\n\
                 version = \"0.1.0\"\n\

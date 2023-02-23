@@ -17,6 +17,9 @@ pub struct Config {
     /// The rust channel, like "nightly"
     /// If this is `Some`, a `rust-toolchain.toml` will be created in the generated crate.
     pub channel: Option<String>,
+
+    /// The name of the generated crate.
+    pub name: String,
 }
 
 impl Config {
@@ -42,6 +45,8 @@ impl Config {
                           .unwrap_or_else(Vec::new);
         let channel = table.get("channel")
                           .map(|v| v.clone().try_into().expect("`channel` is required to be a string!"));
+        let name = table.get("name").expect("`name` is missing in config file")
+                          .clone().try_into().expect("`name` is required to be a string!");
 
         Config {
             root,
@@ -49,6 +54,7 @@ impl Config {
             output,
             attrs,
             channel,
+            name,
         }
     }
 
@@ -58,14 +64,6 @@ impl Config {
 
     pub fn output_path(&self) -> PathBuf {
         self.canonicalize(&self.output)
-    }
-
-    pub fn crate_name(&self) -> String {
-        self.output_path()
-            .file_name()
-            .unwrap()
-            .to_string_lossy()
-            .to_string()
     }
 
     // converts relative paths to be relative from `root`
