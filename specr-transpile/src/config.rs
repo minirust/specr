@@ -13,6 +13,10 @@ pub struct Config {
 
     /// extra inner attributes for the generated rust crate.
     pub attrs: Vec<String>,
+
+    /// The rust channel, like "nightly"
+    /// If this is `Some`, a `rust-toolchain.toml` will be created in the generated crate.
+    pub channel: Option<String>,
 }
 
 impl Config {
@@ -36,12 +40,15 @@ impl Config {
         let attrs = table.get("attrs")
                           .map(|v| v.clone().try_into().expect("`attrs` is required to be an array of strings!"))
                           .unwrap_or_else(Vec::new);
+        let channel = table.get("channel")
+                          .map(|v| v.clone().try_into().expect("`channel` is required to be a string!"));
 
         Config {
             root,
             input,
             output,
-            attrs
+            attrs,
+            channel,
         }
     }
 

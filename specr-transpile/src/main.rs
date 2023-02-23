@@ -55,6 +55,7 @@ fn main() {
 
     let mods = source::fetch(&config.input_path());
     create_cargo_toml(&config);
+    create_rust_toolchain(&config);
     create_lib(&mods, &config);
     compile(mods, &config);
 }
@@ -71,6 +72,12 @@ fn create_cargo_toml(config: &Config) {
                 gccompat-derive = \"0.1.0\"\n\
                ", package_name);
     fs::write(config.output_path().join("Cargo.toml"), &toml).unwrap();
+}
+
+fn create_rust_toolchain(config: &Config) {
+    let Some(ref channel) = config.channel else { return };
+    let toml = format!("[toolchain]\nchannel = \"{channel}\"");
+    fs::write(config.output_path().join("rust-toolchain.toml"), &toml).unwrap();
 }
 
 fn create_lib(mods: &[Module], config: &Config) {

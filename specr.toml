@@ -1,5 +1,6 @@
 input = "minirust"
 output = "gen-minirust"
+channel = "nightly-2023-02-12"
 attrs = [
     '#![recursion_limit = "256"]',
     '#![feature(yeet_expr)]',
