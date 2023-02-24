@@ -126,11 +126,14 @@ fn extract_implementations(fwd_decl: &FwdDeclaration, arg: &mut syn::File) -> Ve
             let mut new_items = Vec::new();
 
             for ii in old_items {
-                if let ImplItem::Method(iim) = &ii && method_fits_fwd_decl(fwd_decl, &iim) {
-                    out.push(iim.clone());
-                } else {
-                    new_items.push(ii);
+                if let ImplItem::Method(iim) = &ii {
+                    if method_fits_fwd_decl(fwd_decl, &iim) {
+                        out.push(iim.clone());
+                        continue;
+                    }
                 }
+
+                new_items.push(ii);
             }
 
             mem::swap(&mut x.items, &mut new_items);

@@ -1,5 +1,3 @@
-#![feature(let_chains)]
-
 // TODO consistent module naming scheme for module and entry function.
 mod let_else;
 mod imports;
