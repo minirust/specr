@@ -26,6 +26,7 @@ fn constant_to_string(c: Constant) -> String {
     match c {
         Constant::Int(int) => int.to_string(),
         Constant::Bool(b) => b.to_string(),
+        Constant::Pointer(_) => format!("<const ptr>"),
         Constant::Variant { .. } => panic!("enums are unsupported!"),
     }
 }

@@ -71,9 +71,10 @@ fn main() {
             dump_program(&prog);
         } else {
             match run_program(prog) {
-                Outcome::IllFormed => eprintln!("ERR: program not well-formed."),
-                Outcome::Stop => { /* silent exit. */ },
-                Outcome::Ub(err) => eprintln!("UB: {}", err),
+                TerminationInfo::IllFormed => eprintln!("ERR: program not well-formed."),
+                TerminationInfo::MachineStop => { /* silent exit. */ },
+                TerminationInfo::Ub(err) => eprintln!("UB: {}", err.get()),
+                _ => unreachable!(),
             }
         }
     });

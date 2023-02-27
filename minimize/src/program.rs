@@ -34,6 +34,7 @@ pub fn translate_program<'tcx>(tcx: rs::TyCtxt<'tcx>) -> Program {
     Program {
         start,
         functions: fmap,
+        globals: Default::default(),
     }
 }
 

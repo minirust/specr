@@ -10,6 +10,7 @@ pub fn program(fns: &[Function]) -> Program {
     Program {
         functions,
         start: FnName(Name::new(0)),
+        globals: Default::default(),
     }
 }
 

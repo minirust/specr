@@ -6,36 +6,19 @@ use crate::*;
 use std::collections::HashSet;
 use GcCompat;
 
-#[derive(Debug, PartialEq, Eq)]
-pub enum Outcome {
-    IllFormed, // program not well-formed
-    Stop, // program stopped normally
-    Ub(String), // program raised UB
-}
-
-pub fn run_program(prog: Program) -> Outcome {
-    fn run_impl<M: Memory>(mut machine: Machine<M>) -> NdResult<!> {
+pub fn run_program(prog: Program) -> TerminationInfo {
+    fn run_impl(program: Program) -> NdResult<!> {
+        let mut machine = Machine::<BasicMemory>::new(program)?;
+        mark_and_sweep(&machine);
         loop {
             machine.step()?;
             mark_and_sweep(&machine);
         }
     }
 
-    let Some(machine) = Machine::<BasicMemory>::new(prog) else {
-        return Outcome::IllFormed;
-    };
-    mark_and_sweep(&machine);
-
-    let x = run_impl(machine).get();
-    let t_info = match x {
-        Ok(never) => never,
-        Err(t_info) => t_info,
-    };
-
-    match t_info {
-        TerminationInfo::Ub(err) => Outcome::Ub(err.get()),
-        TerminationInfo::MachineStop => Outcome::Stop,
-        _ => todo!(),
+    match run_impl(prog).get() {
+        Ok(f) => match f {},
+        Err(t) => t,
     }
 }
 
