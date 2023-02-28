@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use std::mem;
 
 /// Resolve `argmatches` from the source code, by converting them to a match.
 /// See the README for more information.
@@ -11,30 +10,185 @@ pub fn argmatch(mut mods: Vec<Module>) -> Vec<Module> {
     mods
 }
 
-struct FwdDeclaration {
-    // stores all generic parameters etc. of the surrounding impl block
-    // but empty_ii.items is empty, so it's an empty impl block.
-    empty_ii: ItemImpl,
-
-    // stores the actual method forward declaration
-    iim: ImplItemMethod,
-
-    match_ident: Ident,
-    match_idx: usize,
+// represents a `fn` item within an impl block.
+#[derive(PartialEq, Eq)]
+struct MethodIdx {
+    item_idx: usize,
+    fn_idx: usize,
 }
 
-fn argmatch_ast(mut arg: syn::File) -> syn::File {
-    let fwd_decls = extract_fwd_decls(&mut arg);
-    for fwd_decl in fwd_decls {
-        let impls = extract_implementations(&fwd_decl, &mut arg);
-        let item_impl = merge_implementations(fwd_decl, impls);
-        arg.items.push(Item::Impl(item_impl));
+impl MethodIdx {
+    fn as_ref<'a>(&self, ast: &'a syn::File) -> &'a ImplItemMethod {
+        let Item::Impl(ref ii) = ast.items[self.item_idx] else { panic!() };
+        let ImplItem::Method(ref iim) = ii.items[self.fn_idx] else { panic!() };
+        iim
     }
 
-    arg
+    fn as_mut<'a>(&self, ast: &'a mut syn::File) -> &'a mut ImplItemMethod {
+        let Item::Impl(ref mut ii) = ast.items[self.item_idx] else { panic!() };
+        let ImplItem::Method(ref mut iim) = ii.items[self.fn_idx] else { panic!() };
+        iim
+    }
 }
 
-fn get_argmatch_attr(attrs: &mut Vec<Attribute>) -> Option<Ident> {
+// expresses everything that can be contained in an `specr::argmatch` attribute.
+struct AttrInfo {
+    // which attribute is the argmatch attribute.
+    attr_idx: usize,
+
+    // the index and ident of the function argument we match upon
+    // Typically `match_idx = 0` and `match_ident = self`.
+    match_idx: usize,
+    match_ident: Ident,
+}
+
+struct Argmatch {
+    // the method which has the `argmatch` attribute.
+    method_idx: MethodIdx,
+
+    // the information in this attribute.
+    attr_info: AttrInfo,
+}
+
+fn argmatch_ast(mut ast: syn::File) -> syn::File {
+    while let Some(argmatch) = locate_argmatch(&ast) {
+        let submatches = locate_submatches(&argmatch, &ast);
+        let block = construct_block(&argmatch, &ast, &submatches[..]);
+
+        let r = argmatch.method_idx.as_mut(&mut ast);
+
+        // remove the `argmatch` attribute.
+        r.attrs.remove(argmatch.attr_info.attr_idx);
+
+        // set the newly-constructed block.
+        r.block = block;
+
+        clear_submatches(&mut ast, submatches);
+    }
+
+    ast
+}
+
+fn locate_argmatch(ast: &syn::File) -> Option<Argmatch> {
+    for (i, x) in ast.items.iter().enumerate() {
+        let Item::Impl(ii) = x else { continue };
+        for (j, y) in ii.items.iter().enumerate() {
+            let ImplItem::Method(ref iim) = y else { continue };
+            let Some(attr_info) = get_attr_info(iim) else { continue };
+            let method_idx = MethodIdx { item_idx: i, fn_idx: j };
+            return Some(Argmatch { attr_info, method_idx });
+        }
+    }
+
+    None
+}
+
+fn construct_block(argmatch: &Argmatch, ast: &syn::File, submatches: &[MethodIdx]) -> Block {
+    let match_ident = &argmatch.attr_info.match_ident;
+    let pats: Vec<&Pat> = submatches.iter().map(|x| {
+            let iim = x.as_ref(ast);
+            let FnArg::Typed(ref pt) = iim.sig.inputs[argmatch.attr_info.match_idx] else {
+                panic!("expected match-able pattern, got `self`!")
+            };
+
+            &*pt.pat
+        }).collect();
+    let blocks: Vec<&Block> = submatches.iter().map(|x| &x.as_ref(ast).block).collect();
+
+    let tokens = quote! {{
+        match #match_ident {
+            #(#pats => #blocks,)*
+        }
+    }};
+    parse2(tokens).expect("Cannot parse block!")
+}
+
+fn locate_submatches(argmatch: &Argmatch, ast: &syn::File) -> Vec<MethodIdx> {
+    let mut submatches = Vec::new();
+
+    for (i, x) in ast.items.iter().enumerate() {
+        let Item::Impl(ref ii) = x else { continue };
+        for (j, y) in ii.items.iter().enumerate() {
+            let ImplItem::Method(_) = y else { continue };
+
+            let method_idx = MethodIdx { item_idx: i, fn_idx: j };
+            match is_submatch(argmatch, &method_idx, ast) {
+                SubmatchResult::Yes => {
+                    submatches.push(method_idx);
+                },
+                SubmatchResult::No => {},
+                SubmatchResult::SigMismatch => {
+                    eprintln!("`argmatch` encountered signature mismatch!\n");
+                    eprintln!("{}\n", argmatch.method_idx.as_ref(ast).to_token_stream().to_string());
+                    eprintln!("{}\n", method_idx.as_ref(ast).to_token_stream().to_string());
+                    panic!();
+                },
+            }
+        }
+    }
+
+    submatches
+}
+
+enum SubmatchResult {
+    Yes,
+    No,
+
+    // It seems to be a submatch, but something is off.
+    // This generates a warning.
+    SigMismatch,
+}
+
+fn is_submatch(argmatch: &Argmatch, method_idx: &MethodIdx, ast: &syn::File) -> SubmatchResult {
+    if *method_idx == argmatch.method_idx {
+        // this is no "submatch", it's the original method_idx itself!
+        return SubmatchResult::No;
+    }
+
+    let iim1 = argmatch.method_idx.as_ref(ast);
+    let iim2 = method_idx.as_ref(ast);
+
+    if iim1.sig.ident != iim2.sig.ident {
+        // this is not a submatch, it's not even the same function name.
+        return SubmatchResult::No;
+    }
+
+    // check that signature are the same, except for the FnArg we match upon.
+    let hide_match_ident = |sig: &Signature| {
+        let default_receiver = parse2(quote!{self}).unwrap();
+        let mut sig = sig.clone();
+        sig.inputs[argmatch.attr_info.match_idx] = default_receiver;
+
+        sig
+    };
+    let sig1 = hide_match_ident(&iim1.sig);
+    let sig2 = hide_match_ident(&iim2.sig);
+
+    if sig1 != sig2 {
+        return SubmatchResult::SigMismatch;
+    }
+
+    SubmatchResult::Yes
+
+}
+
+fn clear_submatches(ast: &mut syn::File, mut submatches: Vec<MethodIdx>) {
+    submatches.reverse();
+
+    for s in submatches {
+        let Item::Impl(ref mut ii) = ast.items[s.item_idx] else { panic!() };
+        ii.items.remove(s.fn_idx);
+
+        // it the resulting impl block would then be empty, remove it.
+        if ii.items.is_empty() {
+            ast.items.remove(s.item_idx);
+        }
+    }
+}
+
+// Searches for an `argmatch` attribute and returns its info, if successful.
+fn get_attr_info(iim: &ImplItemMethod) -> Option<AttrInfo> {
+    let attrs = &iim.attrs;
     for i in 0..attrs.len() {
         let attr = &attrs[i];
         let segments: Vec<String> = attr.path.segments
@@ -45,152 +199,23 @@ fn get_argmatch_attr(attrs: &mut Vec<Attribute>) -> Option<Ident> {
         if l == "specr" && r == "argmatch" {
             let Some(tok) = attr.tokens.clone().into_iter().next() else { continue };
             let TokenTree::Group(g) = tok else { continue };
+
+            let attr_idx = i;
             let match_ident = format_ident!("{}", g.stream().to_string());
-            attrs.remove(i);
-            return Some(match_ident);
+            let match_idx = if match_ident == "self" {
+                0
+            } else {
+                iim.sig.inputs.iter().position(|arg| {
+                    let FnArg::Typed(pat_ty) = arg else { return false };
+                    let Pat::Ident(pi) = &*pat_ty.pat else { return false };
+
+                    pi.ident == match_ident
+                }).expect("Cannot find argmatch match_idx")
+            };
+
+            return Some(AttrInfo { attr_idx, match_ident, match_idx });
         }
     }
 
     None
-}
-
-fn get_fwd_decl(ii: &ItemImpl, iim: &mut ImplItemMethod) -> Option<FwdDeclaration> {
-    let mut empty_ii = ii.clone();
-    empty_ii.items = Vec::new();
-
-    let match_ident = get_argmatch_attr(&mut iim.attrs)?;
-
-    let match_idx = if match_ident == "self" {
-        0
-    } else {
-        iim.sig.inputs.iter().position(|arg| {
-            let FnArg::Typed(pat_ty) = arg else { return false };
-            let Pat::Ident(pi) = &*pat_ty.pat else { return false };
-
-            pi.ident == match_ident
-        }).expect("Cannot find argmatch match_idx")
-    };
-
-    let iim = iim.clone();
-    Some(FwdDeclaration {
-        empty_ii,
-        iim,
-        match_ident,
-        match_idx,
-    })
-}
-
-fn extract_fwd_decls(arg: &mut syn::File) -> Vec<FwdDeclaration> {
-    let mut out = Vec::new();
-
-    for i in &mut arg.items {
-        if let Item::Impl(x) = i {
-            let mut old_items: Vec<syn::ImplItem> = Vec::new();
-            mem::swap(&mut x.items, &mut old_items); // TODO don't use mem::swap for this.
-
-            let mut new_items: Vec<syn::ImplItem> = Vec::new();
-
-            for mut ii in old_items {
-                if let ImplItem::Method(iim) = &mut ii {
-                    if let Some(fwd_decl) = get_fwd_decl(x, iim) {
-                        out.push(fwd_decl);
-                        continue;
-                    }
-                }
-
-                // called if ii is not a fwd declaration
-                new_items.push(ii);
-            }
-            mem::swap(&mut x.items, &mut new_items);
-        }
-    }
-
-    out
-}
-
-fn method_fits_fwd_decl(fwd_decl: &FwdDeclaration, iim: &ImplItemMethod) -> bool {
-    let fwd_ident = &fwd_decl.iim.sig.ident;
-    let iim_ident = &iim.sig.ident;
-    format!("{}", fwd_ident) == format!("{}", iim_ident)
-}
-
-// extracts all fitting ImplItemMethods
-fn extract_implementations(fwd_decl: &FwdDeclaration, arg: &mut syn::File) -> Vec<ImplItemMethod> {
-    let mut out = Vec::new();
-
-    for i in &mut arg.items {
-        if let Item::Impl(x) = i {
-            let mut old_items = Vec::new();
-            mem::swap(&mut x.items, &mut old_items);
-
-            let mut new_items = Vec::new();
-
-            for ii in old_items {
-                if let ImplItem::Method(iim) = &ii {
-                    if method_fits_fwd_decl(fwd_decl, &iim) {
-                        out.push(iim.clone());
-                        continue;
-                    }
-                }
-
-                new_items.push(ii);
-            }
-
-            mem::swap(&mut x.items, &mut new_items);
-        }
-    }
-
-    out
-}
-
-fn merge_implementations(fwd_decl: FwdDeclaration, impls: Vec<ImplItemMethod>) -> ItemImpl {
-    let match_ident = fwd_decl.match_ident;
-
-    let match_expr = Box::new(Expr::Path(ExprPath {
-        attrs: Vec::new(),
-        qself: None,
-        path: Path {
-            leading_colon: None,
-            segments: {
-                let mut punct = Punctuated::new();
-                punct.push_value(PathSegment::from(match_ident));
-                punct
-            }
-        }
-    }));
-
-    let mut arms = Vec::new();
-    for iim in impls {
-        let FnArg::Typed(pt) = &iim.sig.inputs[fwd_decl.match_idx] else { unreachable!() };
-        let pat = pt.pat.clone();
-
-        arms.push(Arm {
-            attrs: Vec::new(),
-            pat: *pat,
-            guard: None,
-            fat_arrow_token: Default::default(),
-            body: Box::new(Expr::Block(ExprBlock {
-                attrs: Vec::new(),
-                label: None,
-                block: iim.block,
-            })),
-            comma: Some(Default::default()),
-        });
-    }
-
-    let mut iim = fwd_decl.iim.clone();
-    iim.block.stmts = vec![
-        Stmt::Expr(Expr::Match(ExprMatch {
-            attrs: Vec::new(),
-            match_token: Default::default(),
-            expr: match_expr,
-            brace_token: Default::default(),
-            arms,
-        }))
-    ];
-
-    let mut out = fwd_decl.empty_ii.clone();
-    out.items = vec![ImplItem::Method(iim)];
-
-    out
 }
