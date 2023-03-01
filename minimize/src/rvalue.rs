@@ -216,11 +216,17 @@ pub fn translate_const<'tcx>(c: &rs::Constant<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
                     Constant::Bool(val.try_to_bool().unwrap())
                 }
                 Type::Ptr(_) => {
-                    let _val = val.try_to_scalar()
+                    let (alloc_id, offset) = val.try_to_scalar()
                                  .unwrap()
                                  .to_pointer(&fcx.tcx)
-                                 .unwrap();
-                    panic!("minirust doesn't yet support constant pointers!")
+                                 .unwrap()
+                                 .into_parts();
+
+                    let name = GlobalName(Name::new(fcx.global_name_map.len() as _));
+                    let offset = translate_size(offset);
+                    fcx.global_name_map.insert(alloc_id.expect("no alloc id?"), name);
+                    let rel = Relocation { name, offset };
+                    Constant::Pointer(rel)
                 },
                 x => {
                     dbg!(x);
