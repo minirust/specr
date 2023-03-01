@@ -1,6 +1,35 @@
 use crate::prelude::*;
 
 /// Resolve `argmatches` from the source code, by converting them to a match.
+///
+/// How does `argmatch` work:
+/// There is a method with an argmatch attribute
+/// impl Option<()> {
+///     #[specr::argmatch(self)]
+///     fn foo(self);
+/// }
+///
+/// And then a sequence of submatches:
+/// impl Foo {
+///     fn foo(None: Self) { ... }
+/// }
+///
+/// impl Foo {
+///     fn foo(Some(()): Self) { ... }
+/// }
+///
+/// This will be glued together into:
+///
+/// impl Option<()> {
+///     fn foo(self) {
+///         match self {
+///             None => ...,
+///             Some(()) => ...,
+///         }
+///     }
+/// }
+///
+///
 /// See the README for more information.
 pub fn argmatch(mut mods: Vec<Module>) -> Vec<Module> {
     for m in mods.iter_mut() {
@@ -69,6 +98,7 @@ fn argmatch_ast(mut ast: syn::File) -> syn::File {
     ast
 }
 
+// finds a method with an #[specr::argmatch] attribute.
 fn locate_argmatch(ast: &syn::File) -> Option<Argmatch> {
     for (i, x) in ast.items.iter().enumerate() {
         let Item::Impl(ii) = x else { continue };
@@ -103,6 +133,7 @@ fn construct_block(argmatch: &Argmatch, ast: &syn::File, submatches: &[MethodIdx
     parse2(tokens).expect("Cannot parse block!")
 }
 
+// returns the submatches in the order they are written down in the input file.
 fn locate_submatches(argmatch: &Argmatch, ast: &syn::File) -> Vec<MethodIdx> {
     let mut submatches = Vec::new();
 
@@ -117,11 +148,8 @@ fn locate_submatches(argmatch: &Argmatch, ast: &syn::File) -> Vec<MethodIdx> {
                     submatches.push(method_idx);
                 },
                 SubmatchResult::No => {},
-                SubmatchResult::SigMismatch => {
-                    eprintln!("`argmatch` encountered signature mismatch!\n");
-                    eprintln!("{}\n", argmatch.method_idx.as_ref(ast).to_token_stream().to_string());
-                    eprintln!("{}\n", method_idx.as_ref(ast).to_token_stream().to_string());
-                    panic!();
+                SubmatchResult::YesButMismatch { error_msg } => {
+                    panic!("{}", error_msg);
                 },
             }
         }
@@ -135,8 +163,8 @@ enum SubmatchResult {
     No,
 
     // It seems to be a submatch, but something is off.
-    // This generates a warning.
-    SigMismatch,
+    // This generates an error.
+    YesButMismatch { error_msg: String },
 }
 
 fn is_submatch(argmatch: &Argmatch, method_idx: &MethodIdx, ast: &syn::File) -> SubmatchResult {
@@ -165,7 +193,24 @@ fn is_submatch(argmatch: &Argmatch, method_idx: &MethodIdx, ast: &syn::File) -> 
     let sig2 = hide_match_ident(&iim2.sig);
 
     if sig1 != sig2 {
-        return SubmatchResult::SigMismatch;
+        let error_msg = format!("`argmatch` encountered signature mismatch!\n{}\n{}\n", iim1.sig.to_token_stream(), iim2.sig.to_token_stream());
+        return SubmatchResult::YesButMismatch { error_msg };
+    }
+
+    // check that the impl blocks are compatible
+    let hide_items = |item_idx: usize| {
+        let Item::Impl(ii) = &ast.items[item_idx] else { unreachable!() };
+        let mut ii = ii.clone();
+        ii.items.clear();
+        ii
+    };
+
+    let ii1 = hide_items(argmatch.method_idx.item_idx);
+    let ii2 = hide_items(method_idx.item_idx);
+
+    if ii1 != ii2 {
+        let error_msg = format!("`argmatch` encountered impl-block mismatch!\n{}\n{}\n", ii1.to_token_stream(), ii2.to_token_stream());
+        return SubmatchResult::YesButMismatch { error_msg };
     }
 
     SubmatchResult::Yes
