@@ -3,8 +3,8 @@ use super::*;
 pub fn place_expr_to_string(p: PlaceExpr, comptypes: &mut Vec<Type>) -> String {
     match p {
         PlaceExpr::Local(l) => local_name_to_string(l),
-        PlaceExpr::Deref { operand, .. } => {
-            format!("*{}", value_expr_to_string(operand.get(), comptypes))
+        PlaceExpr::Deref { operand, ptype } => {
+            format!("*{} as {}", value_expr_to_string(operand.get(), comptypes), ptype_to_string(ptype, comptypes))
         },
         PlaceExpr::Field { root, field } => {
             let root = root.get();

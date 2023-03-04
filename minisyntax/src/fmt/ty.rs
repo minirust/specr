@@ -1,5 +1,9 @@
 use crate::*;
 
+pub fn ptype_to_string(place_ty: PlaceType, comptypes: &mut Vec<Type>) -> String {
+    format!("{}#{}", type_to_string(place_ty.ty, comptypes), place_ty.align.bytes())
+}
+
 use std::fmt::Write;
 pub fn int_type_to_string(int_ty: IntType) -> String {
     let signed = match int_ty.signed {

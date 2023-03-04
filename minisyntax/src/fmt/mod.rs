@@ -62,7 +62,7 @@ fn fmt_function(fn_name: FnName, f: Function, start: bool, wr: &mut String, comp
     let fn_name = fn_name_to_string(fn_name);
     let args: Vec<_> = f.args.iter().map(|(x, _)| {
             let ident = local_name_to_string(x);
-            let ty = type_to_string(f.locals.index_at(x).ty, comptypes);
+            let ty = ptype_to_string(f.locals.index_at(x), comptypes);
 
             format!("{ident}: {ty}")
         }).collect();
@@ -70,7 +70,7 @@ fn fmt_function(fn_name: FnName, f: Function, start: bool, wr: &mut String, comp
 
     let mut ret_ty = String::from("!!!");
     if let Some((ret, _)) = f.ret {
-        ret_ty = type_to_string(f.locals.index_at(ret).ty, comptypes);
+        ret_ty = ptype_to_string(f.locals.index_at(ret), comptypes);
     }
     writeln!(wr, "{start_str}fn {fn_name}({args}) -> {ret_ty} {{")?;
 
@@ -78,8 +78,8 @@ fn fmt_function(fn_name: FnName, f: Function, start: bool, wr: &mut String, comp
     let mut locals: Vec<_> = f.locals.keys().collect();
     locals.sort_by_key(|l| l.0.get());
     for l in locals {
-        let ty = f.locals.index_at(l).ty;
-        writeln!(wr, "  let {}: {};", local_name_to_string(l), type_to_string(ty, comptypes))?;
+        let ty = f.locals.index_at(l);
+        writeln!(wr, "  let {}: {};", local_name_to_string(l), ptype_to_string(ty, comptypes))?;
     }
 
     let mut blocks: Vec<(_, _)> = f.blocks.iter().collect();
