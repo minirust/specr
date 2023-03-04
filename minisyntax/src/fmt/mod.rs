@@ -21,7 +21,7 @@ pub fn program_to_string(prog: &Program) -> String {
         fmt_function(fn_name, f, start, &mut wr, &mut comptypes).unwrap();
     }
 
-    let mut out = String::new();
+    let mut out = globals_to_string(prog.globals);
 
     let mut i = 0;
     while i < comptypes.len() {
@@ -31,6 +31,24 @@ pub fn program_to_string(prog: &Program) -> String {
     }
     out.push_str(&wr);
     out
+}
+
+fn globals_to_string(globals: Map<GlobalName, Global>) -> String {
+    let mut out = String::new();
+    for (gname, global) in globals {
+        out.push_str(&format!("global {} {{\n", global_name_to_string(gname)));
+        out.push_str(&format!("  bytes = {:?},\n", global.bytes));
+        out.push_str(&format!("  align = {} bytes,\n", global.align.bytes()));
+        for (i, rel) in global.relocations {
+            out.push_str(&format!("  byte {}: {}\n", i.bytes(), relocation_to_string(rel)));
+        }
+        out.push_str("}\n\n");
+    }
+    out
+}
+
+pub fn relocation_to_string(relocation: Relocation) -> String {
+    format!("[{} @ {}]", global_name_to_string(relocation.name), relocation.offset.bytes())
 }
 
 pub fn dump_program(prog: &Program) {

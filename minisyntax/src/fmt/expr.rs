@@ -22,11 +22,15 @@ pub fn local_name_to_string(l: LocalName) -> String {
     format!("_{}", l.0.get())
 }
 
+pub fn global_name_to_string(g: GlobalName) -> String {
+    format!("G{}", g.0.get())
+}
+
 fn constant_to_string(c: Constant) -> String {
     match c {
         Constant::Int(int) => int.to_string(),
         Constant::Bool(b) => b.to_string(),
-        Constant::Pointer(_) => format!("<const ptr>"),
+        Constant::Pointer(relocation) => relocation_to_string(relocation),
         Constant::Variant { .. } => panic!("enums are unsupported!"),
     }
 }
