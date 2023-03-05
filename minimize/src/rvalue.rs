@@ -196,50 +196,44 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
 
 pub fn translate_const<'tcx>(c: &rs::Constant<'tcx>, fcx: &mut FnCtxt<'tcx>) -> ValueExpr {
     let kind = c.literal.eval(fcx.tcx, rs::ParamEnv::empty());
-    match kind {
-        rs::ConstantKind::Val(val, ty) => {
-            let ty = translate_ty(ty, fcx.tcx);
-            let constant = match ty {
-                Type::Int(int_ty) => {
-                    let val = val.try_to_scalar_int().unwrap();
-                    let int: Int = match int_ty.signed {
-                        Signed => val.try_to_int(val.size()).unwrap().into(),
-                        Unsigned => val.try_to_uint(val.size()).unwrap().into(),
-                    };
-                    Constant::Int(int)
-                },
-                // unit type `()`
-                Type::Tuple { fields, .. } if fields.is_empty() => { // TODO are other tuples supported correctly?
-                    return ValueExpr::Tuple(List::new(), Type::Tuple { fields: List::new(), size: Size::ZERO })
-                }
-                Type::Bool => {
-                    Constant::Bool(val.try_to_bool().unwrap())
-                }
-                Type::Ptr(_) => {
-                    let (alloc_id, offset) = val.try_to_scalar()
-                                 .unwrap()
-                                 .to_pointer(&fcx.tcx)
-                                 .unwrap()
-                                 .into_parts();
+    let rs::ConstantKind::Val(val, ty) = kind else { panic!("unsupported ConstantKind!") };
 
-                    let name = GlobalName(Name::new(fcx.global_name_map.len() as _));
-                    let offset = translate_size(offset);
-                    fcx.global_name_map.insert(alloc_id.expect("no alloc id?"), name);
-                    let rel = Relocation { name, offset };
-                    Constant::Pointer(rel)
-                },
-                x => {
-                    dbg!(x);
-                    todo!()
-                }
+    let ty = translate_ty(ty, fcx.tcx);
+    let constant = match ty {
+        Type::Int(int_ty) => {
+            let val = val.try_to_scalar_int().unwrap();
+            let int: Int = match int_ty.signed {
+                Signed => val.try_to_int(val.size()).unwrap().into(),
+                Unsigned => val.try_to_uint(val.size()).unwrap().into(),
             };
-            ValueExpr::Constant(constant, ty)
+            Constant::Int(int)
+        },
+        // unit type `()`
+        Type::Tuple { fields, .. } if fields.is_empty() => { // TODO are other tuples supported correctly?
+            return ValueExpr::Tuple(List::new(), Type::Tuple { fields: List::new(), size: Size::ZERO })
         }
+        Type::Bool => {
+            Constant::Bool(val.try_to_bool().unwrap())
+        }
+        Type::Ptr(_) => {
+            let (alloc_id, offset) = val.try_to_scalar()
+                         .unwrap()
+                         .to_pointer(&fcx.tcx)
+                         .unwrap()
+                         .into_parts();
+
+            let name = GlobalName(Name::new(fcx.global_name_map.len() as _));
+            let offset = translate_size(offset);
+            fcx.global_name_map.insert(alloc_id.expect("no alloc id?"), name);
+            let rel = Relocation { name, offset };
+            Constant::Pointer(rel)
+        },
         x => {
             dbg!(x);
             todo!()
         }
-    }
+    };
+    ValueExpr::Constant(constant, ty)
 }
 
 pub fn translate_operand<'tcx>(operand: &rs::Operand<'tcx>, fcx: &mut FnCtxt<'tcx>) -> ValueExpr {
