@@ -194,11 +194,53 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
     })
 }
 
+fn translate_const_allocation<'tcx>(allocation: rs::ConstAllocation<'tcx>, fcx: &mut FnCtxt<'tcx>) -> GlobalName {
+    let allocation = allocation.inner();
+    let size = allocation.size();
+    let alloc_range = rs::AllocRange { start: rs::Size::ZERO, size };
+    let bytes = allocation.get_bytes_strip_provenance(&fcx.tcx, alloc_range).unwrap().iter().copied().map(Some).collect();
+    let align = translate_align(allocation.align);
+    let global = Global {
+        bytes,
+        relocations: List::new(), // TODO
+        align,
+    };
+
+    let name = GlobalName(Name::new(fcx.globals.iter().count() as _)); // TODO use .len() here, if supported
+    fcx.globals.insert(name, global);
+
+    name
+}
+
 pub fn translate_const<'tcx>(c: &rs::Constant<'tcx>, fcx: &mut FnCtxt<'tcx>) -> ValueExpr {
     let kind = c.literal.eval(fcx.tcx, rs::ParamEnv::empty());
     let rs::ConstantKind::Val(val, ty) = kind else { panic!("unsupported ConstantKind!") };
 
-    let ty = translate_ty(ty, fcx.tcx);
+    let pty = place_type_of(ty, fcx);
+    let ty = pty.ty;
+
+    // This handles usages of `const`
+    if let rs::ConstValue::ByRef { alloc, offset } = val {
+        let name = translate_const_allocation(alloc, fcx);
+        let offset = translate_size(offset);
+        let rel = Relocation { name, offset };
+        let expr = Constant::Pointer(rel);
+
+        let ptr_ty = Type::Ptr(PtrType::Raw { pointee: pty.layout::<BasicMemory>() });
+
+        let expr = ValueExpr::Constant(expr, ptr_ty);
+        let expr = PlaceExpr::Deref {
+            operand: GcCow::new(expr),
+            ptype: pty,
+        };
+        let expr = ValueExpr::Load {
+            source: GcCow::new(expr),
+            destructive: false
+        };
+
+        return expr;
+    }
+
     let constant = match ty {
         Type::Int(int_ty) => {
             let val = val.try_to_scalar_int().unwrap();
@@ -215,16 +257,23 @@ pub fn translate_const<'tcx>(c: &rs::Constant<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
         Type::Bool => {
             Constant::Bool(val.try_to_bool().unwrap())
         }
-        Type::Ptr(_) => {
+        Type::Ptr(_) => { // the only currently supported const pointers are Rust `static`s!
             let (alloc_id, offset) = val.try_to_scalar()
                          .unwrap()
                          .to_pointer(&fcx.tcx)
                          .unwrap()
                          .into_parts();
+            let alloc_id = alloc_id.expect("no alloc id?");
 
-            let name = GlobalName(Name::new(fcx.global_name_map.len() as _));
+            let name = fcx.global_name_map.get(&alloc_id).copied().unwrap_or_else(|| {
+                let rs::GlobalAlloc::Static(def_id) = fcx.tcx.global_alloc(alloc_id) else { panic!("unsupported GlobalAlloc!") };
+                let allocation = fcx.tcx.eval_static_initializer(def_id).unwrap();
+                let name = translate_const_allocation(allocation, fcx);
+                fcx.global_name_map.insert(alloc_id, name);
+                name
+            });
+
             let offset = translate_size(offset);
-            fcx.global_name_map.insert(alloc_id.expect("no alloc id?"), name);
             let rel = Relocation { name, offset };
             Constant::Pointer(rel)
         },
