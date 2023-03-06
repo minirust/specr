@@ -18,3 +18,11 @@ impl<T: Obj> IntoIterator for Set<T> {
 
     }
 }
+
+
+impl<U: Obj> FromIterator<U> for Set<U> {
+    fn from_iter<T>(iter: T) -> Self where T: IntoIterator<Item = U> {
+        let v: IMHashSet<U> = iter.into_iter().collect();
+        Set(GcCow::new(v))
+    }
+}
