@@ -36,8 +36,8 @@ pub fn program_to_string(prog: &Program) -> String {
 fn bytes_to_string(bytes: List<Option<u8>>) -> String {
     let b: Vec<_> = bytes.iter().map(|x| {
         match x {
-            Some(u) => u.to_string(),
-            None => String::from("_"),
+            Some(u) => format!("{:02x?}", u),
+            None => String::from("__"),
         }
     }).collect();
 
@@ -47,11 +47,11 @@ fn bytes_to_string(bytes: List<Option<u8>>) -> String {
 fn globals_to_string(globals: Map<GlobalName, Global>) -> String {
     let mut out = String::new();
     for (gname, global) in globals {
-        out.push_str(&format!("global {} {{\n", global_name_to_string(gname)));
-        out.push_str(&format!("  bytes = {},\n", bytes_to_string(global.bytes)));
+        out.push_str(&format!("{} {{\n", global_name_to_string(gname)));
+        out.push_str(&format!("  bytes = [{}],\n", bytes_to_string(global.bytes)));
         out.push_str(&format!("  align = {} bytes,\n", global.align.bytes()));
         for (i, rel) in global.relocations {
-            out.push_str(&format!("  byte {}: {}\n", i.bytes(), relocation_to_string(rel)));
+            out.push_str(&format!("  at byte {}: {},\n", i.bytes(), relocation_to_string(rel)));
         }
         out.push_str("}\n\n");
     }
@@ -59,7 +59,7 @@ fn globals_to_string(globals: Map<GlobalName, Global>) -> String {
 }
 
 pub fn relocation_to_string(relocation: Relocation) -> String {
-    format!("[{} @ {}]", global_name_to_string(relocation.name), relocation.offset.bytes())
+    format!("{} + {}", global_name_to_string(relocation.name), relocation.offset.bytes())
 }
 
 pub fn dump_program(prog: &Program) {
@@ -79,7 +79,7 @@ fn fmt_function(fn_name: FnName, f: Function, start: bool, wr: &mut String, comp
         }).collect();
     let args = args.join(", ");
 
-    let mut ret_ty = String::from("!!!");
+    let mut ret_ty = String::from("none");
     if let Some((ret, _)) = f.ret {
         ret_ty = ptype_to_string(f.locals.index_at(ret), comptypes);
     }
@@ -143,7 +143,7 @@ fn fmt_call(callee: &str, arguments: List<ValueExpr>, ret: Option<PlaceExpr>, ne
     let args: Vec<_> = arguments.iter().map(|x| value_expr_to_string(x, comptypes)).collect();
     let args = args.join(", ");
 
-    let mut r = String::from("!!!");
+    let mut r = String::from("none");
     if let Some(ret) = ret {
         r = place_expr_to_string(ret, comptypes);
     }

@@ -1,7 +1,7 @@
 use crate::*;
 
 pub fn ptype_to_string(place_ty: PlaceType, comptypes: &mut Vec<Type>) -> String {
-    format!("{}#{}", type_to_string(place_ty.ty, comptypes), place_ty.align.bytes())
+    format!("{}<align={}>", type_to_string(place_ty.ty, comptypes), place_ty.align.bytes())
 }
 
 use std::fmt::Write;
@@ -15,15 +15,23 @@ pub fn int_type_to_string(int_ty: IntType) -> String {
     format!("{signed}{bits}")
 }
 
+fn layout_to_string(layout: Layout) -> String {
+    let uninhab_str = match layout.inhabited {
+        true => "",
+        false => ", uninhabited",
+    };
+    format!("layout(size={}, align={}{})", layout.size.bytes(), layout.align.bytes(), uninhab_str)
+}
+
 pub fn type_to_string(t: Type, comptypes: &mut Vec<Type>) -> String {
     match t {
         Type::Int(int_ty) => int_type_to_string(int_ty),
         Type::Bool => String::from("bool"),
-        Type::Ptr(PtrType::Ref { mutbl: Mutability::Mutable, .. }) => String::from("&mut _"),
-        Type::Ptr(PtrType::Ref { mutbl: Mutability::Immutable, .. }) => String::from("&_"),
-        Type::Ptr(PtrType::Box { .. }) => String::from("Box<_>"),
-        Type::Ptr(PtrType::Raw { .. }) => String::from("*_"),
-        Type::Ptr(PtrType::FnPtr) => String::from("<fn-ptr>"),
+        Type::Ptr(PtrType::Ref { mutbl: Mutability::Mutable, pointee }) => format!("&mut {}", layout_to_string(pointee)),
+        Type::Ptr(PtrType::Ref { mutbl: Mutability::Immutable, pointee }) => format!("&{}", layout_to_string(pointee)),
+        Type::Ptr(PtrType::Box { pointee }) => format!("Box<{}>", layout_to_string(pointee)),
+        Type::Ptr(PtrType::Raw { pointee }) => format!("*{}", layout_to_string(pointee)),
+        Type::Ptr(PtrType::FnPtr) => String::from("fn()"),
         Type::Tuple { .. } | Type::Union { .. } => {
             let i: usize = match comptypes.iter().position(|x| *x == t) {
                 Some(i) => i,
@@ -52,11 +60,11 @@ pub fn fmt_comptype(i: usize, t: Type, comptypes: &mut Vec<Type>) -> String {
     let mut s = String::new();
     writeln!(s, "{} T{} ({} bytes) {{", keyword, i, size.bytes()).unwrap();
     for (offset, f) in fields {
-        writeln!(s, "  {}by : {}", offset.bytes(), type_to_string(f, comptypes)).unwrap()
+        writeln!(s, "  at byte {}: {},", offset.bytes(), type_to_string(f, comptypes)).unwrap()
     }
     if let Some(chunks) = opt_chunks {
         for (offset, size) in chunks {
-            write!(s, "  chunk {}, {}\n", offset.bytes(), size.bytes()).unwrap()
+            write!(s, "  chunk(at={}, size={}),\n", offset.bytes(), size.bytes()).unwrap()
         }
     }
     writeln!(s, "}}\n").unwrap();

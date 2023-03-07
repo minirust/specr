@@ -23,7 +23,7 @@ pub fn local_name_to_string(l: LocalName) -> String {
 }
 
 pub fn global_name_to_string(g: GlobalName) -> String {
-    format!("G{}", g.0.get())
+    format!("global({})", g.0.get())
 }
 
 fn constant_to_string(c: Constant) -> String {
@@ -53,7 +53,7 @@ pub fn value_expr_to_string(v: ValueExpr, comptypes: &mut Vec<Type>) -> String {
         ValueExpr::Union { field, expr, union_ty } => {
             let union_ty = type_to_string(union_ty, comptypes);
             let expr = value_expr_to_string(expr.get(), comptypes);
-            format!("{union_ty} {{ f{field} : {expr} }}")
+            format!("{union_ty} {{ field{field}: {expr} }}")
         },
         ValueExpr::Load { destructive, source } => {
             let source = source.get();
