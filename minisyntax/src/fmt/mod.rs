@@ -33,11 +33,22 @@ pub fn program_to_string(prog: &Program) -> String {
     out
 }
 
+fn bytes_to_string(bytes: List<Option<u8>>) -> String {
+    let b: Vec<_> = bytes.iter().map(|x| {
+        match x {
+            Some(u) => u.to_string(),
+            None => String::from("_"),
+        }
+    }).collect();
+
+    b.join(" ")
+}
+
 fn globals_to_string(globals: Map<GlobalName, Global>) -> String {
     let mut out = String::new();
     for (gname, global) in globals {
         out.push_str(&format!("global {} {{\n", global_name_to_string(gname)));
-        out.push_str(&format!("  bytes = {:?},\n", global.bytes));
+        out.push_str(&format!("  bytes = {},\n", bytes_to_string(global.bytes)));
         out.push_str(&format!("  align = {} bytes,\n", global.align.bytes()));
         for (i, rel) in global.relocations {
             out.push_str(&format!("  byte {}: {}\n", i.bytes(), relocation_to_string(rel)));
