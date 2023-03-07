@@ -1,11 +1,11 @@
 use crate::*;
 
-pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> Option<ValueExpr> {
+pub fn translate_rvalue<'cx, 'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'cx, 'tcx>) -> Option<ValueExpr> {
     Some(match rv {
         rs::Rvalue::Use(operand) => translate_operand(operand, fcx),
         rs::Rvalue::CheckedBinaryOp(bin_op, box (l, r)) | rs::Rvalue::BinaryOp(bin_op, box (l, r)) => {
-            let lty = l.ty(&fcx.body, fcx.tcx);
-            let rty = r.ty(&fcx.body, fcx.tcx);
+            let lty = l.ty(&fcx.body, fcx.cx.tcx);
+            let rty = r.ty(&fcx.body, fcx.cx.tcx);
 
             assert_eq!(lty, rty);
 
@@ -21,7 +21,7 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
             } else { // everything else right-now is a int op!
 
                 let op = |x| {
-                    let Type::Int(int_ty) = translate_ty(lty, fcx.tcx) else {
+                    let Type::Int(int_ty) = translate_ty(lty, fcx.cx.tcx) else {
                         panic!("arithmetic operation with non-int type unsupported!");
                     };
 
@@ -60,8 +60,8 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
         rs::Rvalue::UnaryOp(unop, operand) => {
             match unop {
                 rs::UnOp::Neg => {
-                    let ty = operand.ty(&fcx.body, fcx.tcx);
-                    let ty = translate_ty(ty, fcx.tcx);
+                    let ty = operand.ty(&fcx.body, fcx.cx.tcx);
+                    let ty = translate_ty(ty, fcx.cx.tcx);
                     let Type::Int(int_ty) = ty else {
                         panic!("Neg operation with non-int type!");
                     };
@@ -77,8 +77,8 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
             }
         }
         rs::Rvalue::Ref(_, bkind, place) => {
-            let ty = place.ty(&fcx.body, fcx.tcx).ty;
-            let pointee = layout_of(ty, fcx.tcx);
+            let ty = place.ty(&fcx.body, fcx.cx.tcx).ty;
+            let pointee = layout_of(ty, fcx.cx.tcx);
 
             let place = translate_place(place, fcx);
             let target = GcCow::new(place);
@@ -89,8 +89,8 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
             ValueExpr::AddrOf { target, ptr_ty }
         },
         rs::Rvalue::AddressOf(_mutbl, place) => {
-            let ty = place.ty(&fcx.body, fcx.tcx).ty;
-            let pointee = layout_of(ty, fcx.tcx);
+            let ty = place.ty(&fcx.body, fcx.cx.tcx).ty;
+            let pointee = layout_of(ty, fcx.cx.tcx);
 
             let place = translate_place(place, fcx);
             let target = GcCow::new(place);
@@ -100,8 +100,8 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
             ValueExpr::AddrOf { target, ptr_ty }
         },
         rs::Rvalue::Aggregate(box agg, operands) => {
-            let ty = rv.ty(&fcx.body, fcx.tcx);
-            let ty = translate_ty(ty, fcx.tcx);
+            let ty = rv.ty(&fcx.body, fcx.cx.tcx);
+            let ty = translate_ty(ty, fcx.cx.tcx);
             match ty {
                 Type::Union { .. } => {
                     let rs::AggregateKind::Adt(_, _, _, _, Some(field_idx)) = agg else { panic!() };
@@ -129,14 +129,14 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
         },
         rs::Rvalue::Len(place) => {
             // as slices are unsupported as of now, we only need to care for arrays.
-            let ty = place.ty(&fcx.body, fcx.tcx).ty;
-            let Type::Array { elem: _, count } = translate_ty(ty, fcx.tcx) else { panic!() };
+            let ty = place.ty(&fcx.body, fcx.cx.tcx).ty;
+            let Type::Array { elem: _, count } = translate_ty(ty, fcx.cx.tcx) else { panic!() };
             use crate::minisyntax::build::TypeConv;
             ValueExpr::Constant(Constant::Int(count), <usize>::get_type())
         }
         rs::Rvalue::Cast(rs::CastKind::IntToInt, operand, ty) => {
             let operand = translate_operand(operand, fcx);
-            let Type::Int(int_ty) = translate_ty(*ty, fcx.tcx) else {
+            let Type::Int(int_ty) = translate_ty(*ty, fcx.cx.tcx) else {
                 panic!("attempting to IntToInt-Cast to non-int type!");
             };
 
@@ -156,7 +156,7 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
         rs::Rvalue::Cast(rs::CastKind::PointerFromExposedAddress, operand, ty) => {
             // TODO untested so far! (Can't test because of `predict`)
             let operand = translate_operand(operand, fcx);
-            let Type::Ptr(ptr_ty) = translate_ty(*ty, fcx.tcx) else { panic!() };
+            let Type::Ptr(ptr_ty) = translate_ty(*ty, fcx.cx.tcx) else { panic!() };
 
             ValueExpr::UnOp {
                 operator: UnOp::Int2Ptr(ptr_ty),
@@ -165,7 +165,7 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
         },
         rs::Rvalue::Cast(rs::CastKind::PtrToPtr, operand, ty) => {
             let operand = translate_operand(operand, fcx);
-            let Type::Ptr(ptr_ty) = translate_ty(*ty, fcx.tcx) else { panic!() };
+            let Type::Ptr(ptr_ty) = translate_ty(*ty, fcx.cx.tcx) else { panic!() };
 
             ValueExpr::UnOp {
                 operator: UnOp::Ptr2Ptr(ptr_ty),
@@ -173,10 +173,10 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
             }
         },
         rs::Rvalue::Repeat(op, c) => {
-            let c = c.try_eval_usize(fcx.tcx, rs::ParamEnv::empty()).unwrap();
+            let c = c.try_eval_usize(fcx.cx.tcx, rs::ParamEnv::empty()).unwrap();
             let c = Int::from(c);
 
-            let elem_ty = translate_ty(op.ty(&fcx.body, fcx.tcx), fcx.tcx);
+            let elem_ty = translate_ty(op.ty(&fcx.body, fcx.cx.tcx), fcx.cx.tcx);
             let op = translate_operand(op, fcx);
 
             let ty = Type::Array {
@@ -194,11 +194,11 @@ pub fn translate_rvalue<'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
     })
 }
 
-fn translate_const_allocation<'tcx>(allocation: rs::ConstAllocation<'tcx>, fcx: &mut FnCtxt<'tcx>) -> GlobalName {
+fn translate_const_allocation<'cx, 'tcx>(allocation: rs::ConstAllocation<'tcx>, fcx: &mut FnCtxt<'cx, 'tcx>) -> GlobalName {
     let allocation = allocation.inner();
     let size = allocation.size();
     let alloc_range = rs::AllocRange { start: rs::Size::ZERO, size };
-    let bytes = allocation.get_bytes_strip_provenance(&fcx.tcx, alloc_range).unwrap().iter().copied().map(Some).collect();
+    let bytes = allocation.get_bytes_strip_provenance(&fcx.cx.tcx, alloc_range).unwrap().iter().copied().map(Some).collect();
     let align = translate_align(allocation.align);
     let global = Global {
         bytes,
@@ -206,14 +206,14 @@ fn translate_const_allocation<'tcx>(allocation: rs::ConstAllocation<'tcx>, fcx: 
         align,
     };
 
-    let name = GlobalName(Name::new(fcx.globals.iter().count() as _)); // TODO use .len() here, if supported
-    fcx.globals.insert(name, global);
+    let name = GlobalName(Name::new(fcx.cx.globals.iter().count() as _)); // TODO use .len() here, if supported
+    fcx.cx.globals.insert(name, global);
 
     name
 }
 
-pub fn translate_const<'tcx>(c: &rs::Constant<'tcx>, fcx: &mut FnCtxt<'tcx>) -> ValueExpr {
-    let kind = c.literal.eval(fcx.tcx, rs::ParamEnv::empty());
+pub fn translate_const<'cx, 'tcx>(c: &rs::Constant<'tcx>, fcx: &mut FnCtxt<'cx, 'tcx>) -> ValueExpr {
+    let kind = c.literal.eval(fcx.cx.tcx, rs::ParamEnv::empty());
     let rs::ConstantKind::Val(val, ty) = kind else { panic!("unsupported ConstantKind!") };
 
     let pty = place_type_of(ty, fcx);
@@ -261,16 +261,16 @@ pub fn translate_const<'tcx>(c: &rs::Constant<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
         Type::Ptr(_) => {
             let (alloc_id, offset) = val.try_to_scalar()
                          .unwrap()
-                         .to_pointer(&fcx.tcx)
+                         .to_pointer(&fcx.cx.tcx)
                          .unwrap()
                          .into_parts();
             let alloc_id = alloc_id.expect("no alloc id?");
-            let rs::GlobalAlloc::Static(def_id) = fcx.tcx.global_alloc(alloc_id) else { panic!() };
+            let rs::GlobalAlloc::Static(def_id) = fcx.cx.tcx.global_alloc(alloc_id) else { panic!() };
 
-            let name = fcx.static_map.get(&def_id).copied().unwrap_or_else(|| {
-                let allocation = fcx.tcx.eval_static_initializer(def_id).unwrap();
+            let name = fcx.cx.static_map.get(&def_id).copied().unwrap_or_else(|| {
+                let allocation = fcx.cx.tcx.eval_static_initializer(def_id).unwrap();
                 let name = translate_const_allocation(allocation, fcx);
-                fcx.static_map.insert(def_id, name);
+                fcx.cx.static_map.insert(def_id, name);
                 name
             });
 
@@ -286,7 +286,7 @@ pub fn translate_const<'tcx>(c: &rs::Constant<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
     ValueExpr::Constant(constant, ty)
 }
 
-pub fn translate_operand<'tcx>(operand: &rs::Operand<'tcx>, fcx: &mut FnCtxt<'tcx>) -> ValueExpr {
+pub fn translate_operand<'cx, 'tcx>(operand: &rs::Operand<'tcx>, fcx: &mut FnCtxt<'cx, 'tcx>) -> ValueExpr {
     match operand {
         rs::Operand::Constant(box c) => translate_const(c, fcx),
         rs::Operand::Copy(place) => {
@@ -304,14 +304,14 @@ pub fn translate_operand<'tcx>(operand: &rs::Operand<'tcx>, fcx: &mut FnCtxt<'tc
     }
 }
 
-fn place_type_of<'tcx>(ty: rs::Ty<'tcx>, fcx: &mut FnCtxt<'tcx>) -> PlaceType {
-    let align = layout_of(ty, fcx.tcx).align;
-    let ty = translate_ty(ty, fcx.tcx);
+fn place_type_of<'cx, 'tcx>(ty: rs::Ty<'tcx>, fcx: &mut FnCtxt<'cx, 'tcx>) -> PlaceType {
+    let align = layout_of(ty, fcx.cx.tcx).align;
+    let ty = translate_ty(ty, fcx.cx.tcx);
 
     PlaceType { ty, align }
 }
 
-pub fn translate_place<'tcx>(place: &rs::Place<'tcx>, fcx: &mut FnCtxt<'tcx>) -> PlaceExpr {
+pub fn translate_place<'cx, 'tcx>(place: &rs::Place<'tcx>, fcx: &mut FnCtxt<'cx, 'tcx>) -> PlaceExpr {
     let mut expr = PlaceExpr::Local(fcx.local_name_map[&place.local]);
     for (i, proj) in place.projection.iter().enumerate() {
         match proj {
@@ -331,7 +331,7 @@ pub fn translate_place<'tcx>(place: &rs::Place<'tcx>, fcx: &mut FnCtxt<'tcx>) ->
                 };
                 let x = GcCow::new(x);
 
-                let ty = rs::Place::ty_from(place.local, &place.projection[..(i+1)], &fcx.body, fcx.tcx).ty;
+                let ty = rs::Place::ty_from(place.local, &place.projection[..(i+1)], &fcx.body, fcx.cx.tcx).ty;
                 let ptype = place_type_of(ty, fcx);
 
                 expr = PlaceExpr::Deref {

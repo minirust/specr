@@ -1,46 +1,146 @@
 use crate::*;
 
-/// maps Rust function calls to minirust FnNames.
-pub type FnNameMap<'tcx> = HashMap<(rs::DefId, rs::SubstsRef<'tcx>), FnName>;
-pub type StaticMap = HashMap<rs::DefId, GlobalName>;
+pub struct Ctxt<'tcx> {
+    pub tcx: rs::TyCtxt<'tcx>,
 
-pub fn translate_program<'tcx>(tcx: rs::TyCtxt<'tcx>) -> Program {
-    let mut fn_name_map = FnNameMap::new();
-    let mut static_map = StaticMap::new();
-    let mut globals = Map::new();
+    /// maps Rust function calls to minirust FnNames.
+    pub fn_name_map: HashMap<(rs::DefId, rs::SubstsRef<'tcx>), FnName>,
 
-    let mut fmap: Map<FnName, Function> = Map::new();
+    /// Stores which static evaluates to which GlobalName.
+    pub static_map: HashMap<rs::DefId, GlobalName>,
 
-    let (entry, _ty) = tcx.entry_fn(()).unwrap();
-    let substs_ref: rs::SubstsRef<'tcx> = tcx.intern_substs(&[]);
-    let entry_name = FnName(Name::new(0));
+    pub globals: Map<GlobalName, Global>,
+    // TODO rename to `functions`
+    pub fmap: Map<FnName, Function>,
+}
 
-    fn_name_map.insert((entry, substs_ref), entry_name);
-
-    // take any not-yet-implemented function:
-    while let Some(fn_name) = fn_name_map.values().find(|k| !fmap.contains_key(**k)).copied() {
-        let (def_id, substs_ref) = fn_name_map.iter()
-                                            .find(|(_, f)| **f == fn_name)
-                                            .map(|(r, _)| r)
-                                            .unwrap();
-
-        let (f, fn_name_map_new, static_map_new, globals_new) = translate_body(*def_id, substs_ref, fn_name_map, static_map, globals, tcx);
-        fmap.insert(fn_name, f);
-        fn_name_map = fn_name_map_new;
-        static_map = static_map_new;
-        globals = globals_new;
+impl<'tcx> Ctxt<'tcx> {
+    pub fn new(tcx: rs::TyCtxt<'tcx>) -> Self {
+        Ctxt {
+            tcx,
+            fn_name_map: Default::default(),
+            static_map: Default::default(),
+            globals: Default::default(),
+            fmap: Default::default(),
+        }
     }
 
-    let number_of_fns = fn_name_map.len();
+    pub fn translate(mut self) -> Program {
+        let (entry, _ty) = self.tcx.entry_fn(()).unwrap();
+        let substs_ref: rs::SubstsRef<'tcx> = self.tcx.intern_substs(&[]);
+        let entry_name = FnName(Name::new(0));
 
-    // add a `start` function, which calls `entry`.
-    let start = FnName(Name::new(number_of_fns as _));
-    fmap.insert(start, mk_start_fn(entry_name));
+        self.fn_name_map.insert((entry, substs_ref), entry_name);
 
-    Program {
-        start,
-        functions: fmap,
-        globals,
+        // take any not-yet-implemented function:
+        while let Some(fn_name) = self.fn_name_map.values().find(|k| !self.fmap.contains_key(**k)).copied() {
+            let (def_id, substs_ref) = self.fn_name_map.iter()
+                                                .find(|(_, f)| **f == fn_name)
+                                                .map(|(r, _)| r)
+                                                .unwrap();
+
+            let f = self.translate_body(*def_id, substs_ref);
+            self.fmap.insert(fn_name, f);
+        }
+
+        let number_of_fns = self.fn_name_map.len();
+
+        // add a `start` function, which calls `entry`.
+        let start = FnName(Name::new(number_of_fns as _));
+        self.fmap.insert(start, mk_start_fn(entry_name));
+
+        Program {
+            start,
+            functions: self.fmap,
+            globals: self.globals,
+        }
+    }
+
+    fn translate_body(&mut self, def_id: rs::DefId, substs_ref: rs::SubstsRef<'tcx>) -> Function {
+        let body = self.tcx.optimized_mir(def_id);
+        let body = self.tcx.subst_and_normalize_erasing_regions(substs_ref, rs::ParamEnv::empty(), body.clone());
+
+        // associate names for each mir BB.
+        let mut bb_name_map: HashMap<rs::BasicBlock, BbName> = HashMap::new();
+        for bb_id in body.basic_blocks.indices() {
+            let bb_name = bb_name_map.len(); // .len() is the next free index
+            let bb_name = BbName(Name::new(bb_name as u32));
+            bb_name_map.insert(bb_id, bb_name);
+        }
+
+        // bb with id 0 is the start block:
+        // see https://doc.rust-lang.org/stable/nightly-rustc/src/rustc_middle/mir/mod.rs.html#1014-1042
+        let rs_start = BbName(Name::new(0));
+
+        // associate names for each mir Local.
+        let mut local_name_map: HashMap<rs::Local, LocalName> = HashMap::new();
+        for local_id in body.local_decls.indices() {
+            let local_name = local_name_map.len(); // .len() is the next free index
+            let local_name = LocalName(Name::new(local_name as u32));
+            local_name_map.insert(local_id, local_name);
+        }
+
+        // convert mirs Local-types to minirust.
+        let mut locals = Map::default();
+        for (id, local_name) in &local_name_map {
+            let local_decl = &body.local_decls[*id];
+            locals.insert(*local_name, translate_local(local_decl, self.tcx));
+        }
+
+        // the number of locals which are implicitly storage live.
+        let free_argc = body.arg_count + 1;
+
+        // add init basic block
+        let init_bb = BbName(Name::new(bb_name_map.len() as u32));
+
+        // this block allocates all "always_storage_live_locals",
+        // except for those which are implicitly storage live in Minirust;
+        // like the return local and function args.
+        let init_blk = BasicBlock {
+            statements: rs::always_storage_live_locals(&body).iter()
+                            .map(|loc| local_name_map[&loc])
+                            .filter(|LocalName(i)| i.get() as usize >= free_argc)
+                            .map(Statement::StorageLive).collect(),
+            terminator: Terminator::Goto(rs_start),
+        };
+
+        let mut fcx = FnCtxt {
+            cx: self,
+            local_name_map,
+            bb_name_map: bb_name_map.clone(),
+            body: body.clone(),
+        };
+
+        // convert mirs BBs to minirust.
+        let mut blocks = Map::default();
+        for (id, bb_name) in bb_name_map {
+            let bb_data = &body.basic_blocks[id];
+            blocks.insert(bb_name, translate_bb(bb_data, &mut fcx));
+        }
+        blocks.insert(init_bb, init_blk);
+
+        let (ret_abi, arg_abis) = calc_abis(def_id, substs_ref, self.tcx);
+
+        // "The first local is the return value pointer, followed by arg_count locals for the function arguments, followed by any user-declared variables and temporaries."
+        // - https://doc.rust-lang.org/stable/nightly-rustc/rustc_middle/mir/struct.Body.html
+        let ret = Some((LocalName(Name::new(0)), ret_abi));
+
+        let mut args = List::default();
+        for (i, arg_abi) in arg_abis.iter().enumerate() {
+            let i = i+1; // this starts counting with 1, as id 0 is the return value of the function.
+            let local_name = LocalName(Name::new(i as _));
+            args.push((local_name, arg_abi));
+        }
+
+        let f = Function {
+            locals,
+            args,
+            ret,
+            blocks,
+            start: init_bb,
+        };
+
+        f
     }
 }
 
@@ -82,120 +182,17 @@ fn mk_start_fn(entry: FnName) -> Function {
 }
 
 /// data regarding the currently translated function.
-pub struct FnCtxt<'tcx> {
-    /// This is the only field mutated during translation.
-    /// Upon function call, the callees DefId + SubstsRef will be mapped to a fresh `FnName`.
-    pub fn_name_map: FnNameMap<'tcx>,
-
-    /// Every `static` has an entry here.
-    /// This map is used, so that all usages of a static link to the same GlobalName.
-    pub static_map: StaticMap,
-
-    /// For every GlobalName, there is an entry here.
-    pub globals: Map<GlobalName, Global>,
+pub struct FnCtxt<'cx, 'tcx> {
+    pub cx: &'cx mut Ctxt<'tcx>,
 
     pub local_name_map: HashMap<rs::Local, LocalName>,
     pub bb_name_map: HashMap<rs::BasicBlock, BbName>,
-    pub tcx: rs::TyCtxt<'tcx>,
     pub body: rs::Body<'tcx>,
 }
 
 /// translates a function body.
 /// Any fn calls occuring during this translation will be added to the `FnNameMap`.
 // TODO simplify this function.
-fn translate_body<'tcx>(def_id: rs::DefId, substs_ref: rs::SubstsRef<'tcx>, fn_name_map: FnNameMap<'tcx>, static_map: StaticMap, globals: Map<GlobalName, Global>, tcx: rs::TyCtxt<'tcx>) -> (Function, FnNameMap<'tcx>, StaticMap, Map<GlobalName, Global>) {
-    let body = tcx.optimized_mir(def_id);
-    let body = tcx.subst_and_normalize_erasing_regions(substs_ref, rs::ParamEnv::empty(), body.clone());
-
-    // associate names for each mir BB.
-    let mut bb_name_map: HashMap<rs::BasicBlock, BbName> = HashMap::new();
-    for bb_id in body.basic_blocks.indices() {
-        let bb_name = bb_name_map.len(); // .len() is the next free index
-        let bb_name = BbName(Name::new(bb_name as u32));
-        bb_name_map.insert(bb_id, bb_name);
-    }
-
-    // bb with id 0 is the start block:
-    // see https://doc.rust-lang.org/stable/nightly-rustc/src/rustc_middle/mir/mod.rs.html#1014-1042
-    let rs_start = BbName(Name::new(0));
-
-    // associate names for each mir Local.
-    let mut local_name_map: HashMap<rs::Local, LocalName> = HashMap::new();
-    for local_id in body.local_decls.indices() {
-        let local_name = local_name_map.len(); // .len() is the next free index
-        let local_name = LocalName(Name::new(local_name as u32));
-        local_name_map.insert(local_id, local_name);
-    }
-
-    // convert mirs Local-types to minirust.
-    let mut locals = Map::default();
-    for (id, local_name) in &local_name_map {
-        let local_decl = &body.local_decls[*id];
-        locals.insert(*local_name, translate_local(local_decl, tcx));
-    }
-
-    // the number of locals which are implicitly storage live.
-    let free_argc = body.arg_count + 1;
-
-    // add init basic block
-    let init_bb = BbName(Name::new(bb_name_map.len() as u32));
-
-    // this block allocates all "always_storage_live_locals",
-    // except for those which are implicitly storage live in Minirust;
-    // like the return local and function args.
-    let init_blk = BasicBlock {
-        statements: rs::always_storage_live_locals(&body).iter()
-                        .map(|loc| local_name_map[&loc])
-                        .filter(|LocalName(i)| i.get() as usize >= free_argc)
-                        .map(Statement::StorageLive).collect(),
-        terminator: Terminator::Goto(rs_start),
-    };
-
-    let mut fcx = FnCtxt {
-        local_name_map,
-        bb_name_map: bb_name_map.clone(),
-        fn_name_map,
-        static_map,
-        globals,
-        tcx,
-        body: body.clone(),
-    };
-
-    // convert mirs BBs to minirust.
-    let mut blocks = Map::default();
-    for (id, bb_name) in bb_name_map {
-        let bb_data = &body.basic_blocks[id];
-        blocks.insert(bb_name, translate_bb(bb_data, &mut fcx));
-    }
-    blocks.insert(init_bb, init_blk);
-
-    let (ret_abi, arg_abis) = calc_abis(def_id, substs_ref, tcx);
-
-    // "The first local is the return value pointer, followed by arg_count locals for the function arguments, followed by any user-declared variables and temporaries."
-    // - https://doc.rust-lang.org/stable/nightly-rustc/rustc_middle/mir/struct.Body.html
-    let ret = Some((LocalName(Name::new(0)), ret_abi));
-
-    let mut args = List::default();
-    for (i, arg_abi) in arg_abis.iter().enumerate() {
-        let i = i+1; // this starts counting with 1, as id 0 is the return value of the function.
-        let local_name = LocalName(Name::new(i as _));
-        args.push((local_name, arg_abi));
-    }
-
-    let fn_name_map = fcx.fn_name_map;
-    let static_map = fcx.static_map;
-    let globals = fcx.globals;
-
-    let f = Function {
-        locals,
-        args,
-        ret,
-        blocks,
-        start: init_bb,
-    };
-
-    (f, fn_name_map, static_map, globals)
-}
 
 pub fn calc_abis<'tcx>(def_id: rs::DefId, substs_ref: rs::SubstsRef<'tcx>, tcx: rs::TyCtxt<'tcx>) -> (/*ret:*/ ArgAbi, /*args:*/ List<ArgAbi>) {
     let ty = tcx.type_of(def_id);

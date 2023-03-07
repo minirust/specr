@@ -3,7 +3,7 @@ use crate::*;
 // Some Rust features are not supported, and are ignored by `minimize`.
 // Those can be found by grepping "IGNORED".
 
-pub fn translate_bb<'tcx>(bb: &rs::BasicBlockData<'tcx>, fcx: &mut FnCtxt<'tcx>) -> BasicBlock {
+pub fn translate_bb<'cx, 'tcx>(bb: &rs::BasicBlockData<'tcx>, fcx: &mut FnCtxt<'cx, 'tcx>) -> BasicBlock {
     let mut statements = List::new();
     for stmt in bb.statements.iter() {
         // unsupported statements will be IGNORED.
@@ -17,7 +17,7 @@ pub fn translate_bb<'tcx>(bb: &rs::BasicBlockData<'tcx>, fcx: &mut FnCtxt<'tcx>)
     }
 }
 
-fn translate_stmt<'tcx>(stmt: &rs::Statement<'tcx>, fcx: &mut FnCtxt<'tcx>) -> Option<Statement> {
+fn translate_stmt<'cx, 'tcx>(stmt: &rs::Statement<'tcx>, fcx: &mut FnCtxt<'cx, 'tcx>) -> Option<Statement> {
     Some(match &stmt.kind {
         rs::StatementKind::Assign(box (place, rval)) => {
             Statement::Assign {
@@ -39,13 +39,13 @@ fn translate_stmt<'tcx>(stmt: &rs::Statement<'tcx>, fcx: &mut FnCtxt<'tcx>) -> O
     })
 }
 
-fn translate_terminator<'tcx>(terminator: &rs::Terminator<'tcx>, fcx: &mut FnCtxt<'tcx>) -> Terminator {
+fn translate_terminator<'cx, 'tcx>(terminator: &rs::Terminator<'tcx>, fcx: &mut FnCtxt<'cx, 'tcx>) -> Terminator {
     match &terminator.kind {
         rs::TerminatorKind::Return => Terminator::Return,
         rs::TerminatorKind::Goto { target } => Terminator::Goto(fcx.bb_name_map[&target]),
         rs::TerminatorKind::Call { func, target, destination, args, .. } => translate_call(fcx, func, args, destination, target),
         rs::TerminatorKind::SwitchInt { discr, targets } => {
-            assert!(discr.ty(&fcx.body, fcx.tcx).is_bool()); // for now we only support bool branching.
+            assert!(discr.ty(&fcx.body, fcx.cx.tcx).is_bool()); // for now we only support bool branching.
 
             let condition = translate_operand(discr, fcx);
             let then_block = targets.target_for_value(1);
@@ -69,14 +69,14 @@ fn translate_terminator<'tcx>(terminator: &rs::Terminator<'tcx>, fcx: &mut FnCtx
     }
 }
 
-fn translate_call<'tcx>(fcx: &mut FnCtxt<'tcx>, func: &rs::Operand<'tcx>, args: &[rs::Operand<'tcx>], destination: &rs::Place<'tcx>, target: &Option<rs::BasicBlock>) -> Terminator {
+fn translate_call<'cx, 'tcx>(fcx: &mut FnCtxt<'cx, 'tcx>, func: &rs::Operand<'tcx>, args: &[rs::Operand<'tcx>], destination: &rs::Place<'tcx>, target: &Option<rs::BasicBlock>) -> Terminator {
     let rs::Operand::Constant(box f1) = func else { panic!() };
     let rs::ConstantKind::Val(_, f2) = f1.literal else { panic!() };
     let rs::TyKind::FnDef(f, substs_ref) = f2.kind() else { panic!() };
     let key = (*f, *substs_ref);
 
-    if fcx.tcx.crate_name(f.krate).as_str() == "intrinsics" {
-        let intrinsic = match fcx.tcx.item_name(*f).as_str() {
+    if fcx.cx.tcx.crate_name(f.krate).as_str() == "intrinsics" {
+        let intrinsic = match fcx.cx.tcx.item_name(*f).as_str() {
             "print" => Intrinsic::PrintStdout,
             "eprint" => Intrinsic::PrintStderr,
             "exit" => Intrinsic::Exit,
@@ -91,16 +91,16 @@ fn translate_call<'tcx>(fcx: &mut FnCtxt<'tcx>, func: &rs::Operand<'tcx>, args: 
             next_block: target.as_ref().map(|t| fcx.bb_name_map[t]),
         }
     } else {
-        let (ret_abi, arg_abis) = calc_abis(*f, substs_ref, fcx.tcx);
+        let (ret_abi, arg_abis) = calc_abis(*f, substs_ref, fcx.cx.tcx);
         let args: List<_> = args.iter().map(|op| translate_operand(op, fcx)).collect();
 
-        if !fcx.fn_name_map.contains_key(&key) {
-            let fn_name = fcx.fn_name_map.len();
+        if !fcx.cx.fn_name_map.contains_key(&key) {
+            let fn_name = fcx.cx.fn_name_map.len();
             let fn_name = FnName(Name::new(fn_name as _));
-            fcx.fn_name_map.insert(key, fn_name);
+            fcx.cx.fn_name_map.insert(key, fn_name);
         }
         Terminator::Call {
-            callee: fcx.fn_name_map[&key],
+            callee: fcx.cx.fn_name_map[&key],
             arguments: args.zip(arg_abis),
             ret: Some((translate_place(&destination, fcx), ret_abi)),
             next_block: target.as_ref().map(|t| fcx.bb_name_map[t]),
