@@ -229,8 +229,18 @@ fn translate_const_allocation<'cx, 'tcx>(allocation: rs::ConstAllocation<'tcx>, 
         }
     }
     let relocations = allocation.provenance().ptrs().iter()
-        .map(|&(offset, alloc_id)| (translate_size(offset), translate_relocation(alloc_id, rs::Size::ZERO, fcx)))
-        .collect();
+        .map(|&(offset, alloc_id)| {
+            // "Note that the bytes of a pointer represent the offset of the pointer.", see https://doc.rust-lang.org/nightly/nightly-rustc/rustc_middle/mir/interpret/struct.Allocation.html
+            // Hence we have to decode them.
+            let inner_offset_bytes: &[Option<u8>] = &bytes[offset.bytes() as usize..][..BasicMemory::PTR_SIZE.bytes().try_to_usize().unwrap()];
+            let inner_offset_bytes: List<u8> = inner_offset_bytes.iter().map(|x| x.unwrap()).collect();
+            let inner_offset: Int = BasicMemory::ENDIANNESS.decode(Unsigned, inner_offset_bytes);
+            let inner_offset = rs::Size::from_bytes(inner_offset.try_to_usize().unwrap());
+            let relo = translate_relocation(alloc_id, inner_offset, fcx);
+
+            let offset = translate_size(offset);
+            (offset, relo)
+        }).collect();
     let align = translate_align(allocation.align);
     let global = Global {
         bytes: bytes.into_iter().collect(),
