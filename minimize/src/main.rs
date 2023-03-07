@@ -21,7 +21,7 @@ mod rs {
 }
 
 extern crate gen_minirust;
-extern crate minisyntax;
+extern crate miniutil;
 
 pub use gen_minirust::lang::*;
 pub use gen_minirust::mem::*;
@@ -35,8 +35,9 @@ pub use std::format;
 pub use std::string::String;
 pub use gen_minirust::prelude::NdResult;
 
-pub use minisyntax::run::*;
-pub use minisyntax::fmt::dump_program;
+pub use miniutil::run::*;
+pub use miniutil::build;
+pub use miniutil::fmt::dump_program;
 
 mod program;
 use program::*;

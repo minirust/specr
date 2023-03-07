@@ -66,7 +66,7 @@ fn mk_start_fn(entry: u32) -> Function {
     let b0 = BasicBlock {
         statements: List::new(),
         terminator: Terminator::Call {
-            callee: minisyntax::build::fn_ptr(entry),
+            callee: build::fn_ptr(entry),
             arguments: List::new(),
             ret: None,
             next_block: Some(b1_name),

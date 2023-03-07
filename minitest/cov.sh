@@ -21,7 +21,7 @@ llvm-cov show -Xdemangler=rustfilt \
   --show-line-counts-or-regions \
   --ignore-filename-regex='/.cargo/registry' \
   --ignore-filename-regex='minitest' \
-  --ignore-filename-regex='minisyntax' \
+  --ignore-filename-regex='miniutil' \
   --ignore-filename-regex='libspecr' \
   --show-instantiations=false | less -R
 

@@ -131,7 +131,7 @@ pub fn translate_rvalue<'cx, 'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'cx, 
             // as slices are unsupported as of now, we only need to care for arrays.
             let ty = place.ty(&fcx.body, fcx.cx.tcx).ty;
             let Type::Array { elem: _, count } = translate_ty(ty, fcx.cx.tcx) else { panic!() };
-            use crate::minisyntax::build::TypeConv;
+            use build::TypeConv;
             ValueExpr::Constant(Constant::Int(count), <usize>::get_type())
         }
         rs::Rvalue::Cast(rs::CastKind::IntToInt, operand, ty) => {

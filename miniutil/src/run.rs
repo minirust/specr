@@ -1,6 +1,3 @@
-// TODO this file shall be part of Minirust at some point.
-// It doesn't belong to minisyntax.
-
 use crate::*;
 
 use std::collections::HashSet;

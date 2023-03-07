@@ -8,7 +8,7 @@ llvm-cov show -Xdemangler=rustfilt target/debug/minimize \
   --use-color \
   --show-line-counts-or-regions \
   --ignore-filename-regex='/.cargo/registry' \
-  --ignore-filename-regex='minisyntax' \
+  --ignore-filename-regex='miniutil' \
   --ignore-filename-regex='libspecr' \
   --show-instantiations=false | less -R
 
