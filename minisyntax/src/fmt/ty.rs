@@ -23,6 +23,7 @@ pub fn type_to_string(t: Type, comptypes: &mut Vec<Type>) -> String {
         Type::Ptr(PtrType::Ref { mutbl: Mutability::Immutable, .. }) => String::from("&_"),
         Type::Ptr(PtrType::Box { .. }) => String::from("Box<_>"),
         Type::Ptr(PtrType::Raw { .. }) => String::from("*_"),
+        Type::Ptr(PtrType::FnPtr) => String::from("<fn-ptr>"),
         Type::Tuple { .. } | Type::Union { .. } => {
             let i: usize = match comptypes.iter().position(|x| *x == t) {
                 Some(i) => i,

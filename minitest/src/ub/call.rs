@@ -18,7 +18,7 @@ fn call_success() {
     let b0 = block2(&[
         &live(0),
         &Terminator::Call {
-            callee: FnName(Name::new(1)),
+            callee: fn_ptr(1),
             arguments: list![(const_unit(), ArgAbi::Register)],
             ret: Some((local(0), ArgAbi::Register)),
             next_block: Some(BbName(Name::new(1))),
@@ -39,7 +39,7 @@ fn call_non_exist() {
     let b0 = block2(&[
         &live(0),
         &Terminator::Call {
-            callee: FnName(Name::new(1)),
+            callee: fn_ptr(1),
             arguments: list![(const_unit(), ArgAbi::Register)],
             ret: Some((local(0), ArgAbi::Register)),
             next_block: Some(BbName(Name::new(1))),
@@ -50,7 +50,7 @@ fn call_non_exist() {
     let f = function(Ret::No, 0, &locals, &[b0, b1]);
     let p = program(&[f]);
     dump_program(&p);
-    assert_ub(p, "calling non-existing function");
+    assert_ill_formed(p);
 }
 
 #[test]
@@ -60,7 +60,7 @@ fn call_arg_count() {
     let b0 = block2(&[
         &live(0),
         &Terminator::Call {
-            callee: FnName(Name::new(1)),
+            callee: fn_ptr(1),
             arguments: list![],
             ret: Some((local(0), ArgAbi::Register)),
             next_block: Some(BbName(Name::new(1))),
@@ -81,7 +81,7 @@ fn call_arg_abi() {
     let b0 = block2(&[
         &live(0),
         &Terminator::Call {
-            callee: FnName(Name::new(1)),
+            callee: fn_ptr(1),
             arguments: list![(const_unit(), other_arg_abi())],
             ret: Some((local(0), ArgAbi::Register)),
             next_block: Some(BbName(Name::new(1))),
@@ -102,7 +102,7 @@ fn call_ret_abi() {
     let b0 = block2(&[
         &live(0),
         &Terminator::Call {
-            callee: FnName(Name::new(1)),
+            callee: fn_ptr(1),
             arguments: list![(const_unit(), ArgAbi::Register)],
             ret: Some((local(0), other_arg_abi())),
             next_block: Some(BbName(Name::new(1))),

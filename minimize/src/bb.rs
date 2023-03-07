@@ -100,7 +100,7 @@ fn translate_call<'cx, 'tcx>(fcx: &mut FnCtxt<'cx, 'tcx>, func: &rs::Operand<'tc
             fcx.cx.fn_name_map.insert(key, fn_name);
         }
         Terminator::Call {
-            callee: fcx.cx.fn_name_map[&key],
+            callee: minisyntax::build::fn_ptr(fcx.cx.fn_name_map[&key].0.get()),
             arguments: args.zip(arg_abis),
             ret: Some((translate_place(&destination, fcx), ret_abi)),
             next_block: target.as_ref().map(|t| fcx.bb_name_map[t]),

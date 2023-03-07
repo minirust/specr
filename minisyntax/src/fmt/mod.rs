@@ -170,7 +170,7 @@ fn fmt_terminator(t: Terminator, wr: &mut String, comptypes: &mut Vec<Type>) -> 
             ret,
             next_block,
         } => {
-            let callee = fn_name_to_string(callee);
+            let callee = value_expr_to_string(callee, comptypes);
             let arguments = arguments.iter().map(|(x, _)| x).collect();
             let ret = ret.map(|(x, _)| x);
             fmt_call(&callee, arguments, ret, next_block, wr, comptypes)?;

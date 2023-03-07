@@ -224,7 +224,7 @@ pub fn translate_const<'cx, 'tcx>(c: &rs::Constant<'tcx>, fcx: &mut FnCtxt<'cx, 
         let name = translate_const_allocation(alloc, fcx);
         let offset = translate_size(offset);
         let rel = Relocation { name, offset };
-        let expr = Constant::Pointer(rel);
+        let expr = Constant::GlobalPointer(rel);
 
         let ptr_ty = Type::Ptr(PtrType::Raw { pointee: pty.layout::<BasicMemory>() });
 
@@ -276,7 +276,7 @@ pub fn translate_const<'cx, 'tcx>(c: &rs::Constant<'tcx>, fcx: &mut FnCtxt<'cx, 
 
             let offset = translate_size(offset);
             let rel = Relocation { name, offset };
-            Constant::Pointer(rel)
+            Constant::GlobalPointer(rel)
         },
         x => {
             dbg!(x);

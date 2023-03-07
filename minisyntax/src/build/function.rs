@@ -1,5 +1,13 @@
 use crate::build::*;
 
+pub fn fn_ptr(x: u32) -> ValueExpr {
+    let x = Name::new(x as _);
+    let x = FnName(x);
+    let x = Constant::FnPointer(x);
+    let x = ValueExpr::Constant(x, Type::Ptr(PtrType::FnPtr));
+    x
+}
+
 // fns[0] is the start function.
 // fns[i] has name FnName(Name::new(i))
 pub fn program(fns: &[Function]) -> Program {

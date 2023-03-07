@@ -30,7 +30,8 @@ fn constant_to_string(c: Constant) -> String {
     match c {
         Constant::Int(int) => int.to_string(),
         Constant::Bool(b) => b.to_string(),
-        Constant::Pointer(relocation) => relocation_to_string(relocation),
+        Constant::GlobalPointer(relocation) => relocation_to_string(relocation),
+        Constant::FnPointer(fn_name) => fn_name_to_string(fn_name),
         Constant::Variant { .. } => panic!("enums are unsupported!"),
     }
 }

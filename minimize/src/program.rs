@@ -47,7 +47,7 @@ impl<'tcx> Ctxt<'tcx> {
 
         // add a `start` function, which calls `entry`.
         let start = FnName(Name::new(number_of_fns as _));
-        self.functions.insert(start, mk_start_fn(entry_name));
+        self.functions.insert(start, mk_start_fn(0));
 
         Program {
             start,
@@ -58,14 +58,14 @@ impl<'tcx> Ctxt<'tcx> {
 
 }
 
-fn mk_start_fn(entry: FnName) -> Function {
+fn mk_start_fn(entry: u32) -> Function {
     let b0_name = BbName(Name::new(0));
     let b1_name = BbName(Name::new(1));
 
     let b0 = BasicBlock {
         statements: List::new(),
         terminator: Terminator::Call {
-            callee: entry,
+            callee: minisyntax::build::fn_ptr(entry),
             arguments: List::new(),
             ret: None,
             next_block: Some(b1_name),
