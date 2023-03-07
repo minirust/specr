@@ -6,8 +6,9 @@ pub struct Ctxt<'tcx> {
     /// maps Rust function calls to minirust FnNames.
     pub fn_name_map: HashMap<(rs::DefId, rs::SubstsRef<'tcx>), FnName>,
 
-    /// Stores which static evaluates to which GlobalName.
-    pub static_map: HashMap<rs::DefId, GlobalName>,
+    /// Stores which AllocId evaluates to which GlobalName.
+    /// Note that not every AllocId and GlobalName is coming up in this map (for example constants are missing).
+    pub alloc_map: HashMap<rs::AllocId, GlobalName>,
 
     pub globals: Map<GlobalName, Global>,
 
@@ -19,7 +20,7 @@ impl<'tcx> Ctxt<'tcx> {
         Ctxt {
             tcx,
             fn_name_map: Default::default(),
-            static_map: Default::default(),
+            alloc_map: Default::default(),
             globals: Default::default(),
             functions: Default::default(),
         }

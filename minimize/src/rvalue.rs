@@ -194,15 +194,34 @@ pub fn translate_rvalue<'cx, 'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'cx, 
     })
 }
 
+// calls `translate_const_allocation` with the allocation of alloc_id,
+// and adds the alloc_id and it's newly-created global to alloc_map.
+fn translate_alloc_id<'cx, 'tcx>(alloc_id: rs::AllocId, fcx: &mut FnCtxt<'cx, 'tcx>) -> GlobalName {
+    if let Some(x) = fcx.cx.alloc_map.get(&alloc_id) {
+        return *x;
+    }
+
+    let alloc = match fcx.cx.tcx.global_alloc(alloc_id) {
+        rs::GlobalAlloc::Memory(alloc) => alloc,
+        rs::GlobalAlloc::Static(def_id) => fcx.cx.tcx.eval_static_initializer(def_id).unwrap(),
+        _ => panic!("unsupported!"),
+    };
+    let name = translate_const_allocation(alloc, fcx);
+    fcx.cx.alloc_map.insert(alloc_id, name);
+    name
+}
+
+// adds a Global representing this ConstAllocation, and returns the corresponding GlobalName.
 fn translate_const_allocation<'cx, 'tcx>(allocation: rs::ConstAllocation<'tcx>, fcx: &mut FnCtxt<'cx, 'tcx>) -> GlobalName {
     let allocation = allocation.inner();
     let size = allocation.size();
     let alloc_range = rs::AllocRange { start: rs::Size::ZERO, size };
-    let bytes = allocation.get_bytes_strip_provenance(&fcx.cx.tcx, alloc_range).unwrap().iter().copied().map(Some).collect();
+    let bytes = allocation.get_bytes_strip_provenance(&fcx.cx.tcx, alloc_range).unwrap().iter().copied().map(Some).collect(); // TODO
+    let relocations = Default::default(); // TODO
     let align = translate_align(allocation.align);
     let global = Global {
         bytes,
-        relocations: List::new(), // TODO
+        relocations,
         align,
     };
 
@@ -265,15 +284,7 @@ pub fn translate_const<'cx, 'tcx>(c: &rs::Constant<'tcx>, fcx: &mut FnCtxt<'cx, 
                          .unwrap()
                          .into_parts();
             let alloc_id = alloc_id.expect("no alloc id?");
-            let rs::GlobalAlloc::Static(def_id) = fcx.cx.tcx.global_alloc(alloc_id) else { panic!() };
-
-            let name = fcx.cx.static_map.get(&def_id).copied().unwrap_or_else(|| {
-                let allocation = fcx.cx.tcx.eval_static_initializer(def_id).unwrap();
-                let name = translate_const_allocation(allocation, fcx);
-                fcx.cx.static_map.insert(def_id, name);
-                name
-            });
-
+            let name = translate_alloc_id(alloc_id, fcx);
             let offset = translate_size(offset);
             let rel = Relocation { name, offset };
             Constant::GlobalPointer(rel)
