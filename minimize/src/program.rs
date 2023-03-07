@@ -10,8 +10,8 @@ pub struct Ctxt<'tcx> {
     pub static_map: HashMap<rs::DefId, GlobalName>,
 
     pub globals: Map<GlobalName, Global>,
-    // TODO rename to `functions`
-    pub fmap: Map<FnName, Function>,
+
+    pub functions: Map<FnName, Function>,
 }
 
 impl<'tcx> Ctxt<'tcx> {
@@ -21,7 +21,7 @@ impl<'tcx> Ctxt<'tcx> {
             fn_name_map: Default::default(),
             static_map: Default::default(),
             globals: Default::default(),
-            fmap: Default::default(),
+            functions: Default::default(),
         }
     }
 
@@ -33,25 +33,25 @@ impl<'tcx> Ctxt<'tcx> {
         self.fn_name_map.insert((entry, substs_ref), entry_name);
 
         // take any not-yet-implemented function:
-        while let Some(fn_name) = self.fn_name_map.values().find(|k| !self.fmap.contains_key(**k)).copied() {
+        while let Some(fn_name) = self.fn_name_map.values().find(|k| !self.functions.contains_key(**k)).copied() {
             let (def_id, substs_ref) = self.fn_name_map.iter()
                                                 .find(|(_, f)| **f == fn_name)
                                                 .map(|(r, _)| r)
                                                 .unwrap();
 
             let f = self.translate_body(*def_id, substs_ref);
-            self.fmap.insert(fn_name, f);
+            self.functions.insert(fn_name, f);
         }
 
         let number_of_fns = self.fn_name_map.len();
 
         // add a `start` function, which calls `entry`.
         let start = FnName(Name::new(number_of_fns as _));
-        self.fmap.insert(start, mk_start_fn(entry_name));
+        self.functions.insert(start, mk_start_fn(entry_name));
 
         Program {
             start,
-            functions: self.fmap,
+            functions: self.functions,
             globals: self.globals,
         }
     }
