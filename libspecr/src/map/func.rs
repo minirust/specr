@@ -62,4 +62,9 @@ impl<K: Obj, V: Obj> Map<K, V> {
     pub fn values(self) -> impl Iterator<Item=V> {
         self.into_iter().map(|(_, v)| v)
     }
+
+    /// Returns the number of elements in `self`.
+    pub fn len(self) -> Int {
+        Int::from(self.0.call_ref_unchecked(|m| m.len()))
+    }
 }

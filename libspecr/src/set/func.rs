@@ -26,4 +26,9 @@ impl<T: Obj> Set<T> {
             s.remove(&t);
         });
     }
+
+    /// Returns the number of elements in `self`.
+    pub fn len(self) -> Int {
+        Int::from(self.0.call_ref_unchecked(|s| s.len()))
+    }
 }
