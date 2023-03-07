@@ -2,11 +2,11 @@ use crate::*;
 
 /// maps Rust function calls to minirust FnNames.
 pub type FnNameMap<'tcx> = HashMap<(rs::DefId, rs::SubstsRef<'tcx>), FnName>;
-pub type GlobalNameMap = HashMap<rs::AllocId, GlobalName>;
+pub type StaticMap = HashMap<rs::DefId, GlobalName>;
 
 pub fn translate_program<'tcx>(tcx: rs::TyCtxt<'tcx>) -> Program {
     let mut fn_name_map = FnNameMap::new();
-    let mut global_name_map = GlobalNameMap::new();
+    let mut static_map = StaticMap::new();
     let mut globals = Map::new();
 
     let mut fmap: Map<FnName, Function> = Map::new();
@@ -24,10 +24,10 @@ pub fn translate_program<'tcx>(tcx: rs::TyCtxt<'tcx>) -> Program {
                                             .map(|(r, _)| r)
                                             .unwrap();
 
-        let (f, fn_name_map_new, global_name_map_new, globals_new) = translate_body(*def_id, substs_ref, fn_name_map, global_name_map, globals, tcx);
+        let (f, fn_name_map_new, static_map_new, globals_new) = translate_body(*def_id, substs_ref, fn_name_map, static_map, globals, tcx);
         fmap.insert(fn_name, f);
         fn_name_map = fn_name_map_new;
-        global_name_map = global_name_map_new;
+        static_map = static_map_new;
         globals = globals_new;
     }
 
@@ -87,8 +87,9 @@ pub struct FnCtxt<'tcx> {
     /// Upon function call, the callees DefId + SubstsRef will be mapped to a fresh `FnName`.
     pub fn_name_map: FnNameMap<'tcx>,
 
-    /// For every GlobalName, that has an associated AllocId, there is an entry here.
-    pub global_name_map: GlobalNameMap,
+    /// Every `static` has an entry here.
+    /// This map is used, so that all usages of a static link to the same GlobalName.
+    pub static_map: StaticMap,
 
     /// For every GlobalName, there is an entry here.
     pub globals: Map<GlobalName, Global>,
@@ -102,7 +103,7 @@ pub struct FnCtxt<'tcx> {
 /// translates a function body.
 /// Any fn calls occuring during this translation will be added to the `FnNameMap`.
 // TODO simplify this function.
-fn translate_body<'tcx>(def_id: rs::DefId, substs_ref: rs::SubstsRef<'tcx>, fn_name_map: FnNameMap<'tcx>, global_name_map: GlobalNameMap, globals: Map<GlobalName, Global>, tcx: rs::TyCtxt<'tcx>) -> (Function, FnNameMap<'tcx>, GlobalNameMap, Map<GlobalName, Global>) {
+fn translate_body<'tcx>(def_id: rs::DefId, substs_ref: rs::SubstsRef<'tcx>, fn_name_map: FnNameMap<'tcx>, static_map: StaticMap, globals: Map<GlobalName, Global>, tcx: rs::TyCtxt<'tcx>) -> (Function, FnNameMap<'tcx>, StaticMap, Map<GlobalName, Global>) {
     let body = tcx.optimized_mir(def_id);
     let body = tcx.subst_and_normalize_erasing_regions(substs_ref, rs::ParamEnv::empty(), body.clone());
 
@@ -154,7 +155,7 @@ fn translate_body<'tcx>(def_id: rs::DefId, substs_ref: rs::SubstsRef<'tcx>, fn_n
         local_name_map,
         bb_name_map: bb_name_map.clone(),
         fn_name_map,
-        global_name_map,
+        static_map,
         globals,
         tcx,
         body: body.clone(),
@@ -182,7 +183,7 @@ fn translate_body<'tcx>(def_id: rs::DefId, substs_ref: rs::SubstsRef<'tcx>, fn_n
     }
 
     let fn_name_map = fcx.fn_name_map;
-    let global_name_map = fcx.global_name_map;
+    let static_map = fcx.static_map;
     let globals = fcx.globals;
 
     let f = Function {
@@ -193,7 +194,7 @@ fn translate_body<'tcx>(def_id: rs::DefId, substs_ref: rs::SubstsRef<'tcx>, fn_n
         start: init_bb,
     };
 
-    (f, fn_name_map, global_name_map, globals)
+    (f, fn_name_map, static_map, globals)
 }
 
 pub fn calc_abis<'tcx>(def_id: rs::DefId, substs_ref: rs::SubstsRef<'tcx>, tcx: rs::TyCtxt<'tcx>) -> (/*ret:*/ ArgAbi, /*args:*/ List<ArgAbi>) {

@@ -257,19 +257,20 @@ pub fn translate_const<'tcx>(c: &rs::Constant<'tcx>, fcx: &mut FnCtxt<'tcx>) -> 
         Type::Bool => {
             Constant::Bool(val.try_to_bool().unwrap())
         }
-        Type::Ptr(_) => { // the only currently supported const pointers are Rust `static`s!
+        // A `static`
+        Type::Ptr(_) => {
             let (alloc_id, offset) = val.try_to_scalar()
                          .unwrap()
                          .to_pointer(&fcx.tcx)
                          .unwrap()
                          .into_parts();
             let alloc_id = alloc_id.expect("no alloc id?");
+            let rs::GlobalAlloc::Static(def_id) = fcx.tcx.global_alloc(alloc_id) else { panic!() };
 
-            let name = fcx.global_name_map.get(&alloc_id).copied().unwrap_or_else(|| {
-                let rs::GlobalAlloc::Static(def_id) = fcx.tcx.global_alloc(alloc_id) else { panic!("unsupported GlobalAlloc!") };
+            let name = fcx.static_map.get(&def_id).copied().unwrap_or_else(|| {
                 let allocation = fcx.tcx.eval_static_initializer(def_id).unwrap();
                 let name = translate_const_allocation(allocation, fcx);
-                fcx.global_name_map.insert(alloc_id, name);
+                fcx.static_map.insert(def_id, name);
                 name
             });
 
