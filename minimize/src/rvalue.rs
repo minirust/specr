@@ -194,6 +194,12 @@ pub fn translate_rvalue<'cx, 'tcx>(rv: &rs::Rvalue<'tcx>, fcx: &mut FnCtxt<'cx, 
     })
 }
 
+fn translate_relocation<'cx, 'tcx>(alloc_id: rs::AllocId, offset: rs::Size, fcx: &mut FnCtxt<'cx, 'tcx>) -> Relocation {
+    let name = translate_alloc_id(alloc_id, fcx);
+    let offset = translate_size(offset);
+    Relocation { name, offset }
+}
+
 // calls `translate_const_allocation` with the allocation of alloc_id,
 // and adds the alloc_id and it's newly-created global to alloc_map.
 fn translate_alloc_id<'cx, 'tcx>(alloc_id: rs::AllocId, fcx: &mut FnCtxt<'cx, 'tcx>) -> GlobalName {
@@ -216,11 +222,18 @@ fn translate_const_allocation<'cx, 'tcx>(allocation: rs::ConstAllocation<'tcx>, 
     let allocation = allocation.inner();
     let size = allocation.size();
     let alloc_range = rs::AllocRange { start: rs::Size::ZERO, size };
-    let bytes = allocation.get_bytes_strip_provenance(&fcx.cx.tcx, alloc_range).unwrap().iter().copied().map(Some).collect(); // TODO
-    let relocations = Default::default(); // TODO
+    let mut bytes: Vec<Option<u8>> = allocation.get_bytes_unchecked(alloc_range).iter().copied().map(Some).collect();
+    for (i, b) in bytes.iter_mut().enumerate() {
+        if !allocation.init_mask().get(rs::Size::from_bytes(i)) {
+            *b = None;
+        }
+    }
+    let relocations = allocation.provenance().ptrs().iter()
+        .map(|&(offset, alloc_id)| (translate_size(offset), translate_relocation(alloc_id, rs::Size::ZERO, fcx)))
+        .collect();
     let align = translate_align(allocation.align);
     let global = Global {
-        bytes,
+        bytes: bytes.into_iter().collect(),
         relocations,
         align,
     };
@@ -284,9 +297,7 @@ pub fn translate_const<'cx, 'tcx>(c: &rs::Constant<'tcx>, fcx: &mut FnCtxt<'cx, 
                          .unwrap()
                          .into_parts();
             let alloc_id = alloc_id.expect("no alloc id?");
-            let name = translate_alloc_id(alloc_id, fcx);
-            let offset = translate_size(offset);
-            let rel = Relocation { name, offset };
+            let rel = translate_relocation(alloc_id, offset, fcx);
             Constant::GlobalPointer(rel)
         },
         x => {
