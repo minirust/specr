@@ -1,6 +1,6 @@
 use crate::*;
 
-use rand::rngs::ThreadRng;
+use rand::{rngs::ThreadRng, Rng};
 use num_bigint::RandBigInt;
 use num_integer::Integer;
 use num_traits::Zero;
@@ -42,6 +42,36 @@ impl Distribution<Int> for IntDistribution {
     }
 }
 
+
+/// A uniform distribution over values of type `T` collected from a finite iterator.
+pub struct UniformDistribution<T> {
+    omega: Vec<T>,
+}
+
+impl<T> UniformDistribution<T> 
+    where T: Copy,
+{
+    /// Returns a uniform distribution based on `iter`.
+    pub fn new(iter: impl Iterator<Item = T>) -> Self {
+        Self {
+            omega: iter.collect(),
+        }
+    }
+}
+
+impl<T> Distribution<T> for UniformDistribution<T> 
+    where T: Copy,
+{
+    fn sample(&self, rng: &mut ThreadRng) -> T {
+        let len = self.omega.len();
+        assert!(len > 0);
+
+        let index = rng.gen_range(0..len);
+
+        self.omega[index]
+    }
+}
+
 #[test]
 fn test_int_distr() {
     let mut rng = rand::thread_rng();
@@ -57,5 +87,25 @@ fn test_int_distr() {
             assert!(v < distr.end);
             assert!(v % distr.divisor == 0);
         }
+    }
+}
+
+#[test]
+fn test_uniform() {
+    let mut rng = rand::thread_rng();
+    let iter = 10..30;
+    let distr = UniformDistribution::new(iter);
+
+    for _ in 0..20 {
+        let v = distr.sample(&mut rng);
+        assert!(10 <= v && v < 30);
+    }
+
+    let vec = vec!["hello", "world", "!"];
+    let distr = UniformDistribution::new(vec.clone().into_iter());
+
+    for _ in 0..20 {
+        let v = distr.sample(&mut rng);
+        assert!(vec.contains(&v));
     }
 }
