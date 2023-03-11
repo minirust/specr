@@ -244,7 +244,7 @@ fn translate_local<'tcx>(local: &rs::LocalDecl<'tcx>, tcx: rs::TyCtxt<'tcx>) -> 
     // generics have already been resolved before, so `ParamEnv::empty()` is correct.
     let a = rs::ParamEnv::empty().and(local.ty);
     let layout = tcx.layout_of(a).unwrap().layout;
-    let align = layout.align().pref;
+    let align = layout.align().abi;
     let align = translate_align(align);
 
     PlaceType { ty, align }

@@ -4,7 +4,7 @@ pub fn layout_of<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> Layout {
     let a = rs::ParamEnv::empty().and(ty);
     let layout = tcx.layout_of(a).unwrap().layout;
     let size = translate_size(layout.size());
-    let align = translate_align(layout.align().pref);
+    let align = translate_align(layout.align().abi);
     let inhabited = !layout.abi().is_uninhabited();
 
     Layout {
