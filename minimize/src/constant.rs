@@ -1,5 +1,80 @@
 use crate::*;
 
+pub fn translate_const<'cx, 'tcx>(c: &rs::Constant<'tcx>, fcx: &mut FnCtxt<'cx, 'tcx>) -> ValueExpr {
+    let kind = c.literal.eval(fcx.cx.tcx, rs::ParamEnv::empty());
+    let rs::ConstantKind::Val(val, rs_ty) = kind else { panic!("unsupported ConstantKind!") };
+
+    let ty = translate_ty(rs_ty, fcx.cx.tcx);
+
+    let constant = match ty {
+        Type::Int(int_ty) => {
+            let val = val.try_to_scalar_int().unwrap();
+            let int: Int = match int_ty.signed {
+                Signed => val.try_to_int(val.size()).unwrap().into(),
+                Unsigned => val.try_to_uint(val.size()).unwrap().into(),
+            };
+            Constant::Int(int)
+        },
+        Type::Bool => {
+            Constant::Bool(val.try_to_bool().unwrap())
+        }
+        // A `static`
+        Type::Ptr(_) => {
+            let (alloc_id, offset) = val.try_to_scalar()
+                         .unwrap()
+                         .to_pointer(&fcx.cx.tcx)
+                         .unwrap()
+                         .into_parts();
+            let alloc_id = alloc_id.expect("no alloc id?");
+            let rel = translate_relocation(alloc_id, offset, fcx);
+            Constant::GlobalPointer(rel)
+        },
+        // fallback: every type not yet covered will create a global instead.
+        _ => return translate_const_as_global(val, rs_ty, fcx),
+    };
+    ValueExpr::Constant(constant, ty)
+}
+
+// allocates a global for this ConstValue, and returns the ValueExpr of the constant that references it.
+fn translate_const_as_global<'cx, 'tcx>(val: rs::ConstValue<'tcx>, ty: rs::Ty<'tcx>, fcx: &mut FnCtxt<'cx, 'tcx>) -> ValueExpr {
+    let pty = place_type_of(ty, fcx);
+
+    let rel = match val {
+        rs::ConstValue::ByRef { alloc, offset } => {
+            let name = translate_const_allocation(alloc, fcx);
+            let offset = translate_size(offset);
+
+            Relocation { name, offset }
+        },
+        rs::ConstValue::ZeroSized => {
+            let global = Global {
+                bytes: List::new(),
+                relocations: List::new(),
+                align: Align::ONE,
+            };
+            let name = alloc_global(global, fcx);
+            let offset = Size::ZERO;
+
+            Relocation { name, offset }
+        },
+        _ => panic!("unsupported ConstValue!"),
+    };
+
+    let expr = Constant::GlobalPointer(rel);
+
+    let ptr_ty = Type::Ptr(PtrType::Raw { pointee: pty.layout::<BasicMemory>() });
+
+    let expr = ValueExpr::Constant(expr, ptr_ty);
+    let expr = PlaceExpr::Deref {
+        operand: GcCow::new(expr),
+        ptype: pty,
+    };
+    ValueExpr::Load {
+        source: GcCow::new(expr),
+        destructive: false
+    }
+}
+
 fn translate_relocation<'cx, 'tcx>(alloc_id: rs::AllocId, offset: rs::Size, fcx: &mut FnCtxt<'cx, 'tcx>) -> Relocation {
     let name = translate_alloc_id(alloc_id, fcx);
     let offset = translate_size(offset);
@@ -54,72 +129,14 @@ fn translate_const_allocation<'cx, 'tcx>(allocation: rs::ConstAllocation<'tcx>, 
         align,
     };
 
+    alloc_global(global, fcx)
+}
+
+fn alloc_global<'cx, 'tcx>(global: Global, fcx: &mut FnCtxt<'cx, 'tcx>) -> GlobalName {
+    // choose a fresh name
     let name = GlobalName(Name::new(fcx.cx.globals.iter().count() as _)); // TODO use .len() here, if supported
+
     fcx.cx.globals.insert(name, global);
 
     name
-}
-
-pub fn translate_const<'cx, 'tcx>(c: &rs::Constant<'tcx>, fcx: &mut FnCtxt<'cx, 'tcx>) -> ValueExpr {
-    let kind = c.literal.eval(fcx.cx.tcx, rs::ParamEnv::empty());
-    let rs::ConstantKind::Val(val, ty) = kind else { panic!("unsupported ConstantKind!") };
-
-    let pty = place_type_of(ty, fcx);
-    let ty = pty.ty;
-
-    // This handles usages of `const`
-    if let rs::ConstValue::ByRef { alloc, offset } = val {
-        let name = translate_const_allocation(alloc, fcx);
-        let offset = translate_size(offset);
-        let rel = Relocation { name, offset };
-        let expr = Constant::GlobalPointer(rel);
-
-        let ptr_ty = Type::Ptr(PtrType::Raw { pointee: pty.layout::<BasicMemory>() });
-
-        let expr = ValueExpr::Constant(expr, ptr_ty);
-        let expr = PlaceExpr::Deref {
-            operand: GcCow::new(expr),
-            ptype: pty,
-        };
-        let expr = ValueExpr::Load {
-            source: GcCow::new(expr),
-            destructive: false
-        };
-
-        return expr;
-    }
-
-    let constant = match ty {
-        Type::Int(int_ty) => {
-            let val = val.try_to_scalar_int().unwrap();
-            let int: Int = match int_ty.signed {
-                Signed => val.try_to_int(val.size()).unwrap().into(),
-                Unsigned => val.try_to_uint(val.size()).unwrap().into(),
-            };
-            Constant::Int(int)
-        },
-        // unit type `()`
-        Type::Tuple { fields, .. } if fields.is_empty() => { // TODO are other tuples supported correctly?
-            return ValueExpr::Tuple(List::new(), Type::Tuple { fields: List::new(), size: Size::ZERO })
-        }
-        Type::Bool => {
-            Constant::Bool(val.try_to_bool().unwrap())
-        }
-        // A `static`
-        Type::Ptr(_) => {
-            let (alloc_id, offset) = val.try_to_scalar()
-                         .unwrap()
-                         .to_pointer(&fcx.cx.tcx)
-                         .unwrap()
-                         .into_parts();
-            let alloc_id = alloc_id.expect("no alloc id?");
-            let rel = translate_relocation(alloc_id, offset, fcx);
-            Constant::GlobalPointer(rel)
-        },
-        x => {
-            dbg!(x);
-            todo!()
-        }
-    };
-    ValueExpr::Constant(constant, ty)
 }
