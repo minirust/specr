@@ -1,10 +1,15 @@
 use crate::*;
 
 pub fn translate_const<'cx, 'tcx>(c: &rs::Constant<'tcx>, fcx: &mut FnCtxt<'cx, 'tcx>) -> ValueExpr {
-    let kind = c.literal.eval(fcx.cx.tcx, rs::ParamEnv::empty());
-    let rs::ConstantKind::Val(val, rs_ty) = kind else { panic!("unsupported ConstantKind!") };
+    match c.literal {
+        rs::ConstantKind::Ty(_) => panic!("not supported!"),
+        rs::ConstantKind::Unevaluated(uneval, ty) => translate_const_uneval(uneval, ty, fcx),
+        rs::ConstantKind::Val(val, ty) => translate_const_val(val, ty, fcx),
+    }
+}
 
-    let ty = translate_ty(rs_ty, fcx.cx.tcx);
+fn translate_const_val<'cx, 'tcx>(val: rs::ConstValue<'tcx>, ty: rs::Ty<'tcx>, fcx: &mut FnCtxt<'cx, 'tcx>) -> ValueExpr {
+    let ty = translate_ty(ty, fcx.cx.tcx);
 
     let constant = match ty {
         Type::Int(int_ty) => {
@@ -18,6 +23,9 @@ pub fn translate_const<'cx, 'tcx>(c: &rs::Constant<'tcx>, fcx: &mut FnCtxt<'cx, 
         Type::Bool => {
             Constant::Bool(val.try_to_bool().unwrap())
         }
+        Type::Tuple { fields, .. } if fields.is_empty() => {
+            return ValueExpr::Tuple(List::new(), ty);
+        }
         // A `static`
         Type::Ptr(_) => {
             let (alloc_id, offset) = val.try_to_scalar()
@@ -29,39 +37,28 @@ pub fn translate_const<'cx, 'tcx>(c: &rs::Constant<'tcx>, fcx: &mut FnCtxt<'cx, 
             let rel = translate_relocation(alloc_id, offset, fcx);
             Constant::GlobalPointer(rel)
         },
-        // fallback: every type not yet covered will create a global instead.
-        _ => return translate_const_as_global(val, rs_ty, fcx),
+        ty => panic!("unsupported type for `ConstVal`: {:?}", ty),
     };
     ValueExpr::Constant(constant, ty)
 }
 
-// allocates a global for this ConstValue, and returns the ValueExpr of the constant that references it.
-fn translate_const_as_global<'cx, 'tcx>(val: rs::ConstValue<'tcx>, ty: rs::Ty<'tcx>, fcx: &mut FnCtxt<'cx, 'tcx>) -> ValueExpr {
-    let pty = place_type_of(ty, fcx);
-
-    let rel = match val {
-        rs::ConstValue::ByRef { alloc, offset } => {
-            let name = translate_const_allocation(alloc, fcx);
-            let offset = translate_size(offset);
-
-            Relocation { name, offset }
-        },
-        rs::ConstValue::ZeroSized => {
-            let global = Global {
-                bytes: List::new(),
-                relocations: List::new(),
-                align: Align::ONE,
-            };
-            let name = alloc_global(global, fcx);
-            let offset = Size::ZERO;
-
-            Relocation { name, offset }
-        },
-        _ => panic!("unsupported ConstValue!"),
+fn translate_const_uneval<'cx, 'tcx>(uneval: rs::UnevaluatedConst<'tcx>, ty: rs::Ty<'tcx>, fcx: &mut FnCtxt<'cx, 'tcx>) -> ValueExpr {
+    let Ok(Some(instance)) = rs::Instance::resolve_opt_const_arg(fcx.cx.tcx, rs::ParamEnv::empty(), uneval.def, uneval.substs) else {
+        panic!("can't resolve unevaluated const!")
     };
+    let cid = rs::GlobalId { instance, promoted: uneval.promoted };
+    let alloc = fcx.cx.tcx.eval_to_allocation_raw(rs::ParamEnv::empty().with_const().and(cid)).unwrap();
+    let name = translate_alloc_id(alloc.alloc_id, fcx);
+    let offset = Size::ZERO;
 
+    let rel = Relocation { name, offset };
+    relocation_to_value_expr(rel, ty, fcx)
+}
+
+fn relocation_to_value_expr<'cx, 'tcx>(rel: Relocation, ty: rs::Ty<'tcx>, fcx: &mut FnCtxt<'cx, 'tcx>) -> ValueExpr {
     let expr = Constant::GlobalPointer(rel);
 
+    let pty = place_type_of(ty, fcx);
     let ptr_ty = Type::Ptr(PtrType::Raw { pointee: pty.layout::<BasicMemory>() });
 
     let expr = ValueExpr::Constant(expr, ptr_ty);

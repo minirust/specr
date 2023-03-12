@@ -18,6 +18,7 @@ mod rs {
     pub use rustc_middle::mir::{*, interpret::*};
     pub use rustc_middle::ty::*;
     pub use rustc_mir_dataflow::storage::always_storage_live_locals;
+    pub use rustc_middle::mir::UnevaluatedConst;
 }
 
 extern crate gen_minirust;
