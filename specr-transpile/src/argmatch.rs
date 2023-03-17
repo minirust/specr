@@ -176,8 +176,23 @@ fn is_submatch(argmatch: &Argmatch, method_idx: &MethodIdx, ast: &syn::File) -> 
     let iim1 = argmatch.method_idx.as_ref(ast);
     let iim2 = method_idx.as_ref(ast);
 
+    // check that the methods have the same name.
     if iim1.sig.ident != iim2.sig.ident {
-        // this is not a submatch, it's not even the same function name.
+        return SubmatchResult::No;
+    }
+
+    // check that the impl blocks are compatible (including type, optional trait, generics)
+    let hide_items = |item_idx: usize| {
+        let Item::Impl(ii) = &ast.items[item_idx] else { unreachable!() };
+        let mut ii = ii.clone();
+        ii.items.clear();
+        ii
+    };
+
+    let ii1 = hide_items(argmatch.method_idx.item_idx);
+    let ii2 = hide_items(method_idx.item_idx);
+
+    if ii1 != ii2 {
         return SubmatchResult::No;
     }
 
@@ -194,22 +209,6 @@ fn is_submatch(argmatch: &Argmatch, method_idx: &MethodIdx, ast: &syn::File) -> 
 
     if sig1 != sig2 {
         let error_msg = format!("`argmatch` encountered signature mismatch!\n{}\n{}\n", iim1.sig.to_token_stream(), iim2.sig.to_token_stream());
-        return SubmatchResult::YesButMismatch { error_msg };
-    }
-
-    // check that the impl blocks are compatible
-    let hide_items = |item_idx: usize| {
-        let Item::Impl(ii) = &ast.items[item_idx] else { unreachable!() };
-        let mut ii = ii.clone();
-        ii.items.clear();
-        ii
-    };
-
-    let ii1 = hide_items(argmatch.method_idx.item_idx);
-    let ii2 = hide_items(method_idx.item_idx);
-
-    if ii1 != ii2 {
-        let error_msg = format!("`argmatch` encountered impl-block mismatch!\n{}\n{}\n", ii1.to_token_stream(), ii2.to_token_stream());
         return SubmatchResult::YesButMismatch { error_msg };
     }
 
