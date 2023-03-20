@@ -85,18 +85,20 @@ fn translate_alloc_id<'cx, 'tcx>(alloc_id: rs::AllocId, fcx: &mut FnCtxt<'cx, 't
         return *x;
     }
 
+    let name = fresh_global_name(fcx);
+    fcx.cx.alloc_map.insert(alloc_id, name);
+
     let alloc = match fcx.cx.tcx.global_alloc(alloc_id) {
         rs::GlobalAlloc::Memory(alloc) => alloc,
         rs::GlobalAlloc::Static(def_id) => fcx.cx.tcx.eval_static_initializer(def_id).unwrap(),
         _ => panic!("unsupported!"),
     };
-    let name = translate_const_allocation(alloc, fcx);
-    fcx.cx.alloc_map.insert(alloc_id, name);
+    translate_const_allocation(alloc, fcx, name);
     name
 }
 
 // adds a Global representing this ConstAllocation, and returns the corresponding GlobalName.
-fn translate_const_allocation<'cx, 'tcx>(allocation: rs::ConstAllocation<'tcx>, fcx: &mut FnCtxt<'cx, 'tcx>) -> GlobalName {
+fn translate_const_allocation<'cx, 'tcx>(allocation: rs::ConstAllocation<'tcx>, fcx: &mut FnCtxt<'cx, 'tcx>, name: GlobalName) {
     let allocation = allocation.inner();
     let size = allocation.size();
     let alloc_range = rs::AllocRange { start: rs::Size::ZERO, size };
@@ -126,14 +128,17 @@ fn translate_const_allocation<'cx, 'tcx>(allocation: rs::ConstAllocation<'tcx>, 
         align,
     };
 
-    alloc_global(global, fcx)
+    fcx.cx.globals.insert(name, global);
 }
 
-fn alloc_global<'cx, 'tcx>(global: Global, fcx: &mut FnCtxt<'cx, 'tcx>) -> GlobalName {
-    // choose a fresh name
+fn fresh_global_name<'cx, 'tcx>(fcx: &mut FnCtxt<'cx, 'tcx>) -> GlobalName {
     let name = GlobalName(Name::new(fcx.cx.globals.iter().count() as _)); // TODO use .len() here, if supported
-
-    fcx.cx.globals.insert(name, global);
-
+    // the default_global is added so that calling `fresh_global_name` twice returns different names.
+    let default_global = Global {
+        bytes: Default::default(),
+        relocations: Default::default(),
+        align: Align::ONE,
+    };
+    fcx.cx.globals.insert(name, default_global);
     name
 }
