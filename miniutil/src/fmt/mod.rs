@@ -59,7 +59,11 @@ fn globals_to_string(globals: Map<GlobalName, Global>) -> String {
 }
 
 pub fn relocation_to_string(relocation: Relocation) -> String {
-    format!("{} + {}", global_name_to_string(relocation.name), relocation.offset.bytes())
+    if relocation.offset.bytes() == 0 {
+        global_name_to_string(relocation.name)
+    } else {
+        format!("({} + {})", global_name_to_string(relocation.name), relocation.offset.bytes())
+    }
 }
 
 pub fn dump_program(prog: &Program) {
