@@ -104,3 +104,7 @@ pub mod prelude {
     pub use std::hash::Hash;
     pub use std::fmt::Debug;
 }
+
+// This exists so that `gccompat-derive` can use `libspecr::hidden::GcCompat` to address GcCompat,
+// whether it's used within libspecr or not.
+pub(crate) use crate as libspecr;
