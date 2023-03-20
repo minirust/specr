@@ -25,9 +25,9 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "gccompat-derive"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c60b71523f110db88b7dc82130ad243ab281e168739c79ac72843f8dffb1f739"
+checksum = "95293e337e2a1ecb1b0598f088914cc1f7b4880606d100f8a968a1e95a872dae"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -75,9 +75,9 @@ checksum = "201de327520df007757c1f0adce6e827fe8562fbc28bfd9c15571c66ca1f5f79"
 
 [[package]]
 name = "libspecr"
-version = "0.1.7"
+version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c346d645644b6d9befe864e9eec1e1b50210be23dc46fc60bd2dd8287b6a6c10"
+checksum = "5ddd38101a5bf2563413fccc249b383a027dc5d43d62004c13131c75dedbbaed"
 dependencies = [
  "gccompat-derive",
  "im",

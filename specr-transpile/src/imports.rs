@@ -9,11 +9,6 @@ pub fn add_imports(mut mods: Vec<Module>) -> Vec<Module> {
     let code = quote! {
         #[allow(unused_imports)]
         use crate::{ #(#imports),* };
-
-        // this is currently required to get the #[derive(GcCompat)] to work.
-        // TODO fix.
-        #[allow(unused_imports)]
-        use libspecr::hidden::GcCompat;
     };
     let f: syn::File = parse2(code).unwrap();
 
