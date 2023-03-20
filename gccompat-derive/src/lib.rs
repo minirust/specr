@@ -40,7 +40,7 @@ fn impl_for_struct(s: &ItemStruct) -> Item {
     let tg = generics_trim(&g);
 
     let ts = quote! {
-        impl #g GcCompat for #name #tg {
+        impl #g libspecr::hidden::GcCompat for #name #tg {
             fn as_any(&self) -> &dyn std::any::Any { self }
             #[allow(unused_variables)]
             fn points_to(&self, s: &mut std::collections::HashSet<usize>) {
@@ -89,7 +89,7 @@ fn impl_for_enum(e: &ItemEnum) -> Item {
     let tg = generics_trim(&g);
 
     let ts = quote! {
-        impl #g GcCompat for #enum_ident #tg {
+        impl #g libspecr::hidden::GcCompat for #enum_ident #tg {
             fn as_any(&self) -> &dyn std::any::Any { self }
             #[allow(unused_variables)]
             fn points_to(&self, s: &mut std::collections::HashSet<usize>) {
@@ -104,7 +104,7 @@ fn impl_for_enum(e: &ItemEnum) -> Item {
 }
 
 fn gccompat_bound() -> TypeParamBound {
-    parse2(quote! { GcCompat }).unwrap()
+    parse2(quote! { libspecr::hidden::GcCompat }).unwrap()
 }
 
 // removes defaults from generics, and adds GcCompat to the bounds.
