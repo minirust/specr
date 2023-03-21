@@ -6,19 +6,19 @@ use crate::*;
 fn mem_dealloc_success() {
     let locals = [ <*const i32>::get_ptype() ];
 
-    let b0 = block2(&[
-        &live(0),
-        &allocate(const_int::<usize>(4), const_int::<usize>(4), local(0), 1)
-    ]);
-    let b1 = block2(&[
-        &Terminator::CallIntrinsic {
+    let b0 = block!(
+        live(0),
+        allocate(const_int::<usize>(4), const_int::<usize>(4), local(0), 1)
+    );
+    let b1 = block!(
+        Terminator::CallIntrinsic {
             intrinsic: Intrinsic::Deallocate,
             arguments: list![load(local(0)), const_int::<usize>(4), const_int::<usize>(4)],
             ret: None,
             next_block: Some(BbName(Name::new(2))),
         },
-    ]);
-    let b2 = block2(&[&exit()]);
+    );
+    let b2 = block!(exit());
 
     let f = function(Ret::No, 0, &locals, &[b0, b1, b2]);
     let p = program(&[f]);
@@ -30,19 +30,19 @@ fn mem_dealloc_success() {
 fn mem_dealloc_wrong_size() {
     let locals = [ <*const i32>::get_ptype() ];
 
-    let b0 = block2(&[
-        &live(0),
-        &allocate(const_int::<usize>(4), const_int::<usize>(4), local(0), 1)
-    ]);
-    let b1 = block2(&[
-        &Terminator::CallIntrinsic {
+    let b0 = block!(
+        live(0),
+        allocate(const_int::<usize>(4), const_int::<usize>(4), local(0), 1)
+    );
+    let b1 = block!(
+        Terminator::CallIntrinsic {
             intrinsic: Intrinsic::Deallocate,
             arguments: list![load(local(0)), const_int::<usize>(5), const_int::<usize>(4)],
             ret: None,
             next_block: Some(BbName(Name::new(2))),
         },
-    ]);
-    let b2 = block2(&[&exit()]);
+    );
+    let b2 = block!(exit());
 
     let f = function(Ret::No, 0, &locals, &[b0, b1, b2]);
     let p = program(&[f]);
@@ -54,19 +54,19 @@ fn mem_dealloc_wrong_size() {
 fn mem_dealloc_wrong_align() {
     let locals = [ <*const i32>::get_ptype() ];
 
-    let b0 = block2(&[
-        &live(0),
-        &allocate(const_int::<usize>(4), const_int::<usize>(4), local(0), 1)
-    ]);
-    let b1 = block2(&[
-        &Terminator::CallIntrinsic {
+    let b0 = block!(
+        live(0),
+        allocate(const_int::<usize>(4), const_int::<usize>(4), local(0), 1)
+    );
+    let b1 = block!(
+        Terminator::CallIntrinsic {
             intrinsic: Intrinsic::Deallocate,
             arguments: list![load(local(0)), const_int::<usize>(4), const_int::<usize>(8)],
             ret: None,
             next_block: Some(BbName(Name::new(2))),
         },
-    ]);
-    let b2 = block2(&[&exit()]);
+    );
+    let b2 = block!(exit());
 
     let f = function(Ret::No, 0, &locals, &[b0, b1, b2]);
     let p = program(&[f]);
@@ -86,20 +86,20 @@ fn mem_dealloc_inv_ptr() {
 
     let locals = [ union_pty ];
 
-    let b0 = block2(&[
-        &live(0),
-        &assign(
+    let b0 = block!(
+        live(0),
+        assign(
             field(local(0), 0),
             const_int::<usize>(42)
         ),
-        &deallocate(
+        deallocate(
             load(field(local(0), 1)),
             const_int::<usize>(4), // size
             const_int::<usize>(4), // align
             1,
         )
-    ]);
-    let b1 = block2(&[&exit()]);
+    );
+    let b1 = block!(exit());
 
     let f = function(Ret::No, 0, &locals, &[b0, b1]);
     let p = program(&[f]);
@@ -112,12 +112,12 @@ fn mem_dealloc_inv_ptr() {
 fn mem_dealloc_not_beginning() {
     let locals = [ <*const i32>::get_ptype() ];
 
-    let b0 = block2(&[
-        &live(0),
-        &allocate(const_int::<usize>(4), const_int::<usize>(4), local(0), 1)
-    ]);
-    let b1 = block2(&[
-        &assign(
+    let b0 = block!(
+        live(0),
+        allocate(const_int::<usize>(4), const_int::<usize>(4), local(0), 1)
+    );
+    let b1 = block!(
+        assign(
             local(0),
             ptr_offset(
                 load(local(0)),
@@ -125,14 +125,14 @@ fn mem_dealloc_not_beginning() {
                 InBounds::Yes
             )
         ),
-        &deallocate(
+        deallocate(
             load(local(0)),
             const_int::<usize>(4),
             const_int::<usize>(4),
             2
         )
-    ]);
-    let b2 = block2(&[&exit()]);
+    );
+    let b2 = block!(exit());
 
     let f = function(Ret::No, 0, &locals, &[b0, b1, b2]);
     let p = program(&[f]);

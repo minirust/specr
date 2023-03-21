@@ -1,4 +1,5 @@
 #![feature(never_type)]
+#![feature(decl_macro)]
 
 extern crate gen_minirust;
 

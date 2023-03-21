@@ -90,6 +90,12 @@ pub fn block2(l: &[&dyn ToStmtTerm]) -> BasicBlock {
     }
 }
 
+pub macro block {
+    ($($stmt:expr),* $(,)?) => {
+        block2(&[$(&$stmt),*])
+    }
+}
+
 pub enum StmtTerm {
     Stmt(Statement),
     Term(Terminator),

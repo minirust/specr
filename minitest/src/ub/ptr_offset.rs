@@ -4,18 +4,18 @@ use crate::*;
 fn ptr_offset_success() {
     let locals = &[ <i32>::get_ptype(), <*const i32>::get_ptype() ];
 
-    let b0 = block2(&[
-        &live(0),
-        &live(1),
-        &assign(
+    let b0 = block!(
+        live(0),
+        live(1),
+        assign(
             local(0),
             const_int::<i32>(42),
         ),
-        &assign(
+        assign(
             local(1),
             addr_of(local(0), <*const i32>::get_type())
         ),
-        &assign(
+        assign(
             local(1),
             ptr_offset(
                 load(local(1)),
@@ -23,8 +23,8 @@ fn ptr_offset_success() {
                 InBounds::Yes,
             )
         ),
-        &exit()
-    ]);
+        exit()
+    );
 
     let f = function(Ret::No, 0, locals, &[b0]);
     let p = program(&[f]);
@@ -36,18 +36,18 @@ fn ptr_offset_success() {
 fn ptr_offset_inbounds() {
     let locals = &[ <i32>::get_ptype(), <*const i32>::get_ptype() ];
 
-    let b0 = block2(&[
-        &live(0),
-        &live(1),
-        &assign(
+    let b0 = block!(
+        live(0),
+        live(1),
+        assign(
             local(0),
             const_int::<i32>(42),
         ),
-        &assign(
+        assign(
             local(1),
             addr_of(local(0), <*const i32>::get_type())
         ),
-        &assign(
+        assign(
             local(1),
             ptr_offset(
                 load(local(1)),
@@ -55,8 +55,8 @@ fn ptr_offset_inbounds() {
                 InBounds::Yes,
             )
         ),
-        &exit()
-    ]);
+        exit()
+    );
 
     let f = function(Ret::No, 0, locals, &[b0]);
     let p = program(&[f]);
@@ -68,18 +68,18 @@ fn ptr_offset_inbounds() {
 fn ptr_offset_no_inbounds() {
     let locals = &[ <i32>::get_ptype(), <*const i32>::get_ptype() ];
 
-    let b0 = block2(&[
-        &live(0),
-        &live(1),
-        &assign(
+    let b0 = block!(
+        live(0),
+        live(1),
+        assign(
             local(0),
             const_int::<i32>(42),
         ),
-        &assign(
+        assign(
             local(1),
             addr_of(local(0), <*const i32>::get_type())
         ),
-        &assign(
+        assign(
             local(1),
             ptr_offset(
                 load(local(1)),
@@ -87,8 +87,8 @@ fn ptr_offset_no_inbounds() {
                 InBounds::No,
             )
         ),
-        &exit()
-    ]);
+        exit()
+    );
 
     let f = function(Ret::No, 0, locals, &[b0]);
     let p = program(&[f]);
@@ -106,13 +106,13 @@ fn ptr_offset_overflow() {
 
     let locals = [ union_pty ];
 
-    let b0 = block2(&[
-        &live(0),
-        &assign(
+    let b0 = block!(
+        live(0),
+        assign(
             field(local(0), 0),
             const_int::<usize>(usize::MAX) // this is the largest possible pointer.
         ),
-        &assign(
+        assign(
             field(local(0), 1),
             ptr_offset( // here we add 1 to the largest possible pointer -> overflow.
                 load(field(local(0), 1)),
@@ -120,8 +120,8 @@ fn ptr_offset_overflow() {
                 InBounds::Yes
             ),
         ),
-        &exit()
-    ]);
+        exit()
+    );
 
     let f = function(Ret::No, 0, &locals, &[b0]);
     let p = program(&[f]);
@@ -134,18 +134,18 @@ fn ptr_offset_overflow() {
 fn ptr_offset_out_of_bounds() {
     let locals = &[ <i32>::get_ptype(), <*const i32>::get_ptype() ];
 
-    let b0 = block2(&[
-        &live(0),
-        &live(1),
-        &assign(
+    let b0 = block!(
+        live(0),
+        live(1),
+        assign(
             local(0),
             const_int::<i32>(42),
         ),
-        &assign(
+        assign(
             local(1),
             addr_of(local(0), <*const i32>::get_type())
         ),
-        &assign(
+        assign(
             local(1),
             ptr_offset(
                 load(local(1)),
@@ -153,8 +153,8 @@ fn ptr_offset_out_of_bounds() {
                 InBounds::Yes,
             )
         ),
-        &exit()
-    ]);
+        exit()
+    );
 
     let f = function(Ret::No, 0, locals, &[b0]);
     let p = program(&[f]);

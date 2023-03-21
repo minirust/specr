@@ -4,16 +4,16 @@ use crate::*;
 fn alloc_success() {
     let locals = [ <*const i32>::get_ptype() ];
 
-    let b0 = block2(&[
-        &live(0),
-        &Terminator::CallIntrinsic {
+    let b0 = block!(
+        live(0),
+        Terminator::CallIntrinsic {
             intrinsic: Intrinsic::Allocate,
             arguments: list![const_int::<usize>(4), const_int::<usize>(4)],
             ret: Some(local(0)),
             next_block: Some(BbName(Name::new(1))),
         },
-    ]);
-    let b1 = block2(&[&exit()]);
+    );
+    let b1 = block!(exit());
 
     let f = function(Ret::No, 0, &locals, &[b0, b1]);
     let p = program(&[f]);
@@ -25,14 +25,14 @@ fn alloc_success() {
 fn alloc_noret() {
     let locals = [];
 
-    let b0 = block2(&[
-        &Terminator::CallIntrinsic {
+    let b0 = block!(
+        Terminator::CallIntrinsic {
             intrinsic: Intrinsic::Allocate,
             arguments: list![const_int::<usize>(4), const_int::<usize>(4)],
             ret: None,
             next_block: None,
         },
-    ]);
+    );
 
     let f = function(Ret::No, 0, &locals, &[b0]);
     let p = program(&[f]);
@@ -44,15 +44,15 @@ fn alloc_noret() {
 fn alloc_argcount() {
     let locals = [ <*const i32>::get_ptype() ];
 
-    let b0 = block2(&[
-        &live(0),
-        &Terminator::CallIntrinsic {
+    let b0 = block!(
+        live(0),
+        Terminator::CallIntrinsic {
             intrinsic: Intrinsic::Allocate,
             arguments: list![],
             ret: Some(local(0)),
             next_block: None,
         },
-    ]);
+    );
 
     let f = function(Ret::No, 0, &locals, &[b0]);
     let p = program(&[f]);
@@ -64,16 +64,16 @@ fn alloc_argcount() {
 fn alloc_align_err() {
     let locals = [ <*const i32>::get_ptype() ];
 
-    let b0 = block2(&[
-        &live(0),
-        &Terminator::CallIntrinsic {
+    let b0 = block!(
+        live(0),
+        Terminator::CallIntrinsic {
             intrinsic: Intrinsic::Allocate,
             arguments: list![const_int::<usize>(4), const_int::<usize>(13)], // 13 is no power of two! hence error!
             ret: Some(local(0)),
             next_block: Some(BbName(Name::new(1))),
         },
-    ]);
-    let b1 = block2(&[&exit()]);
+    );
+    let b1 = block!(exit());
 
     let f = function(Ret::No, 0, &locals, &[b0, b1]);
     let p = program(&[f]);
@@ -85,16 +85,16 @@ fn alloc_align_err() {
 fn alloc_size_err() {
     let locals = [ <*const i32>::get_ptype() ];
 
-    let b0 = block2(&[
-        &live(0),
-        &Terminator::CallIntrinsic {
+    let b0 = block!(
+        live(0),
+        Terminator::CallIntrinsic {
             intrinsic: Intrinsic::Allocate,
             arguments: list![const_int::<isize>(-1), const_int::<usize>(4)], // -1 is not a valid size!
             ret: Some(local(0)),
             next_block: Some(BbName(Name::new(1))),
         },
-    ]);
-    let b1 = block2(&[&exit()]);
+    );
+    let b1 = block!(exit());
 
     let f = function(Ret::No, 0, &locals, &[b0, b1]);
     let p = program(&[f]);
@@ -106,16 +106,16 @@ fn alloc_size_err() {
 fn alloc_wrongarg1() {
     let locals = [ <*const i32>::get_ptype() ];
 
-    let b0 = block2(&[
-        &live(0),
-        &Terminator::CallIntrinsic {
+    let b0 = block!(
+        live(0),
+        Terminator::CallIntrinsic {
             intrinsic: Intrinsic::Allocate,
             arguments: list![const_bool(true), const_int::<usize>(4)], // bool is unexpected here!
             ret: Some(local(0)),
             next_block: Some(BbName(Name::new(1))),
         },
-    ]);
-    let b1 = block2(&[&exit()]);
+    );
+    let b1 = block!(exit());
 
     let f = function(Ret::No, 0, &locals, &[b0, b1]);
     let p = program(&[f]);
@@ -127,16 +127,16 @@ fn alloc_wrongarg1() {
 fn alloc_wrongarg2() {
     let locals = [ <*const i32>::get_ptype() ];
 
-    let b0 = block2(&[
-        &live(0),
-        &Terminator::CallIntrinsic {
+    let b0 = block!(
+        live(0),
+        Terminator::CallIntrinsic {
             intrinsic: Intrinsic::Allocate,
             arguments: list![const_int::<usize>(4), const_bool(true)], // bool is unexpected here!
             ret: Some(local(0)),
             next_block: Some(BbName(Name::new(1))),
         },
-    ]);
-    let b1 = block2(&[&exit()]);
+    );
+    let b1 = block!(exit());
 
     let f = function(Ret::No, 0, &locals, &[b0, b1]);
     let p = program(&[f]);

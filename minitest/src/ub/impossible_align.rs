@@ -10,10 +10,10 @@ fn impossible_align() { // TODO this should not actually panic!
 
     let locals = [ pty ];
 
-    let b0 = block2(&[
-        &live(0),
-        &exit()
-    ]);
+    let b0 = block!(
+        live(0),
+        exit()
+    );
 
     let f = function(Ret::No, 0, &locals, &[b0]);
     let p = program(&[f]);

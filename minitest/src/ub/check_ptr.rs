@@ -10,19 +10,19 @@ fn check_ptr_null() {
 
     let locals = [ union_pty, <i32>::get_ptype(), ];
 
-    let b0 = block2(&[
-        &live(0),
-        &live(1),
-        &assign(
+    let b0 = block!(
+        live(0),
+        live(1),
+        assign(
             field(local(0), 0),
             const_int::<usize>(0) // nullptr!
         ),
-        &assign(
+        assign(
             local(1),
             load(deref(load(field(local(0), 1)), <i32>::get_ptype()))
         ),
-        &exit()
-    ]);
+        exit()
+    );
 
     let f = function(Ret::No, 0, &locals, &[b0]);
     let p = program(&[f]);
@@ -40,19 +40,19 @@ fn check_ptr_misaligned() {
 
     let locals = [ union_pty, <i32>::get_ptype(), ];
 
-    let b0 = block2(&[
-        &live(0),
-        &live(1),
-        &assign(
+    let b0 = block!(
+        live(0),
+        live(1),
+        assign(
             field(local(0), 0),
             const_int::<usize>(1) // nullptr + 1
         ),
-        &assign(
+        assign(
             local(1),
             load(deref(load(field(local(0), 1)), <i32>::get_ptype()))
         ),
-        &exit()
-    ]);
+        exit()
+    );
 
     let f = function(Ret::No, 0, &locals, &[b0]);
     let p = program(&[f]);
