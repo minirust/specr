@@ -108,7 +108,7 @@ fn fmt_function(
 
     // fmt locals
     let mut locals: Vec<_> = f.locals.keys().collect();
-    locals.sort_by_key(|l| l.0.get());
+    locals.sort_by_key(|l| l.0.get_internal());
     for l in locals {
         let ty = f.locals.index_at(l);
         writeln!(
@@ -139,9 +139,9 @@ fn fmt_bb(
     comptypes: &mut Vec<Type>,
 ) -> Result<(), Error> {
     if start {
-        writeln!(wr, "  bb{} [start]:", bb_name.0.get())?;
+        writeln!(wr, "  bb{} [start]:", bb_name.0.get_internal())?;
     } else {
-        writeln!(wr, "  bb{}:", bb_name.0.get())?;
+        writeln!(wr, "  bb{}:", bb_name.0.get_internal())?;
     }
 
     for st in bb.statements.iter() {

@@ -28,7 +28,7 @@ pub fn assert_stop(prog: Program) {
 }
 
 pub fn assert_ub(prog: Program, msg: &str) {
-    assert_eq!(run_program(prog), TerminationInfo::Ub(gen_minirust::prelude::String::from(msg.to_string())));
+    assert_eq!(run_program(prog), TerminationInfo::Ub(gen_minirust::prelude::String::from_internal(msg.to_string())));
 }
 
 pub fn assert_ill_formed(prog: Program) {

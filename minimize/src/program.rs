@@ -29,7 +29,7 @@ impl<'tcx> Ctxt<'tcx> {
     pub fn translate(mut self) -> Program {
         let (entry, _ty) = self.tcx.entry_fn(()).unwrap();
         let substs_ref: rs::SubstsRef<'tcx> = self.tcx.intern_substs(&[]);
-        let entry_name = FnName(Name::new(0));
+        let entry_name = FnName(Name::from_internal(0));
 
         self.fn_name_map.insert((entry, substs_ref), entry_name);
 
@@ -47,7 +47,7 @@ impl<'tcx> Ctxt<'tcx> {
         let number_of_fns = self.fn_name_map.len();
 
         // add a `start` function, which calls `entry`.
-        let start = FnName(Name::new(number_of_fns as _));
+        let start = FnName(Name::from_internal(number_of_fns as _));
         self.functions.insert(start, mk_start_fn(0));
 
         Program {
@@ -60,8 +60,8 @@ impl<'tcx> Ctxt<'tcx> {
 }
 
 fn mk_start_fn(entry: u32) -> Function {
-    let b0_name = BbName(Name::new(0));
-    let b1_name = BbName(Name::new(1));
+    let b0_name = BbName(Name::from_internal(0));
+    let b1_name = BbName(Name::from_internal(1));
 
     let b0 = BasicBlock {
         statements: List::new(),
@@ -136,17 +136,17 @@ impl<'cx, 'tcx> FnCtxt<'cx, 'tcx> {
         // associate names for each mir BB.
         for bb_id in self.body.basic_blocks.indices() {
             let bb_name = self.bb_name_map.len(); // .len() is the next free index
-            let bb_name = BbName(Name::new(bb_name as u32));
+            let bb_name = BbName(Name::from_internal(bb_name as u32));
             self.bb_name_map.insert(bb_id, bb_name);
         }
 
         // bb with id 0 is the start block:
         // see https://doc.rust-lang.org/stable/nightly-rustc/src/rustc_middle/mir/mod.rs.html#1014-1042
-        let rs_start = BbName(Name::new(0));
+        let rs_start = BbName(Name::from_internal(0));
 
         for local_id in self.body.local_decls.indices() {
             let local_name = self.local_name_map.len(); // .len() is the next free index
-            let local_name = LocalName(Name::new(local_name as u32));
+            let local_name = LocalName(Name::from_internal(local_name as u32));
             self.local_name_map.insert(local_id, local_name);
         }
 
@@ -160,7 +160,7 @@ impl<'cx, 'tcx> FnCtxt<'cx, 'tcx> {
         let free_argc = self.body.arg_count + 1;
 
         // add init basic block
-        let init_bb = BbName(Name::new(self.bb_name_map.len() as u32));
+        let init_bb = BbName(Name::from_internal(self.bb_name_map.len() as u32));
 
         // this block allocates all "always_storage_live_locals",
         // except for those which are implicitly storage live in Minirust;
@@ -168,7 +168,7 @@ impl<'cx, 'tcx> FnCtxt<'cx, 'tcx> {
         let init_blk = BasicBlock {
             statements: rs::always_storage_live_locals(&self.body).iter()
                             .map(|loc| self.local_name_map[&loc])
-                            .filter(|LocalName(i)| i.get() as usize >= free_argc)
+                            .filter(|LocalName(i)| i.get_internal() as usize >= free_argc)
                             .map(Statement::StorageLive).collect(),
             terminator: Terminator::Goto(rs_start),
         };
@@ -185,12 +185,12 @@ impl<'cx, 'tcx> FnCtxt<'cx, 'tcx> {
 
         // "The first local is the return value pointer, followed by arg_count locals for the function arguments, followed by any user-declared variables and temporaries."
         // - https://doc.rust-lang.org/stable/nightly-rustc/rustc_middle/mir/struct.Body.html
-        let ret = Some((LocalName(Name::new(0)), ret_abi));
+        let ret = Some((LocalName(Name::from_internal(0)), ret_abi));
 
         let mut args = List::default();
         for (i, arg_abi) in arg_abis.iter().enumerate() {
             let i = i+1; // this starts counting with 1, as id 0 is the return value of the function.
-            let local_name = LocalName(Name::new(i as _));
+            let local_name = LocalName(Name::from_internal(i as _));
             args.push((local_name, arg_abi));
         }
 

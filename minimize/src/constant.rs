@@ -132,7 +132,7 @@ fn translate_const_allocation<'cx, 'tcx>(allocation: rs::ConstAllocation<'tcx>, 
 }
 
 fn fresh_global_name<'cx, 'tcx>(fcx: &mut FnCtxt<'cx, 'tcx>) -> GlobalName {
-    let name = GlobalName(Name::new(fcx.cx.globals.iter().count() as _)); // TODO use .len() here, if supported
+    let name = GlobalName(Name::from_internal(fcx.cx.globals.iter().count() as _)); // TODO use .len() here, if supported
     // the default_global is added so that calling `fresh_global_name` twice returns different names.
     let default_global = Global {
         bytes: Default::default(),

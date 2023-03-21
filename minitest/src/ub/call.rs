@@ -21,7 +21,7 @@ fn call_success() {
             callee: fn_ptr(1),
             arguments: list![(const_unit(), ArgAbi::Register)],
             ret: Some((local(0), ArgAbi::Register)),
-            next_block: Some(BbName(Name::new(1))),
+            next_block: Some(BbName(Name::from_internal(1))),
         }
     );
     let b1 = block!(exit());
@@ -42,7 +42,7 @@ fn call_non_exist() {
             callee: fn_ptr(1),
             arguments: list![(const_unit(), ArgAbi::Register)],
             ret: Some((local(0), ArgAbi::Register)),
-            next_block: Some(BbName(Name::new(1))),
+            next_block: Some(BbName(Name::from_internal(1))),
         }
     );
     let b1 = block!(exit());
@@ -63,7 +63,7 @@ fn call_arg_count() {
             callee: fn_ptr(1),
             arguments: list![],
             ret: Some((local(0), ArgAbi::Register)),
-            next_block: Some(BbName(Name::new(1))),
+            next_block: Some(BbName(Name::from_internal(1))),
         }
     );
     let b1 = block!(exit());
@@ -84,7 +84,7 @@ fn call_arg_abi() {
             callee: fn_ptr(1),
             arguments: list![(const_unit(), other_arg_abi())],
             ret: Some((local(0), ArgAbi::Register)),
-            next_block: Some(BbName(Name::new(1))),
+            next_block: Some(BbName(Name::from_internal(1))),
         }
     );
     let b1 = block!(exit());
@@ -105,7 +105,7 @@ fn call_ret_abi() {
             callee: fn_ptr(1),
             arguments: list![(const_unit(), ArgAbi::Register)],
             ret: Some((local(0), other_arg_abi())),
-            next_block: Some(BbName(Name::new(1))),
+            next_block: Some(BbName(Name::from_internal(1))),
         }
     );
     let b1 = block!(exit());

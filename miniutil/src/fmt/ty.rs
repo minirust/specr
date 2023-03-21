@@ -59,7 +59,7 @@ pub fn type_to_string(t: Type, comptypes: &mut Vec<Type>) -> String {
             format!("T{i}")
         }
         Type::Array { elem, count } => {
-            let elem = type_to_string(elem.get(), comptypes);
+            let elem = type_to_string(elem.extract(), comptypes);
             format!("[{}; {}]", elem, count)
         }
         Type::Enum { .. } => panic!("enums are unsupported!"),

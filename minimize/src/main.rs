@@ -78,7 +78,7 @@ fn main() {
             match run_program(prog) {
                 TerminationInfo::IllFormed => eprintln!("ERR: program not well-formed."),
                 TerminationInfo::MachineStop => { /* silent exit. */ },
-                TerminationInfo::Ub(err) => eprintln!("UB: {}", err.get()),
+                TerminationInfo::Ub(err) => eprintln!("UB: {}", err.get_internal()),
                 _ => unreachable!(),
             }
         }

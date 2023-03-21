@@ -14,7 +14,7 @@ pub fn run_program(prog: Program) -> TerminationInfo {
         }
     };
 
-    match res.get() {
+    match res.get_internal() {
         Ok(never) => never,
         Err(t) => t,
     }

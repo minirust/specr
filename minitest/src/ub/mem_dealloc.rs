@@ -15,7 +15,7 @@ fn mem_dealloc_success() {
             intrinsic: Intrinsic::Deallocate,
             arguments: list![load(local(0)), const_int::<usize>(4), const_int::<usize>(4)],
             ret: None,
-            next_block: Some(BbName(Name::new(2))),
+            next_block: Some(BbName(Name::from_internal(2))),
         },
     );
     let b2 = block!(exit());
@@ -39,7 +39,7 @@ fn mem_dealloc_wrong_size() {
             intrinsic: Intrinsic::Deallocate,
             arguments: list![load(local(0)), const_int::<usize>(5), const_int::<usize>(4)],
             ret: None,
-            next_block: Some(BbName(Name::new(2))),
+            next_block: Some(BbName(Name::from_internal(2))),
         },
     );
     let b2 = block!(exit());
@@ -63,7 +63,7 @@ fn mem_dealloc_wrong_align() {
             intrinsic: Intrinsic::Deallocate,
             arguments: list![load(local(0)), const_int::<usize>(4), const_int::<usize>(8)],
             ret: None,
-            next_block: Some(BbName(Name::new(2))),
+            next_block: Some(BbName(Name::from_internal(2))),
         },
     );
     let b2 = block!(exit());

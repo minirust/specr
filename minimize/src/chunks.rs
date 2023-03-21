@@ -59,7 +59,7 @@ fn mark_used_bytes(ty: Type, markers: &mut [bool]) {
             }
         }
         Type::Array { elem, count } => {
-            let elem = elem.get();
+            let elem = elem.extract();
             for i in Int::ZERO..count {
                 let offset = i * elem.size::<BasicMemory>();
                 let offset = offset.bytes().try_to_usize().unwrap();
