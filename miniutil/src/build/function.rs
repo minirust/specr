@@ -23,7 +23,10 @@ pub fn program(fns: &[Function]) -> Program {
 }
 
 // whether a function returns or not.
-pub enum Ret { Yes, No }
+pub enum Ret {
+    Yes,
+    No,
+}
 
 // if ret == Yes, then _0 is the return local.
 // the first block is the starting block.
@@ -35,14 +38,16 @@ pub fn function(ret: Ret, num_args: usize, locs: &[PlaceType], bbs: &[BasicBlock
         locals.insert(LocalName(Name::new(i as _)), *l);
     }
 
-    let args = (0..num_args).map(|x| {
-        let idx = match ret {
-            Ret::Yes => x+1,
-            Ret::No => x,
-        };
+    let args = (0..num_args)
+        .map(|x| {
+            let idx = match ret {
+                Ret::Yes => x + 1,
+                Ret::No => x,
+            };
 
-        (LocalName(Name::new(idx as _)), ArgAbi::Register)
-    }).collect();
+            (LocalName(Name::new(idx as _)), ArgAbi::Register)
+        })
+        .collect();
 
     let ret = match ret {
         Ret::Yes => {

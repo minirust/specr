@@ -101,16 +101,29 @@ fn int_binop<T: TypeConv>(op: BinOpInt, l: ValueExpr, r: ValueExpr) -> ValueExpr
     }
 }
 
-pub fn add<T: TypeConv>(l: ValueExpr, r: ValueExpr) -> ValueExpr { int_binop::<T>(BinOpInt::Add, l, r) }
-pub fn sub<T: TypeConv>(l: ValueExpr, r: ValueExpr) -> ValueExpr { int_binop::<T>(BinOpInt::Sub, l, r) }
-pub fn mul<T: TypeConv>(l: ValueExpr, r: ValueExpr) -> ValueExpr { int_binop::<T>(BinOpInt::Mul, l, r) }
-pub fn div<T: TypeConv>(l: ValueExpr, r: ValueExpr) -> ValueExpr { int_binop::<T>(BinOpInt::Div, l, r) }
+pub fn add<T: TypeConv>(l: ValueExpr, r: ValueExpr) -> ValueExpr {
+    int_binop::<T>(BinOpInt::Add, l, r)
+}
+pub fn sub<T: TypeConv>(l: ValueExpr, r: ValueExpr) -> ValueExpr {
+    int_binop::<T>(BinOpInt::Sub, l, r)
+}
+pub fn mul<T: TypeConv>(l: ValueExpr, r: ValueExpr) -> ValueExpr {
+    int_binop::<T>(BinOpInt::Mul, l, r)
+}
+pub fn div<T: TypeConv>(l: ValueExpr, r: ValueExpr) -> ValueExpr {
+    int_binop::<T>(BinOpInt::Div, l, r)
+}
 
-pub enum InBounds { Yes, No}
+pub enum InBounds {
+    Yes,
+    No,
+}
 
 pub fn ptr_offset(l: ValueExpr, r: ValueExpr, inbounds: InBounds) -> ValueExpr {
     ValueExpr::BinOp {
-        operator: BinOp::PtrOffset { inbounds: matches!(inbounds, InBounds::Yes) },
+        operator: BinOp::PtrOffset {
+            inbounds: matches!(inbounds, InBounds::Yes),
+        },
         left: GcCow::new(l),
         right: GcCow::new(r),
     }

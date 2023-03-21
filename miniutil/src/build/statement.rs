@@ -1,7 +1,10 @@
 use crate::build::*;
 
 pub fn assign(destination: PlaceExpr, source: ValueExpr) -> Statement {
-    Statement::Assign { destination, source }
+    Statement::Assign {
+        destination,
+        source,
+    }
 }
 
 pub fn finalize(place: PlaceExpr, fn_entry: bool) -> Statement {

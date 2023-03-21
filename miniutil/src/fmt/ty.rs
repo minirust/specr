@@ -1,7 +1,11 @@
 use crate::*;
 
 pub fn ptype_to_string(place_ty: PlaceType, comptypes: &mut Vec<Type>) -> String {
-    format!("{}<align={}>", type_to_string(place_ty.ty, comptypes), place_ty.align.bytes())
+    format!(
+        "{}<align={}>",
+        type_to_string(place_ty.ty, comptypes),
+        place_ty.align.bytes()
+    )
 }
 
 use std::fmt::Write;
@@ -20,15 +24,26 @@ fn layout_to_string(layout: Layout) -> String {
         true => "",
         false => ", uninhabited",
     };
-    format!("layout(size={}, align={}{})", layout.size.bytes(), layout.align.bytes(), uninhab_str)
+    format!(
+        "layout(size={}, align={}{})",
+        layout.size.bytes(),
+        layout.align.bytes(),
+        uninhab_str
+    )
 }
 
 pub fn type_to_string(t: Type, comptypes: &mut Vec<Type>) -> String {
     match t {
         Type::Int(int_ty) => int_type_to_string(int_ty),
         Type::Bool => String::from("bool"),
-        Type::Ptr(PtrType::Ref { mutbl: Mutability::Mutable, pointee }) => format!("&mut {}", layout_to_string(pointee)),
-        Type::Ptr(PtrType::Ref { mutbl: Mutability::Immutable, pointee }) => format!("&{}", layout_to_string(pointee)),
+        Type::Ptr(PtrType::Ref {
+            mutbl: Mutability::Mutable,
+            pointee,
+        }) => format!("&mut {}", layout_to_string(pointee)),
+        Type::Ptr(PtrType::Ref {
+            mutbl: Mutability::Immutable,
+            pointee,
+        }) => format!("&{}", layout_to_string(pointee)),
         Type::Ptr(PtrType::Box { pointee }) => format!("Box<{}>", layout_to_string(pointee)),
         Type::Ptr(PtrType::Raw { pointee }) => format!("*{}", layout_to_string(pointee)),
         Type::Ptr(PtrType::FnPtr) => String::from("fn()"),
@@ -42,11 +57,11 @@ pub fn type_to_string(t: Type, comptypes: &mut Vec<Type>) -> String {
                 }
             };
             format!("T{i}")
-        },
+        }
         Type::Array { elem, count } => {
             let elem = type_to_string(elem.get(), comptypes);
             format!("[{}; {}]", elem, count)
-        },
+        }
         Type::Enum { .. } => panic!("enums are unsupported!"),
     }
 }
@@ -54,17 +69,33 @@ pub fn type_to_string(t: Type, comptypes: &mut Vec<Type>) -> String {
 pub fn fmt_comptype(i: usize, t: Type, comptypes: &mut Vec<Type>) -> String {
     let (keyword, fields, opt_chunks, size) = match t {
         Type::Tuple { fields, size } => ("tuple", fields, None, size),
-        Type::Union { chunks, fields, size } => ("union", fields, Some(chunks), size),
+        Type::Union {
+            chunks,
+            fields,
+            size,
+        } => ("union", fields, Some(chunks), size),
         _ => panic!("not a supported composite type!"),
     };
     let mut s = String::new();
     writeln!(s, "{} T{} ({} bytes) {{", keyword, i, size.bytes()).unwrap();
     for (offset, f) in fields {
-        writeln!(s, "  at byte {}: {},", offset.bytes(), type_to_string(f, comptypes)).unwrap()
+        writeln!(
+            s,
+            "  at byte {}: {},",
+            offset.bytes(),
+            type_to_string(f, comptypes)
+        )
+        .unwrap()
     }
     if let Some(chunks) = opt_chunks {
         for (offset, size) in chunks {
-            write!(s, "  chunk(at={}, size={}),\n", offset.bytes(), size.bytes()).unwrap()
+            write!(
+                s,
+                "  chunk(at={}, size={}),\n",
+                offset.bytes(),
+                size.bytes()
+            )
+            .unwrap()
         }
     }
     writeln!(s, "}}\n").unwrap();

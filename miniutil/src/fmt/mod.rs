@@ -34,12 +34,13 @@ pub fn program_to_string(prog: &Program) -> String {
 }
 
 fn bytes_to_string(bytes: List<Option<u8>>) -> String {
-    let b: Vec<_> = bytes.iter().map(|x| {
-        match x {
+    let b: Vec<_> = bytes
+        .iter()
+        .map(|x| match x {
             Some(u) => format!("{:02x?}", u),
             None => String::from("__"),
-        }
-    }).collect();
+        })
+        .collect();
 
     b.join(" ")
 }
@@ -51,7 +52,11 @@ fn globals_to_string(globals: Map<GlobalName, Global>) -> String {
         out.push_str(&format!("  bytes = [{}],\n", bytes_to_string(global.bytes)));
         out.push_str(&format!("  align = {} bytes,\n", global.align.bytes()));
         for (i, rel) in global.relocations {
-            out.push_str(&format!("  at byte {}: {},\n", i.bytes(), relocation_to_string(rel)));
+            out.push_str(&format!(
+                "  at byte {}: {},\n",
+                i.bytes(),
+                relocation_to_string(rel)
+            ));
         }
         out.push_str("}\n\n");
     }
@@ -62,7 +67,11 @@ pub fn relocation_to_string(relocation: Relocation) -> String {
     if relocation.offset.bytes() == 0 {
         global_name_to_string(relocation.name)
     } else {
-        format!("({} + {})", global_name_to_string(relocation.name), relocation.offset.bytes())
+        format!(
+            "({} + {})",
+            global_name_to_string(relocation.name),
+            relocation.offset.bytes()
+        )
     }
 }
 
@@ -70,17 +79,25 @@ pub fn dump_program(prog: &Program) {
     println!("{}", program_to_string(prog));
 }
 
-fn fmt_function(fn_name: FnName, f: Function, start: bool, wr: &mut String, comptypes: &mut Vec<Type>) -> Result<(), Error> {
-    let start_str = if start {
-        "[start] "
-    } else { "" };
+fn fmt_function(
+    fn_name: FnName,
+    f: Function,
+    start: bool,
+    wr: &mut String,
+    comptypes: &mut Vec<Type>,
+) -> Result<(), Error> {
+    let start_str = if start { "[start] " } else { "" };
     let fn_name = fn_name_to_string(fn_name);
-    let args: Vec<_> = f.args.iter().map(|(x, _)| {
+    let args: Vec<_> = f
+        .args
+        .iter()
+        .map(|(x, _)| {
             let ident = local_name_to_string(x);
             let ty = ptype_to_string(f.locals.index_at(x), comptypes);
 
             format!("{ident}: {ty}")
-        }).collect();
+        })
+        .collect();
     let args = args.join(", ");
 
     let mut ret_ty = String::from("none");
@@ -94,7 +111,12 @@ fn fmt_function(fn_name: FnName, f: Function, start: bool, wr: &mut String, comp
     locals.sort_by_key(|l| l.0.get());
     for l in locals {
         let ty = f.locals.index_at(l);
-        writeln!(wr, "  let {}: {};", local_name_to_string(l), ptype_to_string(ty, comptypes))?;
+        writeln!(
+            wr,
+            "  let {}: {};",
+            local_name_to_string(l),
+            ptype_to_string(ty, comptypes)
+        )?;
     }
 
     let mut blocks: Vec<(_, _)> = f.blocks.iter().collect();
@@ -109,7 +131,13 @@ fn fmt_function(fn_name: FnName, f: Function, start: bool, wr: &mut String, comp
     Ok(())
 }
 
-fn fmt_bb(bb_name: BbName, bb: BasicBlock, start: bool, wr: &mut String, comptypes: &mut Vec<Type>) -> Result<(), Error> {
+fn fmt_bb(
+    bb_name: BbName,
+    bb: BasicBlock,
+    start: bool,
+    wr: &mut String,
+    comptypes: &mut Vec<Type>,
+) -> Result<(), Error> {
     if start {
         writeln!(wr, "  bb{} [start]:", bb_name.0.get())?;
     } else {
@@ -126,25 +154,44 @@ fn fmt_bb(bb_name: BbName, bb: BasicBlock, start: bool, wr: &mut String, comptyp
 
 fn fmt_statement(st: Statement, wr: &mut String, comptypes: &mut Vec<Type>) -> Result<(), Error> {
     match st {
-        Statement::Assign { destination, source } => {
-            writeln!(wr, "    {} = {};", place_expr_to_string(destination, comptypes), value_expr_to_string(source, comptypes))?
-        },
-        Statement::Finalize { place, fn_entry } => {
-            writeln!(wr, "    Finalize({}, {});", place_expr_to_string(place, comptypes), fn_entry)?
-        },
+        Statement::Assign {
+            destination,
+            source,
+        } => writeln!(
+            wr,
+            "    {} = {};",
+            place_expr_to_string(destination, comptypes),
+            value_expr_to_string(source, comptypes)
+        )?,
+        Statement::Finalize { place, fn_entry } => writeln!(
+            wr,
+            "    Finalize({}, {});",
+            place_expr_to_string(place, comptypes),
+            fn_entry
+        )?,
         Statement::StorageLive(local) => {
             writeln!(wr, "    StorageLive({});", local_name_to_string(local))?
-        },
+        }
         Statement::StorageDead(local) => {
             writeln!(wr, "    StorageDead({});", local_name_to_string(local))?
-        },
+        }
     }
 
     Ok(())
 }
 
-fn fmt_call(callee: &str, arguments: List<ValueExpr>, ret: Option<PlaceExpr>, next_block: Option<BbName>, wr: &mut String, comptypes: &mut Vec<Type>) -> Result<(), Error> {
-    let args: Vec<_> = arguments.iter().map(|x| value_expr_to_string(x, comptypes)).collect();
+fn fmt_call(
+    callee: &str,
+    arguments: List<ValueExpr>,
+    ret: Option<PlaceExpr>,
+    next_block: Option<BbName>,
+    wr: &mut String,
+    comptypes: &mut Vec<Type>,
+) -> Result<(), Error> {
+    let args: Vec<_> = arguments
+        .iter()
+        .map(|x| value_expr_to_string(x, comptypes))
+        .collect();
     let args = args.join(", ");
 
     let mut r = String::from("none");
@@ -164,18 +211,22 @@ fn fmt_terminator(t: Terminator, wr: &mut String, comptypes: &mut Vec<Type>) -> 
     match t {
         Terminator::Goto(bb) => {
             writeln!(wr, "    goto -> {};", bb_name_to_string(bb))?;
-        },
+        }
         Terminator::If {
             condition,
             then_block,
             else_block,
         } => {
-            writeln!(wr, "    if {} {{", value_expr_to_string(condition, comptypes))?;
+            writeln!(
+                wr,
+                "    if {} {{",
+                value_expr_to_string(condition, comptypes)
+            )?;
             writeln!(wr, "      goto -> {};", bb_name_to_string(then_block))?;
             writeln!(wr, "    }} else {{")?;
             writeln!(wr, "      goto -> {};", bb_name_to_string(else_block))?;
             writeln!(wr, "    }}")?;
-        },
+        }
         Terminator::Unreachable => {
             writeln!(wr, "    unreachable;")?;
         }
@@ -189,10 +240,10 @@ fn fmt_terminator(t: Terminator, wr: &mut String, comptypes: &mut Vec<Type>) -> 
             let arguments = arguments.iter().map(|(x, _)| x).collect();
             let ret = ret.map(|(x, _)| x);
             fmt_call(&callee, arguments, ret, next_block, wr, comptypes)?;
-        },
+        }
         Terminator::Return => {
             writeln!(wr, "    return;")?;
-        },
+        }
         Terminator::CallIntrinsic {
             intrinsic,
             arguments,
@@ -207,7 +258,7 @@ fn fmt_terminator(t: Terminator, wr: &mut String, comptypes: &mut Vec<Type>) -> 
                 Intrinsic::Deallocate => "deallocate",
             };
             fmt_call(callee, arguments, ret, next_block, wr, comptypes)?;
-        },
+        }
     }
 
     Ok(())

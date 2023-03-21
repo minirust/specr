@@ -9,13 +9,12 @@ pub fn layout(size: Size, align: Align) -> Layout {
 }
 
 pub fn int_ty(signed: Signedness, size: Size) -> Type {
-    Type::Int(IntType {
-        signed,
-        size
-    })
+    Type::Int(IntType { signed, size })
 }
 
-pub fn bool_ty() -> Type { Type::Bool }
+pub fn bool_ty() -> Type {
+    Type::Bool
+}
 
 pub fn ref_ty(pointee: Layout) -> Type {
     Type::Ptr(PtrType::Ref {
