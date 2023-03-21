@@ -75,12 +75,25 @@ pub fn block(statements: &[Statement], terminator: Terminator) -> BasicBlock {
     }
 }
 
+// block!(statement1, statement2, ..., terminator)
+// is syntactic sugar for
+// block(&[statement1, statement2, ...], terminator)
+//
+// This macro is evaluated as follows:
+// block!(a, b, c)
+// block!(@{} a, b, c)
+// block!(@{a} b, c)
+// block!(@{a, b} c)
+// block(&[a, b], c)
+//
+// This seems necessary, as macros like this
+// ($($rest:expr),*, $terminator:expr) => { ... }
+// cause `local ambiguity` when called
 pub macro block {
     // entry point
     ($($rest:expr),* $(,)?) => {
         block!(@{} $($rest),*)
     },
-    // exit
     (@{$($stmts:expr),*} $terminator:expr) => {
         block(&[$($stmts),*], $terminator)
     },
