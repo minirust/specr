@@ -37,7 +37,7 @@ impl Int {
 
     pub(crate) fn ext(self) -> ExtInt {
         match self.0 {
-            IntInner::Big(x) => x.get(),
+            IntInner::Big(x) => x.extract(),
             IntInner::Small(x) => x.into(),
         }
     }

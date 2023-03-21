@@ -9,10 +9,10 @@ pub struct NdResult<T, E>(pub(crate) Result<T, E>);
 
 impl<T, E> NdResult<T, E> {
     #[doc(hidden)]
-    pub fn from(r: Result<T, E>) -> Self { Self(r) }
+    pub fn from_internal(r: Result<T, E>) -> Self { Self(r) }
 
     #[doc(hidden)]
-    pub fn get(self) -> Result<T, E> {
+    pub fn get_internal(self) -> Result<T, E> {
         self.0
     }
 }

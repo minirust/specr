@@ -40,7 +40,7 @@ impl<T: GcCompat> GcCow<T> {
     }
 
     /// Extracts the inner value from the `GcCow`.
-    pub fn get(self) -> T where T: GcCompat + Clone {
+    pub fn extract(self) -> T where T: GcCompat + Clone {
         self.call_ref_unchecked(|o| o.clone())
     }
 
@@ -55,7 +55,7 @@ impl<T: GcCompat> GcCow<T> {
 
     // this does the copy-on-write
     pub(crate) fn mutate<O>(&mut self, f: impl FnOnce(&mut T) -> O) -> O where T: GcCompat + Clone {
-        let mut val = self.get();
+        let mut val = self.extract();
         let out = f(&mut val);
         *self = GcCow::new(val);
 
@@ -75,7 +75,7 @@ impl<T: GcCompat> GcCow<T> {
 
     // will fail, if `f` manipulates GC_STATE.
     pub(crate) fn call_mut1_unchecked<U, O>(&mut self, arg: GcCow<U>, f: impl FnOnce(&mut T, &U) -> O) -> O where T: GcCompat + Clone, U: GcCompat {
-        let mut val = self.get();
+        let mut val = self.extract();
         let out = with_gc(|st| {
             let arg = st.get_ref_typed::<U>(arg.idx);
 

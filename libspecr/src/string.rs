@@ -14,20 +14,20 @@ impl Display for String {
 
 impl String {
     #[doc(hidden)]
-    pub fn from(s: std::string::String) -> Self {
+    pub fn from_internal(s: std::string::String) -> Self {
         Self(GcCow::new(s))
     }
 
     #[doc(hidden)]
-    pub fn get(self) -> std::string::String {
-        self.0.get()
+    pub fn get_internal(self) -> std::string::String {
+        self.0.extract()
     }
 }
 
 /// Wrapper around the `std::format` macro returning `libspecr::String` instead of `std::string::String`.
 pub macro format {
     ($($thing:expr),*) => {
-        String::from(
+        String::from_internal(
             std::format!(
                 $($thing),*
             )

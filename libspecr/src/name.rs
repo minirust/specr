@@ -7,8 +7,8 @@ pub struct Name(pub(crate) u32);
 impl Name {
     // hidden so that the internal type (u32) does not leak the docs.
     #[doc(hidden)]
-    pub fn new(i: u32) -> Self { Name(i) }
+    pub fn from_internal(i: u32) -> Self { Name(i) }
 
     #[doc(hidden)]
-    pub fn get(self) -> u32 { self.0 }
+    pub fn get_internal(self) -> u32 { self.0 }
 }

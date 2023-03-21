@@ -160,6 +160,7 @@ impl<T: Obj> List<T> {
         self.iter().map(f).try_collect::<List<O>>()
     }
 
+    // This is required for the list![a; n] macro.
     #[doc(hidden)]
     pub fn from_elem(elem: T, n: Int) -> List<T> {
         let n = n.try_to_usize().expect("invalid number of elements in List::from_elem");
