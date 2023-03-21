@@ -1,6 +1,5 @@
 // TODO consistent module naming scheme for module and entry function.
 mod let_else;
-mod nameres;
 mod imports;
 mod argmatch;
 mod merge_impls;
@@ -98,7 +97,6 @@ fn create_lib(mods: &[Module], config: &Config) {
 
 fn compile(mods: Vec<Module>, config: &Config) {
     let mods = imports::add_imports(mods);
-    let mods = nameres::nameres(mods);
     // argmatch needs to be before typerec, as argmatch generates new match blocks!
     let mods = argmatch::argmatch(mods);
     let mods = typerec::typerec(mods);

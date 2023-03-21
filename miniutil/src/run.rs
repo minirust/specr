@@ -1,20 +1,21 @@
 use crate::*;
 
+use gen_minirust::prelude::NdResult;
 use std::collections::HashSet;
 use GcCompat;
 
 pub fn run_program(prog: Program) -> TerminationInfo {
-    fn run_impl(program: Program) -> NdResult<!> {
-        let mut machine = Machine::<BasicMemory>::new(program)?;
+    let res: NdResult<!> = try {
+        let mut machine = Machine::<BasicMemory>::new(prog)?;
         mark_and_sweep(&machine);
         loop {
             machine.step()?;
             mark_and_sweep(&machine);
         }
-    }
+    };
 
-    match run_impl(prog).get() {
-        Ok(f) => match f {},
+    match res.get() {
+        Ok(never) => never,
         Err(t) => t,
     }
 }

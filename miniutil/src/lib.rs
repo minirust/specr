@@ -1,5 +1,6 @@
 #![feature(never_type)]
 #![feature(decl_macro)]
+#![feature(try_blocks)]
 
 extern crate gen_minirust;
 
@@ -11,7 +12,6 @@ pub use gen_minirust::libspecr::hidden::*;
 pub use gen_minirust::libspecr::prelude::*;
 pub use gen_minirust::libspecr::*;
 
-pub use gen_minirust::prelude::NdResult;
 pub use std::format;
 pub use std::string::String;
 
