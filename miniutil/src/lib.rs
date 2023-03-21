@@ -14,6 +14,7 @@ pub use gen_minirust::libspecr::*;
 
 pub use std::format;
 pub use std::string::String;
+pub use std::result::Result;
 
 pub mod build;
 pub mod fmt;
