@@ -17,6 +17,6 @@ fn negative_index() {
     ];
 
     let p = small_program(locals, stmts);
-    dump_program(&p);
+    dump_program(p);
     assert_ub(p, "out-of-bounds array access");
 }

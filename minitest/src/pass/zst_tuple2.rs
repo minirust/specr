@@ -22,6 +22,6 @@ fn zst_tuple2() {
     ];
 
     let p = small_program(locals, stmts);
-    dump_program(&p);
+    dump_program(p);
     assert_stop(p);
 }

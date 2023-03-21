@@ -18,6 +18,6 @@ fn div_zero() {
 
     let f = function(Ret::No, 0, &locals, &[b0]);
     let p = program(&[f]);
-    dump_program(&p);
+    dump_program(p);
     assert_ub(p, "division by zero");
 }

@@ -11,25 +11,40 @@ use expr::*;
 mod ty;
 use ty::*;
 
-pub fn program_to_string(prog: &Program) -> String {
-    let mut wr = String::new();
-    let mut fns: Vec<(_, _)> = prog.functions.iter().collect();
+pub fn dump_program(prog: Program) {
+    println!("{}", program_to_string(prog));
+}
+
+pub fn program_to_string(prog: Program) -> String {
     let mut comptypes: Vec<Type> = Vec::new();
+    let functions_string = functions_to_string(prog, &mut comptypes);
+    let globals_string = globals_to_string(prog.globals);
+    let comptypes_string = comptypes_to_string(comptypes);
+
+    comptypes_string + &functions_string + &globals_string
+}
+
+fn functions_to_string(prog: Program, comptypes: &mut Vec<Type>) -> String {
+    let mut out = String::new();
+    let mut fns: Vec<(_, _)> = prog.functions.iter().collect();
     fns.sort_by_key(|(k, _)| k.0);
     for (fn_name, f) in fns {
         let start = prog.start == fn_name;
-        fmt_function(fn_name, f, start, &mut wr, &mut comptypes).unwrap();
+        fmt_function(fn_name, f, start, &mut out, comptypes).unwrap();
     }
 
-    let mut out = globals_to_string(prog.globals);
+    out
+}
 
+fn comptypes_to_string(mut comptypes: Vec<Type>) -> String {
+    let mut out = String::new();
     let mut i = 0;
     while i < comptypes.len() {
         let c = comptypes[i];
         out.push_str(&fmt_comptype(i, c, &mut comptypes));
         i += 1;
     }
-    out.push_str(&wr);
+
     out
 }
 
@@ -73,10 +88,6 @@ pub fn relocation_to_string(relocation: Relocation) -> String {
             relocation.offset.bytes()
         )
     }
-}
-
-pub fn dump_program(prog: &Program) {
-    println!("{}", program_to_string(prog));
 }
 
 fn fmt_function(

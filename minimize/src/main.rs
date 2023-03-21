@@ -73,7 +73,7 @@ fn main() {
     get_mini(file, |prog| {
         let dump = std::env::args().skip(1).any(|x| x == "--dump");
         if dump {
-            dump_program(&prog);
+            dump_program(prog);
         } else {
             match run_program(prog) {
                 TerminationInfo::IllFormed => eprintln!("ERR: program not well-formed."),

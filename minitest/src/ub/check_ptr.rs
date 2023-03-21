@@ -26,7 +26,7 @@ fn check_ptr_null() {
 
     let f = function(Ret::No, 0, &locals, &[b0]);
     let p = program(&[f]);
-    dump_program(&p);
+    dump_program(p);
     assert_ub(p, "dereferencing null pointer");
 }
 
@@ -56,7 +56,7 @@ fn check_ptr_misaligned() {
 
     let f = function(Ret::No, 0, &locals, &[b0]);
     let p = program(&[f]);
-    dump_program(&p);
+    dump_program(p);
     assert_ub(p, "pointer is insufficiently aligned");
 }
 

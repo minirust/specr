@@ -28,7 +28,7 @@ fn call_success() {
 
     let f = function(Ret::No, 0, &locals, &[b0, b1]);
     let p = program(&[f, other_f()]);
-    dump_program(&p);
+    dump_program(p);
     assert_stop(p);
 }
 
@@ -49,7 +49,7 @@ fn call_non_exist() {
 
     let f = function(Ret::No, 0, &locals, &[b0, b1]);
     let p = program(&[f]);
-    dump_program(&p);
+    dump_program(p);
     assert_ill_formed(p);
 }
 
@@ -70,7 +70,7 @@ fn call_arg_count() {
 
     let f = function(Ret::No, 0, &locals, &[b0, b1]);
     let p = program(&[f, other_f()]);
-    dump_program(&p);
+    dump_program(p);
     assert_ub(p, "call ABI violation: number of arguments does not agree");
 }
 
@@ -91,7 +91,7 @@ fn call_arg_abi() {
 
     let f = function(Ret::No, 0, &locals, &[b0, b1]);
     let p = program(&[f, other_f()]);
-    dump_program(&p);
+    dump_program(p);
     assert_ub(p, "call ABI violation: argument ABI does not agree");
 }
 
@@ -112,6 +112,6 @@ fn call_ret_abi() {
 
     let f = function(Ret::No, 0, &locals, &[b0, b1]);
     let p = program(&[f, other_f()]);
-    dump_program(&p);
+    dump_program(p);
     assert_ub(p, "call ABI violation: return ABI does not agree");
 }

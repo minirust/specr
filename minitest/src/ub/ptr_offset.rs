@@ -28,7 +28,7 @@ fn ptr_offset_success() {
 
     let f = function(Ret::No, 0, locals, &[b0]);
     let p = program(&[f]);
-    dump_program(&p);
+    dump_program(p);
     assert_stop(p);
 }
 
@@ -60,7 +60,7 @@ fn ptr_offset_inbounds() {
 
     let f = function(Ret::No, 0, locals, &[b0]);
     let p = program(&[f]);
-    dump_program(&p);
+    dump_program(p);
     assert_ub(p, "inbounds offset does not fit into `isize`");
 }
 
@@ -92,7 +92,7 @@ fn ptr_offset_no_inbounds() {
 
     let f = function(Ret::No, 0, locals, &[b0]);
     let p = program(&[f]);
-    dump_program(&p);
+    dump_program(p);
     assert_stop(p);
 }
 
@@ -125,7 +125,7 @@ fn ptr_offset_overflow() {
 
     let f = function(Ret::No, 0, &locals, &[b0]);
     let p = program(&[f]);
-    dump_program(&p);
+    dump_program(p);
     assert_ub(p, "overflowing inbounds pointer arithmetic");
 }
 
@@ -158,6 +158,6 @@ fn ptr_offset_out_of_bounds() {
 
     let f = function(Ret::No, 0, locals, &[b0]);
     let p = program(&[f]);
-    dump_program(&p);
+    dump_program(p);
     assert_ub(p, "out-of-bounds memory access");
 }

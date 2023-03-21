@@ -11,7 +11,7 @@ fn print_success() {
 
     let f = function(Ret::No, 0, &locals, &[b0, b1]);
     let p = program(&[f]);
-    dump_program(&p);
+    dump_program(p);
     assert_stop(p);
 }
 
@@ -26,6 +26,6 @@ fn print_fail() {
 
     let f = function(Ret::No, 0, &locals, &[b0, b1]);
     let p = program(&[f]);
-    dump_program(&p);
+    dump_program(p);
     assert_ub(p, "unsupported value for printing");
 }

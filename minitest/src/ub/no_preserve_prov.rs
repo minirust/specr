@@ -42,6 +42,6 @@ fn no_preserve_prov() {
     ];
 
     let p = small_program(&locals, &stmts);
-    dump_program(&p);
+    dump_program(p);
     assert_ub(p, "non-zero-sized access with invalid pointer");
 }

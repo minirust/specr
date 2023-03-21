@@ -11,6 +11,6 @@ fn neg_count_array() {
     let stmts = &[ live(0) ];
 
     let p = small_program(locals, stmts);
-    dump_program(&p);
+    dump_program(p);
     assert_ill_formed(p);
 }

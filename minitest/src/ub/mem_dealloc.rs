@@ -22,7 +22,7 @@ fn mem_dealloc_success() {
 
     let f = function(Ret::No, 0, &locals, &[b0, b1, b2]);
     let p = program(&[f]);
-    dump_program(&p);
+    dump_program(p);
     assert_stop(p);
 }
 
@@ -46,7 +46,7 @@ fn mem_dealloc_wrong_size() {
 
     let f = function(Ret::No, 0, &locals, &[b0, b1, b2]);
     let p = program(&[f]);
-    dump_program(&p);
+    dump_program(p);
     assert_ub(p, "deallocating with incorrect size information");
 }
 
@@ -70,7 +70,7 @@ fn mem_dealloc_wrong_align() {
 
     let f = function(Ret::No, 0, &locals, &[b0, b1, b2]);
     let p = program(&[f]);
-    dump_program(&p);
+    dump_program(p);
     assert_ub(p, "deallocating with incorrect alignment information");
 }
 
@@ -103,7 +103,7 @@ fn mem_dealloc_inv_ptr() {
 
     let f = function(Ret::No, 0, &locals, &[b0, b1]);
     let p = program(&[f]);
-    dump_program(&p);
+    dump_program(p);
     assert_ub(p, "deallocating invalid pointer");
 }
 
@@ -136,7 +136,7 @@ fn mem_dealloc_not_beginning() {
 
     let f = function(Ret::No, 0, &locals, &[b0, b1, b2]);
     let p = program(&[f]);
-    dump_program(&p);
+    dump_program(p);
     assert_ub(p, "deallocating with pointer not to the beginning of its allocation");
 }
 
