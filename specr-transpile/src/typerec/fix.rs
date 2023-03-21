@@ -53,13 +53,13 @@ impl VisitMut for Visitor<'_> {
     }
 
     // fixup matches:
-    // `Foo { x } => { ... }` ==> `Foo { x } => { let x = x.get(); ... }`
+    // `Foo { x } => { ... }` ==> `Foo { x } => { let x = x.extract(); ... }`
     fn visit_arm_mut(&mut self, i: &mut Arm) {
         let idents: Vec<_> = pat_idents::pat_idents(&i.pat, self.elements).into_iter().collect();
         let body = &i.body;
         let body = quote! {
             {
-                #( let #idents = #idents.get(); )*
+                #( let #idents = #idents.extract(); )*
                 #body
             }
         };
