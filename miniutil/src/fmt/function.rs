@@ -21,30 +21,39 @@ fn fmt_function(
     start: bool,
     comptypes: &mut Vec<CompType>,
 ) -> String {
-    let start_str = if start { "start " } else { "" };
     let fn_name = fmt_fn_name(fn_name);
-    let args: Vec<_> = f
+
+    // Format function arguments
+    let args: Vec<String> = f
         .args
         .iter()
-        .map(|(x, _)| {
-            let ident = fmt_local_name(x);
-            let ty = fmt_ptype(f.locals.index_at(x), comptypes);
+        .map(|(name, _arg_abi)| {
+            let ident = fmt_local_name(name);
+            let ty = fmt_ptype(f.locals.index_at(name), comptypes);
 
             format!("{ident}: {ty}")
         })
         .collect();
     let args = args.join(", ");
 
+    // Format return type
     let mut ret_ty = String::from("none");
-    if let Some((ret, _)) = f.ret {
+    if let Some((ret, _arg_abi)) = f.ret {
         ret_ty = fmt_ptype(f.locals.index_at(ret), comptypes);
     }
+
+    // Format function signature
+    let mut out = if start {
+        format!("start fn {fn_name}({args}) -> {ret_ty} {{\n")
+    } else {
+        format!("fn {fn_name}({args}) -> {ret_ty} {{\n")
+    };
+
+    // Format locals
     let mut locals: Vec<(LocalName, PlaceType)> = f.locals.iter().collect();
 
     // The locals are formatted in the order of their names.
     locals.sort_by_key(|(LocalName(name), _place_ty)| *name);
-
-    let mut out = format!("{start_str}fn {fn_name}({args}) -> {ret_ty} {{\n");
 
     for (l, pty) in locals {
         let local = fmt_local_name(l);
@@ -52,6 +61,7 @@ fn fmt_function(
         out += &format!("  let {local}: {ptype};\n");
     }
 
+    // Format basic blocks
     let mut blocks: Vec<(BbName, BasicBlock)> = f.blocks.iter().collect();
 
     // Basic blocks are formatted in the order of their names.
@@ -68,11 +78,12 @@ fn fmt_function(
 
 fn fmt_bb(bb_name: BbName, bb: BasicBlock, start: bool, comptypes: &mut Vec<CompType>) -> String {
     let name = bb_name.0.get_internal();
-    let start_str = match start {
-        true => "start ",
-        false => "",
+
+    let mut out = if start {
+        format!("  start bb{name}:\n")
+    } else {
+        format!("  bb{name}:\n")
     };
-    let mut out = format!("  {start_str}bb{name}:\n");
 
     for st in bb.statements.iter() {
         out += &fmt_statement(st, comptypes);
