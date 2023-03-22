@@ -4,7 +4,7 @@ use crate::*;
 fn type_mismatch() {
     let locals = &[<i32>::get_ptype()];
     let stmts = &[
-        live(0),
+        storage_live(0),
         assign(
             local(0),
             const_int::<u32>(0),

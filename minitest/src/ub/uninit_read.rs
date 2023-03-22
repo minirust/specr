@@ -4,8 +4,8 @@ use crate::*;
 fn uninit_read() {
     let locals = vec![ <bool>::get_ptype(); 2];
     let stmts = vec![
-        live(0),
-        live(1),
+        storage_live(0),
+        storage_live(1),
         assign(
             local(0),
             load(local(1)),

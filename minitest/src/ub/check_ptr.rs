@@ -11,8 +11,8 @@ fn check_ptr_null() {
     let locals = [ union_pty, <i32>::get_ptype(), ];
 
     let b0 = block!(
-        live(0),
-        live(1),
+        storage_live(0),
+        storage_live(1),
         assign(
             field(local(0), 0),
             const_int::<usize>(0) // nullptr!
@@ -41,8 +41,8 @@ fn check_ptr_misaligned() {
     let locals = [ union_pty, <i32>::get_ptype(), ];
 
     let b0 = block!(
-        live(0),
-        live(1),
+        storage_live(0),
+        storage_live(1),
         assign(
             field(local(0), 0),
             const_int::<usize>(1) // nullptr + 1
@@ -64,7 +64,7 @@ fn check_ptr_misaligned() {
 fn use_after_free() {
     let locals = vec![<*const i32>::get_ptype()];
     let n = const_int::<usize>(4);
-    let b0 = block!(live(0), allocate(n, n, local(0), 1));
+    let b0 = block!(storage_live(0), allocate(n, n, local(0), 1));
     let b1 = block!(deallocate(load(local(0)), n, n, 2));
     let b2 = block!(
         assign( // write to ptr after dealloc!

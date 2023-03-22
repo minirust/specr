@@ -8,7 +8,7 @@ fn neg_count_array() {
         pty,
     ];
 
-    let stmts = &[ live(0) ];
+    let stmts = &[ storage_live(0) ];
 
     let p = small_program(locals, stmts);
     dump_program(p);

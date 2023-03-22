@@ -11,11 +11,11 @@ pub fn finalize(place: PlaceExpr, fn_entry: bool) -> Statement {
     Statement::Finalize { place, fn_entry }
 }
 
-pub fn live(x: u32) -> Statement {
+pub fn storage_live(x: u32) -> Statement {
     Statement::StorageLive(LocalName(Name::from_internal(x)))
 }
 
-pub fn dead(x: u32) -> Statement {
+pub fn storage_dead(x: u32) -> Statement {
     Statement::StorageDead(LocalName(Name::from_internal(x)))
 }
 

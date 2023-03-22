@@ -5,7 +5,7 @@ fn dealloc_success() {
     let locals = [ <*const i32>::get_ptype() ];
 
     let b0 = block!(
-        live(0),
+        storage_live(0),
         allocate(const_int::<usize>(4), const_int::<usize>(4), local(0), 1)
     );
     let b1 = block!(
@@ -49,7 +49,7 @@ fn dealloc_align_err() {
     let locals = [ <*const i32>::get_ptype() ];
 
     let b0 = block!(
-        live(0),
+        storage_live(0),
         allocate(const_int::<usize>(4), const_int::<usize>(4), local(0), 1)
     );
     let b1 = block!(
@@ -73,7 +73,7 @@ fn dealloc_size_err() {
     let locals = [ <*const i32>::get_ptype() ];
 
     let b0 = block!(
-        live(0),
+        storage_live(0),
         allocate(const_int::<usize>(4), const_int::<usize>(4), local(0), 1)
     );
     let b1 = block!(
@@ -97,7 +97,7 @@ fn dealloc_wrongarg1() {
     let locals = [ <*const i32>::get_ptype() ];
 
     let b0 = block!(
-        live(0),
+        storage_live(0),
         allocate(const_int::<usize>(4), const_int::<usize>(4), local(0), 1)
     );
     let b1 = block!(
@@ -121,7 +121,7 @@ fn dealloc_wrongarg2() {
     let locals = [ <*const i32>::get_ptype() ];
 
     let b0 = block!(
-        live(0),
+        storage_live(0),
         allocate(const_int::<usize>(4), const_int::<usize>(4), local(0), 1)
     );
     let b1 = block!(
@@ -145,7 +145,7 @@ fn dealloc_wrongarg3() {
     let locals = [ <*const i32>::get_ptype() ];
 
     let b0 = block!(
-        live(0),
+        storage_live(0),
         allocate(const_int::<usize>(4), const_int::<usize>(4), local(0), 1)
     );
     let b1 = block!(

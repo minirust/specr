@@ -5,7 +5,7 @@ fn alloc_success() {
     let locals = [ <*const i32>::get_ptype() ];
 
     let b0 = block!(
-        live(0),
+        storage_live(0),
         Terminator::CallIntrinsic {
             intrinsic: Intrinsic::Allocate,
             arguments: list![const_int::<usize>(4), const_int::<usize>(4)],
@@ -45,7 +45,7 @@ fn alloc_argcount() {
     let locals = [ <*const i32>::get_ptype() ];
 
     let b0 = block!(
-        live(0),
+        storage_live(0),
         Terminator::CallIntrinsic {
             intrinsic: Intrinsic::Allocate,
             arguments: list![],
@@ -65,7 +65,7 @@ fn alloc_align_err() {
     let locals = [ <*const i32>::get_ptype() ];
 
     let b0 = block!(
-        live(0),
+        storage_live(0),
         Terminator::CallIntrinsic {
             intrinsic: Intrinsic::Allocate,
             arguments: list![const_int::<usize>(4), const_int::<usize>(13)], // 13 is no power of two! hence error!
@@ -86,7 +86,7 @@ fn alloc_size_err() {
     let locals = [ <*const i32>::get_ptype() ];
 
     let b0 = block!(
-        live(0),
+        storage_live(0),
         Terminator::CallIntrinsic {
             intrinsic: Intrinsic::Allocate,
             arguments: list![const_int::<isize>(-1), const_int::<usize>(4)], // -1 is not a valid size!
@@ -107,7 +107,7 @@ fn alloc_wrongarg1() {
     let locals = [ <*const i32>::get_ptype() ];
 
     let b0 = block!(
-        live(0),
+        storage_live(0),
         Terminator::CallIntrinsic {
             intrinsic: Intrinsic::Allocate,
             arguments: list![const_bool(true), const_int::<usize>(4)], // bool is unexpected here!
@@ -128,7 +128,7 @@ fn alloc_wrongarg2() {
     let locals = [ <*const i32>::get_ptype() ];
 
     let b0 = block!(
-        live(0),
+        storage_live(0),
         Terminator::CallIntrinsic {
             intrinsic: Intrinsic::Allocate,
             arguments: list![const_int::<usize>(4), const_bool(true)], // bool is unexpected here!

@@ -12,7 +12,7 @@ fn return_success() {
     let locals = [<()>::get_ptype()];
 
     let b0 = block!(
-        live(0),
+        storage_live(0),
         call(1, &[], Some(local(0)), Some(1))
     );
     let b1 = block!(exit());
@@ -34,7 +34,7 @@ fn return_no_local() {
     let locals = [<()>::get_ptype()];
 
     let b0 = block!(
-        live(0),
+        storage_live(0),
         call(1, &[], Some(local(0)), Some(1))
     );
     let b1 = block!(exit());
@@ -57,7 +57,7 @@ fn return_no_next() {
     let locals = [<()>::get_ptype()];
 
     let b0 = block!(
-        live(0),
+        storage_live(0),
         call(1, &[], Some(local(0)), None)
     );
 
@@ -73,7 +73,7 @@ fn return_intrinsic_no_next() {
     let locals = [<*const i32>::get_ptype()];
 
     let b0 = block!(
-        live(0),
+        storage_live(0),
         Terminator::CallIntrinsic {
             intrinsic: Intrinsic::Allocate,
             arguments: list![const_int::<usize>(4), const_int::<usize>(4)],

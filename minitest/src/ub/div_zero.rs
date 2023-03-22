@@ -5,7 +5,7 @@ fn div_zero() {
     let locals = [<i32>::get_ptype()];
 
     let b0 = block!(
-        live(0),
+        storage_live(0),
         assign(
             local(0),
             div::<i32>(

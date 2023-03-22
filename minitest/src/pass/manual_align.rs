@@ -8,8 +8,8 @@ fn manual_align() {
     ];
 
     let stmts = &[
-        live(0),
-        live(1),
+        storage_live(0),
+        storage_live(1),
         assign( // _1 = (&raw _0) as usize;
             local(1),
             ptr_to_int(

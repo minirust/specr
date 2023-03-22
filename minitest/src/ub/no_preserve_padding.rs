@@ -37,10 +37,10 @@ fn no_preserve_padding() {
     ];
 
     let stmts = vec![
-        live(0),
-        live(1),
-        live(2),
-        live(3),
+        storage_live(0),
+        storage_live(1),
+        storage_live(2),
+        storage_live(3),
         assign(
             field(local(0), 1),
             const_int::<u32>(0)

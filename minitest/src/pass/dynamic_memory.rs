@@ -4,7 +4,7 @@ use crate::*;
 fn dynamic_memory() {
     let locals = [<*const i32>::get_ptype(), <i32>::get_ptype()];
     let n = const_int::<usize>(4);
-    let b0 = block!(live(0), live(1), allocate(n, n, local(0), 1)); // alloc ptr
+    let b0 = block!(storage_live(0), storage_live(1), allocate(n, n, local(0), 1)); // alloc ptr
     let b1 = block!(
         assign( // write to ptr
             deref(load(local(0)), <i32>::get_ptype()),

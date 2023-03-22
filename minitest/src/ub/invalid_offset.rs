@@ -13,8 +13,8 @@ fn invalid_offset() {
     ];
 
     let stmts = &[
-        live(0),
-        live(1),
+        storage_live(0),
+        storage_live(1),
         assign(local(0),
             const_array(&[
                 const_int::<i32>(42),

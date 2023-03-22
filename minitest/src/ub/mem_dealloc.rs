@@ -7,7 +7,7 @@ fn mem_dealloc_success() {
     let locals = [ <*const i32>::get_ptype() ];
 
     let b0 = block!(
-        live(0),
+        storage_live(0),
         allocate(const_int::<usize>(4), const_int::<usize>(4), local(0), 1)
     );
     let b1 = block!(
@@ -31,7 +31,7 @@ fn mem_dealloc_wrong_size() {
     let locals = [ <*const i32>::get_ptype() ];
 
     let b0 = block!(
-        live(0),
+        storage_live(0),
         allocate(const_int::<usize>(4), const_int::<usize>(4), local(0), 1)
     );
     let b1 = block!(
@@ -55,7 +55,7 @@ fn mem_dealloc_wrong_align() {
     let locals = [ <*const i32>::get_ptype() ];
 
     let b0 = block!(
-        live(0),
+        storage_live(0),
         allocate(const_int::<usize>(4), const_int::<usize>(4), local(0), 1)
     );
     let b1 = block!(
@@ -87,7 +87,7 @@ fn mem_dealloc_inv_ptr() {
     let locals = [ union_pty ];
 
     let b0 = block!(
-        live(0),
+        storage_live(0),
         assign(
             field(local(0), 0),
             const_int::<usize>(42)
@@ -113,7 +113,7 @@ fn mem_dealloc_not_beginning() {
     let locals = [ <*const i32>::get_ptype() ];
 
     let b0 = block!(
-        live(0),
+        storage_live(0),
         allocate(const_int::<usize>(4), const_int::<usize>(4), local(0), 1)
     );
     let b1 = block!(
@@ -144,7 +144,7 @@ fn mem_dealloc_not_beginning() {
 fn double_free() {
     let locals = vec![<*const i32>::get_ptype()];
     let n = const_int::<usize>(4);
-    let b0 = block!(live(0), allocate(n, n, local(0), 1));
+    let b0 = block!(storage_live(0), allocate(n, n, local(0), 1));
     let b1 = block!(deallocate(load(local(0)), n, n, 2));
     let b2 = block!(deallocate(load(local(0)), n, n, 3));
     let b3 = block!(exit());

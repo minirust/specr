@@ -8,8 +8,8 @@ fn negative_index() {
     ];
 
     let stmts = &[
-        live(0),
-        live(1),
+        storage_live(0),
+        storage_live(1),
         assign(
             local(1),
             load(index(local(0), const_int::<isize>(-1))),

@@ -16,7 +16,7 @@ fn call_success() {
     let locals = [<()>::get_ptype()];
 
     let b0 = block!(
-        live(0),
+        storage_live(0),
         Terminator::Call {
             callee: fn_ptr(1),
             arguments: list![(const_unit(), ArgAbi::Register)],
@@ -37,7 +37,7 @@ fn call_non_exist() {
     let locals = [<()>::get_ptype()];
 
     let b0 = block!(
-        live(0),
+        storage_live(0),
         Terminator::Call {
             callee: fn_ptr(1),
             arguments: list![(const_unit(), ArgAbi::Register)],
@@ -58,7 +58,7 @@ fn call_arg_count() {
     let locals = [<()>::get_ptype()];
 
     let b0 = block!(
-        live(0),
+        storage_live(0),
         Terminator::Call {
             callee: fn_ptr(1),
             arguments: list![],
@@ -79,7 +79,7 @@ fn call_arg_abi() {
     let locals = [<()>::get_ptype()];
 
     let b0 = block!(
-        live(0),
+        storage_live(0),
         Terminator::Call {
             callee: fn_ptr(1),
             arguments: list![(const_unit(), other_arg_abi())],
@@ -100,7 +100,7 @@ fn call_ret_abi() {
     let locals = [<()>::get_ptype()];
 
     let b0 = block!(
-        live(0),
+        storage_live(0),
         Terminator::Call {
             callee: fn_ptr(1),
             arguments: list![(const_unit(), ArgAbi::Register)],

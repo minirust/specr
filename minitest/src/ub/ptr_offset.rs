@@ -5,8 +5,8 @@ fn ptr_offset_success() {
     let locals = &[ <i32>::get_ptype(), <*const i32>::get_ptype() ];
 
     let b0 = block!(
-        live(0),
-        live(1),
+        storage_live(0),
+        storage_live(1),
         assign(
             local(0),
             const_int::<i32>(42),
@@ -37,8 +37,8 @@ fn ptr_offset_inbounds() {
     let locals = &[ <i32>::get_ptype(), <*const i32>::get_ptype() ];
 
     let b0 = block!(
-        live(0),
-        live(1),
+        storage_live(0),
+        storage_live(1),
         assign(
             local(0),
             const_int::<i32>(42),
@@ -69,8 +69,8 @@ fn ptr_offset_no_inbounds() {
     let locals = &[ <i32>::get_ptype(), <*const i32>::get_ptype() ];
 
     let b0 = block!(
-        live(0),
-        live(1),
+        storage_live(0),
+        storage_live(1),
         assign(
             local(0),
             const_int::<i32>(42),
@@ -107,7 +107,7 @@ fn ptr_offset_overflow() {
     let locals = [ union_pty ];
 
     let b0 = block!(
-        live(0),
+        storage_live(0),
         assign(
             field(local(0), 0),
             const_int::<usize>(usize::MAX) // this is the largest possible pointer.
@@ -135,8 +135,8 @@ fn ptr_offset_out_of_bounds() {
     let locals = &[ <i32>::get_ptype(), <*const i32>::get_ptype() ];
 
     let b0 = block!(
-        live(0),
-        live(1),
+        storage_live(0),
+        storage_live(1),
         assign(
             local(0),
             const_int::<i32>(42),

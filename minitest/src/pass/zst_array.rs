@@ -9,7 +9,7 @@ fn zst_array() {
     ];
 
     let stmts = &[
-        live(0),
+        storage_live(0),
         assign(
             local(0),
             load(local(0))

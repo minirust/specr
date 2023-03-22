@@ -17,9 +17,9 @@ fn no_preserve_prov() {
     ];
 
     let stmts = vec![
-        live(0),
-        live(1),
-        live(2),
+        storage_live(0),
+        storage_live(1),
+        storage_live(2),
         assign(local(0), const_int::<i32>(42)), // _0 = 42;
         assign( // _1.0[0] = &_0;
             index(

@@ -1,4 +1,4 @@
-//! This allows you to convert Rust types to minirust types conveniently.
+//! This allows you to convert Rust types to MiniRust types conveniently.
 
 use crate::build::*;
 
@@ -18,7 +18,7 @@ pub trait TypeConv {
         Layout {
             size: Self::get_size(),
             align: Self::get_align(),
-            inhabited: true, // currently there are no uninhabited types in minirust; Type::Enum is not yet supported!
+            inhabited: true, // currently there are no uninhabited types in MiniRust; Type::Enum is not yet supported!
         }
     }
 }

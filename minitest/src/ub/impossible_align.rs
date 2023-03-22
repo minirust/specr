@@ -11,7 +11,7 @@ fn impossible_align() { // TODO this should not actually panic!
     let locals = [ pty ];
 
     let b0 = block!(
-        live(0),
+        storage_live(0),
         exit()
     );
 
