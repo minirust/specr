@@ -84,9 +84,10 @@ fn fmt_global(gname: GlobalName, global: Global) -> String {
     let bytes_str = bytes_to_string(global.bytes);
     let align = global.align.bytes();
     let mut out = format!(
-"{gname_str} {{
+        "{gname_str} {{
   bytes = [{bytes_str}],
-  align = {align} bytes,\n");
+  align = {align} bytes,\n"
+    );
     for (i, rel) in global.relocations {
         let i = i.bytes();
         let rel_str = relocation_to_string(rel);
@@ -155,13 +156,7 @@ fn fmt_function(
     out
 }
 
-
-fn fmt_bb(
-    bb_name: BbName,
-    bb: BasicBlock,
-    start: bool,
-    comptypes: &mut Vec<CompType>,
-) -> String {
+fn fmt_bb(bb_name: BbName, bb: BasicBlock, start: bool, comptypes: &mut Vec<CompType>) -> String {
     let name = bb_name.0.get_internal();
     let start_str = match start {
         true => "start ",
@@ -187,11 +182,11 @@ fn fmt_statement(st: Statement, comptypes: &mut Vec<CompType>) -> String {
             let left = place_expr_to_string(destination, comptypes);
             let right = value_expr_to_string(source, comptypes);
             format!("    {left} = {right};")
-        },
+        }
         Statement::Finalize { place, fn_entry } => {
             let place = place_expr_to_string(place, comptypes);
             format!("    Finalize({place}, {fn_entry});")
-        },
+        }
         Statement::StorageLive(local) => {
             let local = local_name_to_string(local);
             format!("    StorageLive({local});")
@@ -244,7 +239,7 @@ fn fmt_terminator(t: Terminator, comptypes: &mut Vec<CompType>) -> String {
             let then_bb = bb_name_to_string(then_block);
             let else_bb = bb_name_to_string(else_block);
             format!(
-"    if {branch_expr} {{
+                "    if {branch_expr} {{
       goto -> {then_bb};
     }} else {{
       goto -> {else_bb};
@@ -300,4 +295,3 @@ pub(self) fn comptype_index_to_string(comptype_index: CompTypeIndex) -> String {
     let id = comptype_index.idx;
     format!("T{id}")
 }
-

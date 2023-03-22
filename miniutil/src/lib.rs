@@ -13,8 +13,8 @@ pub use gen_minirust::libspecr::prelude::*;
 pub use gen_minirust::libspecr::*;
 
 pub use std::format;
-pub use std::string::String;
 pub use std::result::Result;
+pub use std::string::String;
 
 pub mod build;
 pub mod fmt;

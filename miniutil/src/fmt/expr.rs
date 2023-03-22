@@ -1,6 +1,6 @@
 use super::*;
 
-pub(in super) fn place_expr_to_string(p: PlaceExpr, comptypes: &mut Vec<CompType>) -> String {
+pub(super) fn place_expr_to_string(p: PlaceExpr, comptypes: &mut Vec<CompType>) -> String {
     match p {
         PlaceExpr::Local(l) => local_name_to_string(l),
         PlaceExpr::Deref { operand, ptype } => {
@@ -15,17 +15,17 @@ pub(in super) fn place_expr_to_string(p: PlaceExpr, comptypes: &mut Vec<CompType
         PlaceExpr::Index { root, index } => {
             let root = place_expr_to_string(root.extract(), comptypes);
             let index = value_expr_to_string(index.extract(), comptypes);
-            format!( "{root}[{index}]")
+            format!("{root}[{index}]")
         }
     }
 }
 
-pub(in super) fn local_name_to_string(l: LocalName) -> String {
+pub(super) fn local_name_to_string(l: LocalName) -> String {
     let id = l.0.get_internal();
     format!("_{id}")
 }
 
-pub(in super) fn global_name_to_string(g: GlobalName) -> String {
+pub(super) fn global_name_to_string(g: GlobalName) -> String {
     let id = g.0.get_internal();
     format!("global({id})")
 }
@@ -40,7 +40,7 @@ fn constant_to_string(c: Constant) -> String {
     }
 }
 
-pub(in super) fn value_expr_to_string(v: ValueExpr, comptypes: &mut Vec<CompType>) -> String {
+pub(super) fn value_expr_to_string(v: ValueExpr, comptypes: &mut Vec<CompType>) -> String {
     match v {
         ValueExpr::Constant(c, _ty) => constant_to_string(c),
         ValueExpr::Tuple(l, t) => {
