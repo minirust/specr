@@ -1,6 +1,6 @@
 use super::*;
 
-pub fn place_expr_to_string(p: PlaceExpr, comptypes: &mut CompTypes) -> String {
+pub(in super) fn place_expr_to_string(p: PlaceExpr, comptypes: &mut Vec<CompType>) -> String {
     match p {
         PlaceExpr::Local(l) => local_name_to_string(l),
         PlaceExpr::Deref { operand, ptype } => {
@@ -20,12 +20,12 @@ pub fn place_expr_to_string(p: PlaceExpr, comptypes: &mut CompTypes) -> String {
     }
 }
 
-pub fn local_name_to_string(l: LocalName) -> String {
+pub(in super) fn local_name_to_string(l: LocalName) -> String {
     let id = l.0.get_internal();
     format!("_{id}")
 }
 
-pub fn global_name_to_string(g: GlobalName) -> String {
+pub(in super) fn global_name_to_string(g: GlobalName) -> String {
     let id = g.0.get_internal();
     format!("global({id})")
 }
@@ -40,7 +40,7 @@ fn constant_to_string(c: Constant) -> String {
     }
 }
 
-pub fn value_expr_to_string(v: ValueExpr, comptypes: &mut CompTypes) -> String {
+pub(in super) fn value_expr_to_string(v: ValueExpr, comptypes: &mut Vec<CompType>) -> String {
     match v {
         ValueExpr::Constant(c, _ty) => constant_to_string(c),
         ValueExpr::Tuple(l, t) => {

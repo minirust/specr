@@ -6,18 +6,13 @@ use expr::*;
 mod ty;
 use ty::*;
 
-// A list of "composite" type, namely a union or a tuple (enums aren't yet supported).
-// They are not rendered like normal types, but rather the i'th comptype will be rendered as `Ti`.
-// Composite types are formatted before the functions.
-type CompTypes = Vec<Type>;
-
 pub fn dump_program(prog: Program) {
     let s = program_to_string(prog);
     println!("{s}");
 }
 
 pub fn program_to_string(prog: Program) -> String {
-    let mut comptypes: CompTypes = CompTypes::new();
+    let mut comptypes: Vec<CompType> = Vec::new();
     let functions_string = functions_to_string(prog, &mut comptypes);
     let globals_string = globals_to_string(prog.globals);
     let comptypes_string = comptypes_to_string(comptypes);
@@ -25,7 +20,7 @@ pub fn program_to_string(prog: Program) -> String {
     comptypes_string + &functions_string + &globals_string
 }
 
-fn functions_to_string(prog: Program, comptypes: &mut CompTypes) -> String {
+fn functions_to_string(prog: Program, comptypes: &mut Vec<CompType>) -> String {
     let mut out = String::new();
     let mut fns: Vec<(FnName, Function)> = prog.functions.iter().collect();
 
@@ -40,15 +35,16 @@ fn functions_to_string(prog: Program, comptypes: &mut CompTypes) -> String {
     out
 }
 
-fn comptypes_to_string(mut comptypes: CompTypes) -> String {
+fn comptypes_to_string(mut comptypes: Vec<CompType>) -> String {
     let mut out = String::new();
     let mut i = 0;
     while i < comptypes.len() {
         let c = comptypes[i];
+        let comptype_index = CompTypeIndex { idx: i };
 
         // A call to `fmt_comptype` might push further comptypes.
         // Hence, we cannot use an iterator here.
-        let s = &*fmt_comptype(i, c, &mut comptypes);
+        let s = &*fmt_comptype(comptype_index, c, &mut comptypes);
 
         out += s;
 
@@ -100,7 +96,7 @@ fn fmt_global(gname: GlobalName, global: Global) -> String {
     out
 }
 
-pub fn relocation_to_string(relocation: Relocation) -> String {
+fn relocation_to_string(relocation: Relocation) -> String {
     let gname = global_name_to_string(relocation.name);
 
     if relocation.offset.bytes() == 0 {
@@ -115,7 +111,7 @@ fn fmt_function(
     fn_name: FnName,
     f: Function,
     start: bool,
-    comptypes: &mut CompTypes,
+    comptypes: &mut Vec<CompType>,
 ) -> String {
     let start_str = if start { "start " } else { "" };
     let fn_name = fn_name_to_string(fn_name);
@@ -164,7 +160,7 @@ fn fmt_bb(
     bb_name: BbName,
     bb: BasicBlock,
     start: bool,
-    comptypes: &mut CompTypes,
+    comptypes: &mut Vec<CompType>,
 ) -> String {
     let name = bb_name.0.get_internal();
     let start_str = match start {
@@ -182,7 +178,7 @@ fn fmt_bb(
     out
 }
 
-fn fmt_statement(st: Statement, comptypes: &mut CompTypes) -> String {
+fn fmt_statement(st: Statement, comptypes: &mut Vec<CompType>) -> String {
     match st {
         Statement::Assign {
             destination,
@@ -212,7 +208,7 @@ fn fmt_call(
     arguments: List<ValueExpr>,
     ret: Option<PlaceExpr>,
     next_block: Option<BbName>,
-    comptypes: &mut CompTypes,
+    comptypes: &mut Vec<CompType>,
 ) -> String {
     let args: Vec<_> = arguments
         .iter()
@@ -233,7 +229,7 @@ fn fmt_call(
     format!("    {r} = {callee}({args}){next};")
 }
 
-fn fmt_terminator(t: Terminator, comptypes: &mut CompTypes) -> String {
+fn fmt_terminator(t: Terminator, comptypes: &mut Vec<CompType>) -> String {
     match t {
         Terminator::Goto(bb) => {
             let bb = bb_name_to_string(bb);
@@ -290,17 +286,18 @@ fn fmt_terminator(t: Terminator, comptypes: &mut CompTypes) -> String {
     }
 }
 
-pub fn bb_name_to_string(bb: BbName) -> String {
+pub(self) fn bb_name_to_string(bb: BbName) -> String {
     let id = bb.0.get_internal();
     format!("bb{id}")
 }
 
-pub fn fn_name_to_string(fn_name: FnName) -> String {
+pub(self) fn fn_name_to_string(fn_name: FnName) -> String {
     let id = fn_name.0.get_internal();
     format!("f{id}")
 }
 
-pub fn comptype_to_string(comptype_index: usize) -> String {
-    format!("T{comptype_index}")
+pub(self) fn comptype_index_to_string(comptype_index: CompTypeIndex) -> String {
+    let id = comptype_index.idx;
+    format!("T{id}")
 }
 
