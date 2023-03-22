@@ -67,4 +67,10 @@ impl<K: Obj, V: Obj> Map<K, V> {
     pub fn len(self) -> Int {
         Int::from(self.0.call_ref_unchecked(|m| m.len()))
     }
+
+    /// Returns `true` if the map contains no elements.
+    pub fn is_empty(self) -> bool {
+        self.0.call_ref_unchecked(|m| m.is_empty())
+    }
+
 }

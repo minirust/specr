@@ -134,7 +134,7 @@ fn fmt_function(
     }
     let mut out = format!("{start_str}fn {fn_name}({args}) -> {ret_ty} {{\n");
 
-    // fmt locals
+    // Format locals
     let mut locals: Vec<_> = f.locals.keys().collect();
     locals.sort_by_key(|l| l.0.get_internal());
     for l in locals {
@@ -144,7 +144,7 @@ fn fmt_function(
         out += &format!("  let {local}: {ptype};\n");
     }
 
-    // blocks are formatted in order.
+    // Blocks are formatted in order.
     let mut blocks: Vec<(BbName, BasicBlock)> = f.blocks.iter().collect();
     blocks.sort_by_key(|(BbName(name), _block)| *name);
     for (bb_name, bb) in blocks {

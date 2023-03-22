@@ -8,13 +8,14 @@ pub fn fn_ptr(fn_name: u32) -> ValueExpr {
     x
 }
 
-// fns[0] is the start function.
-// fns[i] has name FnName(Name::from_internal(i))
+// The first function is the start function.
+// `fns[i]` has name FnName(Name::from_internal(i))
 pub fn program(fns: &[Function]) -> Program {
-    let mut functions = Map::new();
-    for (i, f) in fns.iter().enumerate() {
-        functions.insert(FnName(Name::from_internal(i as _)), *f);
-    }
+    let functions: Map<FnName, Function> = fns.iter().enumerate().map(|(i, f)| {
+        let name = FnName(Name::from_internal(i as _));
+        (name, *f)
+    }).collect();
+
     Program {
         functions,
         start: FnName(Name::from_internal(0)),
@@ -22,27 +23,27 @@ pub fn program(fns: &[Function]) -> Program {
     }
 }
 
-// whether a function returns or not.
+// Whether a function returns or not.
 pub enum Ret {
     Yes,
     No,
 }
 
+// The first block is the starting block.
+// `locals[i]` has name `LocalName(Name::from_internal(i))`
+// `blocks[i]` has name `BbName(Name::from_internal(i))`
+//
 // if ret == Yes,
 //   then _0 is the return local
-//   and _1 .. (_n+1) are the locals of the function parameters.
+//   and _1 .. (_n+1) are the locals of the function args.
 // if ret == No,
 //   then there is no return local
-//   and _0 .. _n are the locals of the function parameters.
-//
-// the first block is the starting block.
-// locals[i] has name LocalName(Name::from_internal(i))
-// blocks[i] has name BbName(Name::from_internal(i))
-pub fn function(ret: Ret, num_args: usize, locs: &[PlaceType], bbs: &[BasicBlock]) -> Function {
-    let mut locals = Map::new();
-    for (i, l) in locs.iter().enumerate() {
-        locals.insert(LocalName(Name::from_internal(i as _)), *l);
-    }
+//   and _0 .. _n are the locals of the function arsg.
+pub fn function(ret: Ret, num_args: usize, locals: &[PlaceType], bbs: &[BasicBlock]) -> Function {
+    let locals: Map<LocalName, PlaceType> = locals.iter().enumerate().map(|(i, l)| {
+        let name = LocalName(Name::from_internal(i as _));
+        (name, *l)
+    }).collect();
 
     let args = (0..num_args)
         .map(|x| {
@@ -52,23 +53,26 @@ pub fn function(ret: Ret, num_args: usize, locs: &[PlaceType], bbs: &[BasicBlock
                 Ret::No => x,
             };
 
-            (LocalName(Name::from_internal(idx as _)), ArgAbi::Register)
+            let name = LocalName(Name::from_internal(idx as _));
+
+            (name, ArgAbi::Register)
         })
         .collect();
 
-    // the ret local has nane `0` if it exists.
+    // the ret local has name `0` if it exists.
     let ret = match ret {
         Ret::Yes => {
-            assert!(!locs.is_empty());
-            Some((LocalName(Name::from_internal(0)), ArgAbi::Register))
+            assert!(locals.len() > 0);
+            let name = LocalName(Name::from_internal(0));
+            Some((name, ArgAbi::Register))
         }
         Ret::No => None,
     };
 
-    let mut blocks = Map::new();
-    for (i, b) in bbs.iter().enumerate() {
-        blocks.insert(BbName(Name::from_internal(i as _)), *b);
-    }
+    let blocks = bbs.iter().enumerate().map(|(i, b)| {
+        let name = BbName(Name::from_internal(i as _));
+        (name, *b)
+    }).collect();
 
     let start = BbName(Name::from_internal(0));
 

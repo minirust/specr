@@ -13,9 +13,9 @@ impl<T: Obj> List<T> {
         Int::from(self.0.call_ref_unchecked(|v| v.len()))
     }
 
-    /// Returns whether `self` is empty.
-    pub fn is_empty(&self) -> bool {
-        self.len() == 0
+    /// Returns `true` if the list contains no elements.
+    pub fn is_empty(self) -> bool {
+        self.0.call_ref_unchecked(|v| v.is_empty())
     }
 
     /// Returns the first element of `self`

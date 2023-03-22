@@ -23,12 +23,12 @@ pub fn const_array(args: &[ValueExpr], elem_ty: Type) -> ValueExpr {
     ValueExpr::Tuple(args.iter().cloned().collect(), ty)
 }
 
-// returns () or [].
+// Returns () or [].
 pub fn const_unit() -> ValueExpr {
     ValueExpr::Tuple(Default::default(), <()>::get_type())
 }
 
-// non-destructive load.
+// Non-destructive load.
 pub fn load(p: PlaceExpr) -> ValueExpr {
     ValueExpr::Load {
         source: GcCow::new(p),

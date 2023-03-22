@@ -10,7 +10,7 @@ use crate::*;
 mod function;
 pub use function::*;
 
-mod statement; // also includes terminators
+mod statement; // Also includes terminators
 pub use statement::*;
 
 mod expr;

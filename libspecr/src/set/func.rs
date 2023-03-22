@@ -31,4 +31,9 @@ impl<T: Obj> Set<T> {
     pub fn len(self) -> Int {
         Int::from(self.0.call_ref_unchecked(|s| s.len()))
     }
+
+    /// Returns `true` if the set contains no elements.
+    pub fn is_empty(self) -> bool {
+        self.0.call_ref_unchecked(|s| s.is_empty())
+    }
 }
