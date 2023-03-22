@@ -1,37 +1,33 @@
 use super::*;
 
-pub fn place_expr_to_string(p: PlaceExpr, comptypes: &mut Vec<Type>) -> String {
+pub fn place_expr_to_string(p: PlaceExpr, comptypes: &mut CompTypes) -> String {
     match p {
         PlaceExpr::Local(l) => local_name_to_string(l),
         PlaceExpr::Deref { operand, ptype } => {
-            format!(
-                "deref<{}>({})",
-                ptype_to_string(ptype, comptypes),
-                value_expr_to_string(operand.extract(), comptypes)
-            )
+            let ptype = ptype_to_string(ptype, comptypes);
+            let expr = value_expr_to_string(operand.extract(), comptypes);
+            format!("deref<{ptype}>({expr})")
         }
         PlaceExpr::Field { root, field } => {
-            let root = root.extract();
-            format!("{}.{}", place_expr_to_string(root, comptypes), field)
+            let root = place_expr_to_string(root.extract(), comptypes);
+            format!("{root}.{field}")
         }
         PlaceExpr::Index { root, index } => {
-            let root = root.extract();
-            let index = index.extract();
-            format!(
-                "{}[{}]",
-                place_expr_to_string(root, comptypes),
-                value_expr_to_string(index, comptypes)
-            )
+            let root = place_expr_to_string(root.extract(), comptypes);
+            let index = value_expr_to_string(index.extract(), comptypes);
+            format!( "{root}[{index}]")
         }
     }
 }
 
 pub fn local_name_to_string(l: LocalName) -> String {
-    format!("_{}", l.0.get_internal())
+    let id = l.0.get_internal();
+    format!("_{id}")
 }
 
 pub fn global_name_to_string(g: GlobalName) -> String {
-    format!("global({})", g.0.get_internal())
+    let id = g.0.get_internal();
+    format!("global({id})")
 }
 
 fn constant_to_string(c: Constant) -> String {
@@ -44,7 +40,7 @@ fn constant_to_string(c: Constant) -> String {
     }
 }
 
-pub fn value_expr_to_string(v: ValueExpr, comptypes: &mut Vec<Type>) -> String {
+pub fn value_expr_to_string(v: ValueExpr, comptypes: &mut CompTypes) -> String {
     match v {
         ValueExpr::Constant(c, _ty) => constant_to_string(c),
         ValueExpr::Tuple(l, t) => {
@@ -111,11 +107,11 @@ pub fn value_expr_to_string(v: ValueExpr, comptypes: &mut Vec<Type>) -> String {
         ValueExpr::UnOp { operator, operand } => {
             let operand = value_expr_to_string(operand.extract(), comptypes);
             match operator {
-                UnOp::Int(UnOpInt::Neg, _int_ty) => format!("(-{})", operand),
-                UnOp::Int(UnOpInt::Cast, _int_ty) => format!("int2int({})", operand),
-                UnOp::Ptr2Ptr(_ptr_ty) => format!("ptr2ptr({})", operand),
-                UnOp::Ptr2Int => format!("ptr2int({})", operand),
-                UnOp::Int2Ptr(_ptr_ty) => format!("int2ptr({})", operand),
+                UnOp::Int(UnOpInt::Neg, _int_ty) => format!("(-{operand})"),
+                UnOp::Int(UnOpInt::Cast, _int_ty) => format!("int2int({operand})"),
+                UnOp::Ptr2Ptr(_ptr_ty) => format!("ptr2ptr({operand})"),
+                UnOp::Ptr2Int => format!("ptr2int({operand})"),
+                UnOp::Int2Ptr(_ptr_ty) => format!("int2ptr({operand})"),
             }
         }
         ValueExpr::BinOp {
@@ -172,12 +168,4 @@ pub fn value_expr_to_string(v: ValueExpr, comptypes: &mut Vec<Type>) -> String {
             format!("{offset_name}({l}, {r})")
         }
     }
-}
-
-pub fn bb_name_to_string(bb: BbName) -> String {
-    format!("bb{}", bb.0.get_internal())
-}
-
-pub fn fn_name_to_string(fn_name: FnName) -> String {
-    format!("f{}", fn_name.0.get_internal())
 }
