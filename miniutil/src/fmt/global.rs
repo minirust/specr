@@ -5,6 +5,7 @@ pub(super) fn fmt_globals(globals: Map<GlobalName, Global>) -> String {
 
     let mut globals: Vec<(GlobalName, Global)> = globals.iter().collect();
 
+    // The globals are formatted in the order of their names.
     globals.sort_by_key(|(GlobalName(name), _global)| *name);
 
     for (gname, global) in globals {

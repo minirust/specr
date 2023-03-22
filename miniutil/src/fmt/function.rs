@@ -1,12 +1,12 @@
 use super::*;
 
 pub(super) fn fmt_functions(prog: Program, comptypes: &mut Vec<CompType>) -> String {
-    let mut out = String::new();
     let mut fns: Vec<(FnName, Function)> = prog.functions.iter().collect();
 
     // functions are formatted in the order given by their name.
     fns.sort_by_key(|(FnName(name), _fn)| *name);
 
+    let mut out = String::new();
     for (fn_name, f) in fns {
         let start = prog.start == fn_name;
         out += &fmt_function(fn_name, f, start, comptypes);
@@ -39,21 +39,24 @@ fn fmt_function(
     if let Some((ret, _)) = f.ret {
         ret_ty = fmt_ptype(f.locals.index_at(ret), comptypes);
     }
+    let mut locals: Vec<(LocalName, PlaceType)> = f.locals.iter().collect();
+
+    // The locals are formatted in the order of their names.
+    locals.sort_by_key(|(LocalName(name), _place_ty)| *name);
+
     let mut out = format!("{start_str}fn {fn_name}({args}) -> {ret_ty} {{\n");
 
-    // Format locals
-    let mut locals: Vec<_> = f.locals.keys().collect();
-    locals.sort_by_key(|l| l.0.get_internal());
-    for l in locals {
-        let ty = f.locals.index_at(l);
+    for (l, pty) in locals {
         let local = fmt_local_name(l);
-        let ptype = fmt_ptype(ty, comptypes);
+        let ptype = fmt_ptype(pty, comptypes);
         out += &format!("  let {local}: {ptype};\n");
     }
 
-    // Blocks are formatted in order.
     let mut blocks: Vec<(BbName, BasicBlock)> = f.blocks.iter().collect();
+
+    // Basic blocks are formatted in the order of their names.
     blocks.sort_by_key(|(BbName(name), _block)| *name);
+
     for (bb_name, bb) in blocks {
         let start = f.start == bb_name;
         out += &fmt_bb(bb_name, bb, start, comptypes);
