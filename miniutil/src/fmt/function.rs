@@ -1,9 +1,11 @@
 use super::*;
 
+// Formats all functions found within the program.
+// All composite types that are used within `prog` will be added to `comptypes` exactly once.
 pub(super) fn fmt_functions(prog: Program, comptypes: &mut Vec<CompType>) -> String {
     let mut fns: Vec<(FnName, Function)> = prog.functions.iter().collect();
 
-    // functions are formatted in the order given by their name.
+    // Functions are formatted in the order given by their name.
     fns.sort_by_key(|(FnName(name), _fn)| *name);
 
     let mut out = String::new();
@@ -85,10 +87,12 @@ fn fmt_bb(bb_name: BbName, bb: BasicBlock, start: bool, comptypes: &mut Vec<Comp
         format!("  bb{name}:\n")
     };
 
+    // Format statements
     for st in bb.statements.iter() {
         out += &fmt_statement(st, comptypes);
         out.push('\n');
     }
+    // Format terminator
     out += &fmt_terminator(bb.terminator, comptypes);
     out.push('\n');
     out
@@ -119,6 +123,7 @@ fn fmt_statement(st: Statement, comptypes: &mut Vec<CompType>) -> String {
     }
 }
 
+// used both for functions and intrinsics.
 fn fmt_call(
     callee: &str,
     arguments: List<ValueExpr>,
@@ -126,21 +131,27 @@ fn fmt_call(
     next_block: Option<BbName>,
     comptypes: &mut Vec<CompType>,
 ) -> String {
+    // Format function args
     let args: Vec<_> = arguments
         .iter()
         .map(|x| fmt_value_expr(x, comptypes))
         .collect();
     let args = args.join(", ");
 
-    let mut r = String::from("none");
-    if let Some(ret) = ret {
-        r = fmt_place_expr(ret, comptypes);
-    }
-    let mut next = String::new();
-    if let Some(next_block) = next_block {
-        let next_str = fmt_bb_name(next_block);
-        next = format!(" -> {next_str}");
-    }
+    // Format return place
+    let r = match ret {
+        Some(ret) => fmt_place_expr(ret, comptypes),
+        None => String::from("none"),
+    };
+
+    // Format next block
+    let next = match next_block {
+        Some(next_block) => {
+            let next_str = fmt_bb_name(next_block);
+            format!(" -> {next_str}")
+        }
+        None => String::new(),
+    };
 
     format!("    {r} = {callee}({args}){next};")
 }
@@ -177,8 +188,8 @@ fn fmt_terminator(t: Terminator, comptypes: &mut Vec<CompType>) -> String {
             next_block,
         } => {
             let callee = fmt_value_expr(callee, comptypes);
-            let arguments = arguments.iter().map(|(x, _)| x).collect();
-            let ret = ret.map(|(x, _)| x);
+            let arguments = arguments.iter().map(|(expr, _arg_abi)| expr).collect();
+            let ret = ret.map(|(place_expr, _arg_abi)| place_expr);
             fmt_call(&callee, arguments, ret, next_block, comptypes)
         }
         Terminator::Return => {

@@ -70,14 +70,13 @@ fn fmt_layout(layout: Layout) -> String {
 // composite types
 /////////////////////
 
-// A "composite" type, namely a union or tuple (enums aren't yet supported).
-// Composite types will be printed above the functions.
+// A "composite" type is a union or tuple (enums aren't yet supported).
+// Composite types will be printed separately above the functions, as inlining them would be hard to read.
 // During formatting, the list of composite types we encounter will be stored in `comptypes`.
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub(super) struct CompType(pub(super) Type);
 
 // An index into `comptypes`.
-// Will be formatted as `T{idx}`
 pub(super) struct CompTypeIndex {
     idx: usize,
 }
@@ -102,6 +101,7 @@ fn fmt_comptype_index(comptype_index: CompTypeIndex) -> String {
     format!("T{id}")
 }
 
+// Formats all composite types.
 pub(super) fn fmt_comptypes(mut comptypes: Vec<CompType>) -> String {
     let mut out = String::new();
     let mut i = 0;
@@ -109,7 +109,7 @@ pub(super) fn fmt_comptypes(mut comptypes: Vec<CompType>) -> String {
         let c = comptypes[i];
         let comptype_index = CompTypeIndex { idx: i };
 
-        // A call to `fmt_comptype` might push further comptypes.
+        // A call to `fmt_comptype` might find new `CompTypes` and push them to `comptypes`.
         // Hence, we cannot use an iterator here.
         let s = &*fmt_comptype(comptype_index, c, &mut comptypes);
 
