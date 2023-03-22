@@ -8,7 +8,7 @@ use super::*;
 pub(super) struct CompType(pub(super) Type);
 
 // An index into `comptypes`.
-// will be formatted as `T{idx}`
+// Will be formatted as `T{idx}`
 pub(super) struct CompTypeIndex {
     pub(super) idx: usize,
 }
@@ -39,18 +39,14 @@ fn fmt_layout(layout: Layout) -> String {
     format!("layout(size={size}, align={align}{uninhab_str})")
 }
 
-// `ty` is a composite type.
 // Gives the index of `ty` within `comptypes`.
-// This adds `ty` to `comptypes` if it's not yet in there.
-fn get_comptype_index(ty: Type, comptypes: &mut Vec<CompType>) -> CompTypeIndex {
-    // check that `ty` is indeed a composite type.
-    assert!(matches!(ty, Type::Union { .. } | Type::Tuple { .. }));
-    let comp_ty = CompType(ty);
-    let idx = match comptypes.iter().position(|x| *x == comp_ty) {
+// This adds `ty` to `comptypes` if it has been missing.
+fn get_comptype_index(ty: CompType, comptypes: &mut Vec<CompType>) -> CompTypeIndex {
+    let idx = match comptypes.iter().position(|x| *x == ty) {
         Some(i) => i,
         None => {
             let n = comptypes.len();
-            comptypes.push(comp_ty);
+            comptypes.push(ty);
             n
         }
     };
@@ -86,7 +82,8 @@ pub(super) fn fmt_type(t: Type, comptypes: &mut Vec<CompType>) -> String {
         }
         Type::Ptr(PtrType::FnPtr) => String::from("fn()"),
         Type::Tuple { .. } | Type::Union { .. } => {
-            let comptype_index = get_comptype_index(t, comptypes);
+            let comp_ty = CompType(t);
+            let comptype_index = get_comptype_index(comp_ty, comptypes);
             fmt_comptype_index(comptype_index)
         }
         Type::Array { elem, count } => {

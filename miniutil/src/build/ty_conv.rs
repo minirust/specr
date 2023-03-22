@@ -2,6 +2,8 @@
 
 use crate::build::*;
 
+/// Converts a Rust type to a MiniRust type.
+/// Example usage: `let x: Type = <usize>::get_type();`
 pub trait TypeConv {
     fn get_type() -> Type;
     fn get_align() -> Align;

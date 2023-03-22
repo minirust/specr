@@ -1,5 +1,7 @@
 use crate::build::*;
 
+// Example usage:
+// `const_int::<usize>(42)`
 pub fn const_int<T: TypeConv>(int: impl Into<Int>) -> ValueExpr {
     ValueExpr::Constant(Constant::Int(int.into()), T::get_type())
 }
@@ -8,7 +10,6 @@ pub fn const_bool(b: bool) -> ValueExpr {
     ValueExpr::Constant(Constant::Bool(b), Type::Bool)
 }
 
-// this gets ValueExprs instead of Constants to be compatible with the functions above.
 pub fn const_tuple(args: &[ValueExpr], ty: Type) -> ValueExpr {
     let Type::Tuple { fields, .. } = ty else {
         panic!("const_tuple received non-tuple type!");
@@ -17,7 +18,6 @@ pub fn const_tuple(args: &[ValueExpr], ty: Type) -> ValueExpr {
     ValueExpr::Tuple(args.iter().cloned().collect(), ty)
 }
 
-// doesn't support zero-length arrays, as their type wouldn't be clear.
 pub fn const_array(args: &[ValueExpr], elem_ty: Type) -> ValueExpr {
     let ty = array_ty(elem_ty, args.len());
     ValueExpr::Tuple(args.iter().cloned().collect(), ty)
@@ -53,6 +53,8 @@ pub fn addr_of(target: PlaceExpr, ty: Type) -> ValueExpr {
     }
 }
 
+// Example usage:
+// `neg::<i32>(42)`
 pub fn neg<T: TypeConv>(v: ValueExpr) -> ValueExpr {
     let Type::Int(t) = T::get_type() else {
         panic!("int operator received non-int type!");

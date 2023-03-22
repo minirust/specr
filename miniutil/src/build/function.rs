@@ -1,7 +1,7 @@
 use crate::build::*;
 
-pub fn fn_ptr(x: u32) -> ValueExpr {
-    let x = Name::from_internal(x as _);
+pub fn fn_ptr(fn_name: u32) -> ValueExpr {
+    let x = Name::from_internal(fn_name as _);
     let x = FnName(x);
     let x = Constant::FnPointer(x);
     let x = ValueExpr::Constant(x, Type::Ptr(PtrType::FnPtr));
@@ -28,7 +28,13 @@ pub enum Ret {
     No,
 }
 
-// if ret == Yes, then _0 is the return local.
+// if ret == Yes,
+//   then _0 is the return local
+//   and _1 .. (_n+1) are the locals of the function parameters.
+// if ret == No,
+//   then there is no return local
+//   and _0 .. _n are the locals of the function parameters.
+//
 // the first block is the starting block.
 // locals[i] has name LocalName(Name::from_internal(i))
 // blocks[i] has name BbName(Name::from_internal(i))
@@ -40,6 +46,7 @@ pub fn function(ret: Ret, num_args: usize, locs: &[PlaceType], bbs: &[BasicBlock
 
     let args = (0..num_args)
         .map(|x| {
+            // `Ret::Yes` shifts the arg locals by one so that they start at one instead of zero.
             let idx = match ret {
                 Ret::Yes => x + 1,
                 Ret::No => x,
@@ -49,6 +56,7 @@ pub fn function(ret: Ret, num_args: usize, locs: &[PlaceType], bbs: &[BasicBlock
         })
         .collect();
 
+    // the ret local has nane `0` if it exists.
     let ret = match ret {
         Ret::Yes => {
             assert!(!locs.is_empty());

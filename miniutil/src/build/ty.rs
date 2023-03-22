@@ -38,14 +38,19 @@ pub fn raw_ptr_ty(pointee: Layout) -> Type {
     Type::Ptr(PtrType::Raw { pointee })
 }
 
-fn fields(fs: &[(Size, Type)]) -> Fields {
-    fs.iter().copied().collect()
-}
-
 pub fn tuple_ty(f: &[(Size, Type)], size: Size) -> Type {
     Type::Tuple {
-        fields: fields(f),
+        fields: f.iter().copied().collect(),
         size,
+    }
+}
+
+pub fn union_ty(f: &[(Size, Type)], size: Size) -> Type {
+    let chunks = list![(Size::ZERO, size)];
+    Type::Union {
+        fields: f.iter().copied().collect(),
+        size,
+        chunks,
     }
 }
 
@@ -53,15 +58,6 @@ pub fn array_ty(elem: Type, count: impl Into<Int>) -> Type {
     Type::Array {
         elem: GcCow::new(elem),
         count: count.into(),
-    }
-}
-
-pub fn union_ty(f: &[(Size, Type)], size: Size) -> Type {
-    let chunks = list![(Size::ZERO, size)];
-    Type::Union {
-        fields: fields(f),
-        size,
-        chunks,
     }
 }
 
