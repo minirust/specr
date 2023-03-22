@@ -8,21 +8,6 @@ pub fn fn_ptr(fn_name: u32) -> ValueExpr {
     x
 }
 
-// The first function is the start function.
-// `fns[i]` has name FnName(Name::from_internal(i))
-pub fn program(fns: &[Function]) -> Program {
-    let functions: Map<FnName, Function> = fns.iter().enumerate().map(|(i, f)| {
-        let name = FnName(Name::from_internal(i as _));
-        (name, *f)
-    }).collect();
-
-    Program {
-        functions,
-        start: FnName(Name::from_internal(0)),
-        globals: Default::default(),
-    }
-}
-
 // Whether a function returns or not.
 pub enum Ret {
     Yes,
@@ -40,10 +25,14 @@ pub enum Ret {
 //   then there is no return local
 //   and _0 .. _n are the locals of the function arsg.
 pub fn function(ret: Ret, num_args: usize, locals: &[PlaceType], bbs: &[BasicBlock]) -> Function {
-    let locals: Map<LocalName, PlaceType> = locals.iter().enumerate().map(|(i, l)| {
-        let name = LocalName(Name::from_internal(i as _));
-        (name, *l)
-    }).collect();
+    let locals: Map<LocalName, PlaceType> = locals
+        .iter()
+        .enumerate()
+        .map(|(i, l)| {
+            let name = LocalName(Name::from_internal(i as _));
+            (name, *l)
+        })
+        .collect();
 
     let args = (0..num_args)
         .map(|x| {
@@ -69,10 +58,14 @@ pub fn function(ret: Ret, num_args: usize, locals: &[PlaceType], bbs: &[BasicBlo
         Ret::No => None,
     };
 
-    let blocks = bbs.iter().enumerate().map(|(i, b)| {
-        let name = BbName(Name::from_internal(i as _));
-        (name, *b)
-    }).collect();
+    let blocks = bbs
+        .iter()
+        .enumerate()
+        .map(|(i, b)| {
+            let name = BbName(Name::from_internal(i as _));
+            (name, *b)
+        })
+        .collect();
 
     let start = BbName(Name::from_internal(0));
 

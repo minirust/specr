@@ -1,57 +1,9 @@
 use super::*;
 
-// A "composite" type, namely a union or tuple.
-// Composite types will not be printed inline,
-// but instead they will be printed above the functions.
-// During formatting, the list of composite types we encounter will be stored in `comptypes`.
-#[derive(PartialEq, Eq, Clone, Copy)]
-pub(super) struct CompType(pub(super) Type);
-
-// An index into `comptypes`.
-// Will be formatted as `T{idx}`
-pub(super) struct CompTypeIndex {
-    pub(super) idx: usize,
-}
-
 pub(super) fn fmt_ptype(place_ty: PlaceType, comptypes: &mut Vec<CompType>) -> String {
     let ty_str = fmt_type(place_ty.ty, comptypes);
     let align = place_ty.align.bytes();
     format!("{ty_str}<align={align}>")
-}
-
-pub(super) fn fmt_int_type(int_ty: IntType) -> String {
-    let signed = match int_ty.signed {
-        Signed => "i",
-        Unsigned => "u",
-    };
-    let bits = int_ty.size.bits();
-
-    format!("{signed}{bits}")
-}
-
-fn fmt_layout(layout: Layout) -> String {
-    let size = layout.size.bytes();
-    let align = layout.align.bytes();
-    let uninhab_str = match layout.inhabited {
-        true => "",
-        false => ", uninhabited",
-    };
-    format!("layout(size={size}, align={align}{uninhab_str})")
-}
-
-// Gives the index of `ty` within `comptypes`.
-// This adds `ty` to `comptypes` if it has been missing.
-fn get_comptype_index(ty: CompType, comptypes: &mut Vec<CompType>) -> CompTypeIndex {
-    let idx = match comptypes.iter().position(|x| *x == ty) {
-        Some(i) => i,
-        None => {
-            let n = comptypes.len();
-            comptypes.push(ty);
-            n
-        }
-    };
-
-    CompTypeIndex { idx }
 }
 
 pub(super) fn fmt_type(t: Type, comptypes: &mut Vec<CompType>) -> String {
@@ -94,7 +46,82 @@ pub(super) fn fmt_type(t: Type, comptypes: &mut Vec<CompType>) -> String {
     }
 }
 
-pub(super) fn fmt_comptype(i: CompTypeIndex, t: CompType, comptypes: &mut Vec<CompType>) -> String {
+pub(super) fn fmt_int_type(int_ty: IntType) -> String {
+    let signed = match int_ty.signed {
+        Signed => "i",
+        Unsigned => "u",
+    };
+    let bits = int_ty.size.bits();
+
+    format!("{signed}{bits}")
+}
+
+fn fmt_layout(layout: Layout) -> String {
+    let size = layout.size.bytes();
+    let align = layout.align.bytes();
+    let uninhab_str = match layout.inhabited {
+        true => "",
+        false => ", uninhabited",
+    };
+    format!("layout(size={size}, align={align}{uninhab_str})")
+}
+
+/////////////////////
+// composite types
+/////////////////////
+
+// A "composite" type, namely a union or tuple (enums aren't yet supported).
+// Composite types will be printed above the functions.
+// During formatting, the list of composite types we encounter will be stored in `comptypes`.
+#[derive(PartialEq, Eq, Clone, Copy)]
+pub(super) struct CompType(pub(super) Type);
+
+// An index into `comptypes`.
+// Will be formatted as `T{idx}`
+pub(super) struct CompTypeIndex {
+    idx: usize,
+}
+
+// Gives the index of `ty` within `comptypes`.
+// This adds `ty` to `comptypes` if it has been missing.
+fn get_comptype_index(ty: CompType, comptypes: &mut Vec<CompType>) -> CompTypeIndex {
+    let idx = match comptypes.iter().position(|x| *x == ty) {
+        Some(i) => i,
+        None => {
+            let n = comptypes.len();
+            comptypes.push(ty);
+            n
+        }
+    };
+
+    CompTypeIndex { idx }
+}
+
+fn fmt_comptype_index(comptype_index: CompTypeIndex) -> String {
+    let id = comptype_index.idx;
+    format!("T{id}")
+}
+
+pub(super) fn fmt_comptypes(mut comptypes: Vec<CompType>) -> String {
+    let mut out = String::new();
+    let mut i = 0;
+    while i < comptypes.len() {
+        let c = comptypes[i];
+        let comptype_index = CompTypeIndex { idx: i };
+
+        // A call to `fmt_comptype` might push further comptypes.
+        // Hence, we cannot use an iterator here.
+        let s = &*fmt_comptype(comptype_index, c, &mut comptypes);
+
+        out += s;
+
+        i += 1;
+    }
+
+    out
+}
+
+fn fmt_comptype(i: CompTypeIndex, t: CompType, comptypes: &mut Vec<CompType>) -> String {
     let (keyword, fields, opt_chunks, size) = match t.0 {
         Type::Tuple { fields, size } => ("tuple", fields, None, size),
         Type::Union {

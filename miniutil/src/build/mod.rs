@@ -1,9 +1,20 @@
 //! This module makes it easy to create a `Program`.
 //!
-//! This is achieved by having constructor functions for every MiniRust object.
-//! For example a `Statement::StorageLive` referring to a local with name `1` can be constructed using `storage_live(1)`.
-
-#![allow(unused)]
+//! Example:
+//!
+//! ```rust
+//! // Our main function has one local of type `usize`.
+//! let locals = &[<usize>::get_ptype()];
+//!
+//! // the basic block `bb` allocates space for this local, and then terminates the program.
+//! let bb = block!(storage_live(0), exit());
+//!
+//! // the function `f` is our main function, it does never return and has no function arguments.
+//! let f = function(Ret::No, 0, locals, &[bb]);
+//!
+//! // Our program only consists of the function `f`.
+//! let program = program(&[f]);
+//! ```
 
 use crate::*;
 
@@ -30,7 +41,26 @@ pub fn size(bytes: u32) -> Size {
     Size::from_bytes(bytes).unwrap()
 }
 
-/// Generates a small program with a single basic block.
+// The first function in `fns` is the start function of the program.
+// TODO Globals are not yet supported.
+pub fn program(fns: &[Function]) -> Program {
+    let functions: Map<FnName, Function> = fns
+        .iter()
+        .enumerate()
+        .map(|(i, f)| {
+            let name = FnName(Name::from_internal(i as _));
+            (name, *f)
+        })
+        .collect();
+
+    Program {
+        functions,
+        start: FnName(Name::from_internal(0)),
+        globals: Default::default(),
+    }
+}
+
+// Generates a small program with a single basic block.
 pub fn small_program(locals: &[PlaceType], statements: &[Statement]) -> Program {
     let b = block(statements, exit());
     let f = function(Ret::No, 0, locals, &[b]);
