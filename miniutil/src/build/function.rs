@@ -51,7 +51,7 @@ pub fn function(ret: Ret, num_args: usize, locs: &[PlaceType], bbs: &[BasicBlock
 
     let ret = match ret {
         Ret::Yes => {
-            assert!(locs.len() > 0);
+            assert!(!locs.is_empty());
             Some((LocalName(Name::from_internal(0)), ArgAbi::Register))
         }
         Ret::No => None,

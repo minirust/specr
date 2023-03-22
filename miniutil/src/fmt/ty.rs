@@ -13,13 +13,13 @@ pub(super) struct CompTypeIndex {
     pub(super) idx: usize,
 }
 
-pub(super) fn ptype_to_string(place_ty: PlaceType, comptypes: &mut Vec<CompType>) -> String {
-    let ty_str = type_to_string(place_ty.ty, comptypes);
+pub(super) fn fmt_ptype(place_ty: PlaceType, comptypes: &mut Vec<CompType>) -> String {
+    let ty_str = fmt_type(place_ty.ty, comptypes);
     let align = place_ty.align.bytes();
     format!("{ty_str}<align={align}>")
 }
 
-pub(super) fn int_type_to_string(int_ty: IntType) -> String {
+pub(super) fn fmt_int_type(int_ty: IntType) -> String {
     let signed = match int_ty.signed {
         Signed => "i",
         Unsigned => "u",
@@ -29,7 +29,7 @@ pub(super) fn int_type_to_string(int_ty: IntType) -> String {
     format!("{signed}{bits}")
 }
 
-fn layout_to_string(layout: Layout) -> String {
+fn fmt_layout(layout: Layout) -> String {
     let size = layout.size.bytes();
     let align = layout.align.bytes();
     let uninhab_str = match layout.inhabited {
@@ -58,39 +58,39 @@ fn get_comptype_index(ty: Type, comptypes: &mut Vec<CompType>) -> CompTypeIndex 
     CompTypeIndex { idx }
 }
 
-pub(super) fn type_to_string(t: Type, comptypes: &mut Vec<CompType>) -> String {
+pub(super) fn fmt_type(t: Type, comptypes: &mut Vec<CompType>) -> String {
     match t {
-        Type::Int(int_ty) => int_type_to_string(int_ty),
+        Type::Int(int_ty) => fmt_int_type(int_ty),
         Type::Bool => String::from("bool"),
         Type::Ptr(PtrType::Ref {
             mutbl: Mutability::Mutable,
             pointee,
         }) => {
-            let layout_str = layout_to_string(pointee);
+            let layout_str = fmt_layout(pointee);
             format!("&mut {layout_str}")
         }
         Type::Ptr(PtrType::Ref {
             mutbl: Mutability::Immutable,
             pointee,
         }) => {
-            let layout_str = layout_to_string(pointee);
+            let layout_str = fmt_layout(pointee);
             format!("&{layout_str}")
         }
         Type::Ptr(PtrType::Box { pointee }) => {
-            let layout_str = layout_to_string(pointee);
+            let layout_str = fmt_layout(pointee);
             format!("Box<{layout_str}>")
         }
         Type::Ptr(PtrType::Raw { pointee }) => {
-            let layout_str = layout_to_string(pointee);
+            let layout_str = fmt_layout(pointee);
             format!("*{layout_str}")
         }
         Type::Ptr(PtrType::FnPtr) => String::from("fn()"),
         Type::Tuple { .. } | Type::Union { .. } => {
             let comptype_index = get_comptype_index(t, comptypes);
-            comptype_index_to_string(comptype_index)
+            fmt_comptype_index(comptype_index)
         }
         Type::Array { elem, count } => {
-            let elem = type_to_string(elem.extract(), comptypes);
+            let elem = fmt_type(elem.extract(), comptypes);
             format!("[{elem}; {count}]")
         }
         Type::Enum { .. } => panic!("enums are unsupported!"),
@@ -107,12 +107,12 @@ pub(super) fn fmt_comptype(i: CompTypeIndex, t: CompType, comptypes: &mut Vec<Co
         } => ("union", fields, Some(chunks), size),
         _ => panic!("not a supported composite type!"),
     };
-    let ct = comptype_index_to_string(i);
+    let ct = fmt_comptype_index(i);
     let size = size.bytes();
     let mut s = format!("{keyword} {ct} ({size} bytes) {{\n");
     for (offset, f) in fields {
         let offset = offset.bytes();
-        let ty = type_to_string(f, comptypes);
+        let ty = fmt_type(f, comptypes);
         s += &format!("  at byte {offset}: {ty},\n");
     }
     if let Some(chunks) = opt_chunks {

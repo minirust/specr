@@ -7,20 +7,20 @@ mod ty;
 use ty::*;
 
 pub fn dump_program(prog: Program) {
-    let s = program_to_string(prog);
+    let s = fmt_program(prog);
     println!("{s}");
 }
 
-pub fn program_to_string(prog: Program) -> String {
+pub fn fmt_program(prog: Program) -> String {
     let mut comptypes: Vec<CompType> = Vec::new();
-    let functions_string = functions_to_string(prog, &mut comptypes);
-    let globals_string = globals_to_string(prog.globals);
-    let comptypes_string = comptypes_to_string(comptypes);
+    let functions_string = fmt_functions(prog, &mut comptypes);
+    let globals_string = fmt_globals(prog.globals);
+    let comptypes_string = fmt_comptypes(comptypes);
 
     comptypes_string + &functions_string + &globals_string
 }
 
-fn functions_to_string(prog: Program, comptypes: &mut Vec<CompType>) -> String {
+fn fmt_functions(prog: Program, comptypes: &mut Vec<CompType>) -> String {
     let mut out = String::new();
     let mut fns: Vec<(FnName, Function)> = prog.functions.iter().collect();
 
@@ -35,7 +35,7 @@ fn functions_to_string(prog: Program, comptypes: &mut Vec<CompType>) -> String {
     out
 }
 
-fn comptypes_to_string(mut comptypes: Vec<CompType>) -> String {
+fn fmt_comptypes(mut comptypes: Vec<CompType>) -> String {
     let mut out = String::new();
     let mut i = 0;
     while i < comptypes.len() {
@@ -54,7 +54,7 @@ fn comptypes_to_string(mut comptypes: Vec<CompType>) -> String {
     out
 }
 
-fn bytes_to_string(bytes: List<Option<u8>>) -> String {
+fn fmt_bytes(bytes: List<Option<u8>>) -> String {
     let b: Vec<_> = bytes
         .iter()
         .map(|x| match x {
@@ -66,7 +66,7 @@ fn bytes_to_string(bytes: List<Option<u8>>) -> String {
     b.join(" ")
 }
 
-fn globals_to_string(globals: Map<GlobalName, Global>) -> String {
+fn fmt_globals(globals: Map<GlobalName, Global>) -> String {
     let mut out = String::new();
 
     let mut globals: Vec<(GlobalName, Global)> = globals.iter().collect();
@@ -80,8 +80,8 @@ fn globals_to_string(globals: Map<GlobalName, Global>) -> String {
 }
 
 fn fmt_global(gname: GlobalName, global: Global) -> String {
-    let gname_str = global_name_to_string(gname);
-    let bytes_str = bytes_to_string(global.bytes);
+    let gname_str = fmt_global_name(gname);
+    let bytes_str = fmt_bytes(global.bytes);
     let align = global.align.bytes();
     let mut out = format!(
         "{gname_str} {{
@@ -90,15 +90,15 @@ fn fmt_global(gname: GlobalName, global: Global) -> String {
     );
     for (i, rel) in global.relocations {
         let i = i.bytes();
-        let rel_str = relocation_to_string(rel);
+        let rel_str = fmt_relocation(rel);
         out += &format!("  at byte {i}: {rel_str},\n");
     }
     out += "}\n\n";
     out
 }
 
-fn relocation_to_string(relocation: Relocation) -> String {
-    let gname = global_name_to_string(relocation.name);
+fn fmt_relocation(relocation: Relocation) -> String {
+    let gname = fmt_global_name(relocation.name);
 
     if relocation.offset.bytes() == 0 {
         gname
@@ -115,13 +115,13 @@ fn fmt_function(
     comptypes: &mut Vec<CompType>,
 ) -> String {
     let start_str = if start { "start " } else { "" };
-    let fn_name = fn_name_to_string(fn_name);
+    let fn_name = fmt_fn_name(fn_name);
     let args: Vec<_> = f
         .args
         .iter()
         .map(|(x, _)| {
-            let ident = local_name_to_string(x);
-            let ty = ptype_to_string(f.locals.index_at(x), comptypes);
+            let ident = fmt_local_name(x);
+            let ty = fmt_ptype(f.locals.index_at(x), comptypes);
 
             format!("{ident}: {ty}")
         })
@@ -130,7 +130,7 @@ fn fmt_function(
 
     let mut ret_ty = String::from("none");
     if let Some((ret, _)) = f.ret {
-        ret_ty = ptype_to_string(f.locals.index_at(ret), comptypes);
+        ret_ty = fmt_ptype(f.locals.index_at(ret), comptypes);
     }
     let mut out = format!("{start_str}fn {fn_name}({args}) -> {ret_ty} {{\n");
 
@@ -139,8 +139,8 @@ fn fmt_function(
     locals.sort_by_key(|l| l.0.get_internal());
     for l in locals {
         let ty = f.locals.index_at(l);
-        let local = local_name_to_string(l);
-        let ptype = ptype_to_string(ty, comptypes);
+        let local = fmt_local_name(l);
+        let ptype = fmt_ptype(ty, comptypes);
         out += &format!("  let {local}: {ptype};\n");
     }
 
@@ -179,20 +179,20 @@ fn fmt_statement(st: Statement, comptypes: &mut Vec<CompType>) -> String {
             destination,
             source,
         } => {
-            let left = place_expr_to_string(destination, comptypes);
-            let right = value_expr_to_string(source, comptypes);
+            let left = fmt_place_expr(destination, comptypes);
+            let right = fmt_value_expr(source, comptypes);
             format!("    {left} = {right};")
         }
         Statement::Finalize { place, fn_entry } => {
-            let place = place_expr_to_string(place, comptypes);
+            let place = fmt_place_expr(place, comptypes);
             format!("    Finalize({place}, {fn_entry});")
         }
         Statement::StorageLive(local) => {
-            let local = local_name_to_string(local);
+            let local = fmt_local_name(local);
             format!("    StorageLive({local});")
         }
         Statement::StorageDead(local) => {
-            let local = local_name_to_string(local);
+            let local = fmt_local_name(local);
             format!("    StorageDead({local});")
         }
     }
@@ -207,17 +207,17 @@ fn fmt_call(
 ) -> String {
     let args: Vec<_> = arguments
         .iter()
-        .map(|x| value_expr_to_string(x, comptypes))
+        .map(|x| fmt_value_expr(x, comptypes))
         .collect();
     let args = args.join(", ");
 
     let mut r = String::from("none");
     if let Some(ret) = ret {
-        r = place_expr_to_string(ret, comptypes);
+        r = fmt_place_expr(ret, comptypes);
     }
     let mut next = String::new();
     if let Some(next_block) = next_block {
-        let next_str = bb_name_to_string(next_block);
+        let next_str = fmt_bb_name(next_block);
         next = format!(" -> {next_str}");
     }
 
@@ -227,7 +227,7 @@ fn fmt_call(
 fn fmt_terminator(t: Terminator, comptypes: &mut Vec<CompType>) -> String {
     match t {
         Terminator::Goto(bb) => {
-            let bb = bb_name_to_string(bb);
+            let bb = fmt_bb_name(bb);
             format!("    goto -> {bb};")
         }
         Terminator::If {
@@ -235,9 +235,9 @@ fn fmt_terminator(t: Terminator, comptypes: &mut Vec<CompType>) -> String {
             then_block,
             else_block,
         } => {
-            let branch_expr = value_expr_to_string(condition, comptypes);
-            let then_bb = bb_name_to_string(then_block);
-            let else_bb = bb_name_to_string(else_block);
+            let branch_expr = fmt_value_expr(condition, comptypes);
+            let then_bb = fmt_bb_name(then_block);
+            let else_bb = fmt_bb_name(else_block);
             format!(
                 "    if {branch_expr} {{
       goto -> {then_bb};
@@ -255,7 +255,7 @@ fn fmt_terminator(t: Terminator, comptypes: &mut Vec<CompType>) -> String {
             ret,
             next_block,
         } => {
-            let callee = value_expr_to_string(callee, comptypes);
+            let callee = fmt_value_expr(callee, comptypes);
             let arguments = arguments.iter().map(|(x, _)| x).collect();
             let ret = ret.map(|(x, _)| x);
             fmt_call(&callee, arguments, ret, next_block, comptypes)
@@ -281,17 +281,17 @@ fn fmt_terminator(t: Terminator, comptypes: &mut Vec<CompType>) -> String {
     }
 }
 
-pub(self) fn bb_name_to_string(bb: BbName) -> String {
+fn fmt_bb_name(bb: BbName) -> String {
     let id = bb.0.get_internal();
     format!("bb{id}")
 }
 
-pub(self) fn fn_name_to_string(fn_name: FnName) -> String {
+fn fmt_fn_name(fn_name: FnName) -> String {
     let id = fn_name.0.get_internal();
     format!("f{id}")
 }
 
-pub(self) fn comptype_index_to_string(comptype_index: CompTypeIndex) -> String {
+fn fmt_comptype_index(comptype_index: CompTypeIndex) -> String {
     let id = comptype_index.idx;
     format!("T{id}")
 }

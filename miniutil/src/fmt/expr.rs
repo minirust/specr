@@ -1,58 +1,55 @@
 use super::*;
 
-pub(super) fn place_expr_to_string(p: PlaceExpr, comptypes: &mut Vec<CompType>) -> String {
+pub(super) fn fmt_place_expr(p: PlaceExpr, comptypes: &mut Vec<CompType>) -> String {
     match p {
-        PlaceExpr::Local(l) => local_name_to_string(l),
+        PlaceExpr::Local(l) => fmt_local_name(l),
         PlaceExpr::Deref { operand, ptype } => {
-            let ptype = ptype_to_string(ptype, comptypes);
-            let expr = value_expr_to_string(operand.extract(), comptypes);
+            let ptype = fmt_ptype(ptype, comptypes);
+            let expr = fmt_value_expr(operand.extract(), comptypes);
             format!("deref<{ptype}>({expr})")
         }
         PlaceExpr::Field { root, field } => {
-            let root = place_expr_to_string(root.extract(), comptypes);
+            let root = fmt_place_expr(root.extract(), comptypes);
             format!("{root}.{field}")
         }
         PlaceExpr::Index { root, index } => {
-            let root = place_expr_to_string(root.extract(), comptypes);
-            let index = value_expr_to_string(index.extract(), comptypes);
+            let root = fmt_place_expr(root.extract(), comptypes);
+            let index = fmt_value_expr(index.extract(), comptypes);
             format!("{root}[{index}]")
         }
     }
 }
 
-pub(super) fn local_name_to_string(l: LocalName) -> String {
+pub(super) fn fmt_local_name(l: LocalName) -> String {
     let id = l.0.get_internal();
     format!("_{id}")
 }
 
-pub(super) fn global_name_to_string(g: GlobalName) -> String {
+pub(super) fn fmt_global_name(g: GlobalName) -> String {
     let id = g.0.get_internal();
     format!("global({id})")
 }
 
-fn constant_to_string(c: Constant) -> String {
+fn fmt_constant(c: Constant) -> String {
     match c {
         Constant::Int(int) => int.to_string(),
         Constant::Bool(b) => b.to_string(),
-        Constant::GlobalPointer(relocation) => relocation_to_string(relocation),
-        Constant::FnPointer(fn_name) => fn_name_to_string(fn_name),
+        Constant::GlobalPointer(relocation) => fmt_relocation(relocation),
+        Constant::FnPointer(fn_name) => fmt_fn_name(fn_name),
         Constant::Variant { .. } => panic!("enums are unsupported!"),
     }
 }
 
-pub(super) fn value_expr_to_string(v: ValueExpr, comptypes: &mut Vec<CompType>) -> String {
+pub(super) fn fmt_value_expr(v: ValueExpr, comptypes: &mut Vec<CompType>) -> String {
     match v {
-        ValueExpr::Constant(c, _ty) => constant_to_string(c),
+        ValueExpr::Constant(c, _ty) => fmt_constant(c),
         ValueExpr::Tuple(l, t) => {
             let (lparen, rparen) = match t {
                 Type::Array { .. } => ('[', ']'),
                 Type::Tuple { .. } => ('(', ')'),
                 _ => panic!(),
             };
-            let l: Vec<_> = l
-                .iter()
-                .map(|x| value_expr_to_string(x, comptypes))
-                .collect();
+            let l: Vec<_> = l.iter().map(|x| fmt_value_expr(x, comptypes)).collect();
             let l = l.join(", ");
 
             format!("{lparen}{l}{rparen}")
@@ -62,8 +59,8 @@ pub(super) fn value_expr_to_string(v: ValueExpr, comptypes: &mut Vec<CompType>) 
             expr,
             union_ty,
         } => {
-            let union_ty = type_to_string(union_ty, comptypes);
-            let expr = value_expr_to_string(expr.extract(), comptypes);
+            let union_ty = fmt_type(union_ty, comptypes);
+            let expr = fmt_value_expr(expr.extract(), comptypes);
             format!("{union_ty} {{ field{field}: {expr} }}")
         }
         ValueExpr::Load {
@@ -71,7 +68,7 @@ pub(super) fn value_expr_to_string(v: ValueExpr, comptypes: &mut Vec<CompType>) 
             source,
         } => {
             let source = source.extract();
-            let source = place_expr_to_string(source, comptypes);
+            let source = fmt_place_expr(source, comptypes);
             let load_name = match destructive {
                 true => "move",
                 false => "load",
@@ -83,7 +80,7 @@ pub(super) fn value_expr_to_string(v: ValueExpr, comptypes: &mut Vec<CompType>) 
             ptr_ty: PtrType::Raw { .. },
         } => {
             let target = target.extract();
-            let target = place_expr_to_string(target, comptypes);
+            let target = fmt_place_expr(target, comptypes);
             format!("&raw {target}")
         }
         ValueExpr::AddrOf {
@@ -91,7 +88,7 @@ pub(super) fn value_expr_to_string(v: ValueExpr, comptypes: &mut Vec<CompType>) 
             ptr_ty: PtrType::Ref { mutbl, .. },
         } => {
             let target = target.extract();
-            let target = place_expr_to_string(target, comptypes);
+            let target = fmt_place_expr(target, comptypes);
             let mutbl = match mutbl {
                 Mutability::Mutable => "mut ",
                 Mutability::Immutable => "",
@@ -105,7 +102,7 @@ pub(super) fn value_expr_to_string(v: ValueExpr, comptypes: &mut Vec<CompType>) 
             panic!("unsupported ptr_ty for AddrOr!")
         }
         ValueExpr::UnOp { operator, operand } => {
-            let operand = value_expr_to_string(operand.extract(), comptypes);
+            let operand = fmt_value_expr(operand.extract(), comptypes);
             match operator {
                 UnOp::Int(UnOpInt::Neg, _int_ty) => format!("(-{operand})"),
                 UnOp::Int(UnOpInt::Cast, _int_ty) => format!("int2int({operand})"),
@@ -127,11 +124,11 @@ pub(super) fn value_expr_to_string(v: ValueExpr, comptypes: &mut Vec<CompType>) 
                 BinOpInt::Rem => '%',
             };
 
-            let int_ty = int_type_to_string(int_ty);
+            let int_ty = fmt_int_type(int_ty);
             let int_op = format!("{int_op}<{int_ty}>");
 
-            let l = value_expr_to_string(left.extract(), comptypes);
-            let r = value_expr_to_string(right.extract(), comptypes);
+            let l = fmt_value_expr(left.extract(), comptypes);
+            let r = fmt_value_expr(right.extract(), comptypes);
 
             format!("({l} {int_op} {r})")
         }
@@ -149,8 +146,8 @@ pub(super) fn value_expr_to_string(v: ValueExpr, comptypes: &mut Vec<CompType>) 
                 IntRel::Ne => "!=",
             };
 
-            let l = value_expr_to_string(left.extract(), comptypes);
-            let r = value_expr_to_string(right.extract(), comptypes);
+            let l = fmt_value_expr(left.extract(), comptypes);
+            let r = fmt_value_expr(right.extract(), comptypes);
 
             format!("({l} {rel} {r})")
         }
@@ -163,8 +160,8 @@ pub(super) fn value_expr_to_string(v: ValueExpr, comptypes: &mut Vec<CompType>) 
                 true => "offset_inbounds",
                 false => "offset_wrapping",
             };
-            let l = value_expr_to_string(left.extract(), comptypes);
-            let r = value_expr_to_string(right.extract(), comptypes);
+            let l = fmt_value_expr(left.extract(), comptypes);
+            let r = fmt_value_expr(right.extract(), comptypes);
             format!("{offset_name}({l}, {r})")
         }
     }
