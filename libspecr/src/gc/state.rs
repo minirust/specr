@@ -79,16 +79,17 @@ impl GcState {
         self.data.iter().map(|x| x.size()).sum::<usize>()
     }
 
-    pub fn mark_and_sweep(&mut self, roots: HashSet<usize>) {
+    pub fn mark_and_sweep(&mut self, root: impl GcCompat) {
         // don't cleanup, if you didn't allocate at least LEEWAY_MEMORY bytes since the last cleanup.
         if self.current_memory < self.last_memory + LEEWAY_MEMORY {
             return;
         }
 
-        // objects which are found to be reachable from `roots`, but their children were not yet added.
-        let mut open = roots;
+        // objects which are found to be directly reachable from `root`.
+        let mut open = HashSet::new();
+        root.points_to(&mut open);
 
-        // objects which are found to be reachable from `roots`, whose children have already been added.
+        // objects which are found to be reachable from `root`, whose children have already been added.
         let mut done = HashSet::new();
 
         while let Some(i) = open.iter().next().cloned() {
@@ -104,7 +105,7 @@ impl GcState {
                 }
             }
         }
-        // seen now contains the `usize` which are reachable from roots.
+        // seen now contains the `usize` which are reachable from root.
         let seen = done;
 
         // clear all unreachable objects.
