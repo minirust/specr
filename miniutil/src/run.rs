@@ -1,7 +1,6 @@
 use crate::*;
 
 use gen_minirust::prelude::NdResult;
-use std::collections::HashSet;
 
 // Run the program and return its TerminationInfo.
 // We fix `BasicMemory` as a memory for now.
@@ -11,7 +10,9 @@ pub fn run_program(prog: Program) -> TerminationInfo {
 
         loop {
             machine.step()?;
-            mark_and_sweep(&machine);
+
+            // Drops everything not reachable from `machine`.
+            gen_minirust::libspecr::hidden::mark_and_sweep::<Machine<BasicMemory>>(machine);
         }
     };
 
@@ -21,13 +22,4 @@ pub fn run_program(prog: Program) -> TerminationInfo {
         Ok(never) => never,
         Err(t) => t,
     }
-}
-
-// This drops everything not reachable from the machine.
-fn mark_and_sweep<M: Memory>(machine: &Machine<M>) {
-    // `set` is the set of gc pointers directly pointed to by `machine`.
-    let mut set = HashSet::new();
-    machine.points_to(&mut set);
-
-    gen_minirust::libspecr::hidden::mark_and_sweep(set);
 }
