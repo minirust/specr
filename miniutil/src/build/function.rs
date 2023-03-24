@@ -107,6 +107,9 @@ pub macro block {
     (@{$($stmts:expr),*} $terminator:expr) => {
         block(&[$($stmts),*], $terminator)
     },
+
+    // This is just a specialization of the case below.
+    // We do not know why it is required separately.
     (@{} $stmt:expr, $($rest:expr),*) => {
         block!(@{$stmt} $($rest),*)
     },

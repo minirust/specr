@@ -33,11 +33,12 @@ pub use ty::*;
 mod ty_conv;
 pub use ty_conv::*;
 
-pub fn align(bytes: u32) -> Align {
+pub fn align(bytes: impl Into<Int>) -> Align {
+    let bytes = bytes.into();
     Align::from_bytes(bytes).unwrap()
 }
 
-pub fn size(bytes: u32) -> Size {
+pub fn size(bytes: impl Into<Int>) -> Size {
     Size::from_bytes(bytes).unwrap()
 }
 

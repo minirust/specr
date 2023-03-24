@@ -38,7 +38,7 @@ pub fn calc_chunks(fields: Fields, size: Size) -> List<(Size, Size)> {
 
 // The `markers` object stores a bool for each byte within the size of a union.
 // Such a bool is `true` if the corresponding byte should be part of a chunk (i.e. it contains actual data),
-// and it's false it this byte is just padding.
+// and it's false if this byte is just padding.
 //
 // marks any non-padding bytes used by `ty` as `true`.
 fn mark_used_bytes(ty: Type, markers: &mut [bool]) {

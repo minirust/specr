@@ -2,4 +2,4 @@
 
 `minitest` is the MiniRust test suite.
 
-Use `./cov.sh` for the test coverage.
+Use `./cov.sh` to generate the test coverage.

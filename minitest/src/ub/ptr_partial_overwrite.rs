@@ -17,7 +17,7 @@ fn pointer_partial_overwrite() {
             local(1),
             addr_of(local(0), <&i32>::get_type())
         ),
-        assign( // this corrupts one u8 of the pointer, stripping it's provenance
+        assign( // this corrupts one u8 of the pointer, stripping its provenance
             deref(
                 addr_of(local(1), <*mut u8>::get_type()),
                 <u8>::get_ptype(),

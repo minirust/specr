@@ -13,7 +13,7 @@ mod trait_passthrough;
 
 use std::cell::RefCell;
 
-// Note that each thread has it's own GC_STATE.
+// Note that each thread has its own GC_STATE.
 // You cannot share/send Garbage collected objects over threads.
 thread_local! {
     pub(crate) static GC_STATE: RefCell<GcState> = RefCell::new(GcState::new());

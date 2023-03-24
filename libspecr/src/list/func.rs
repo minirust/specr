@@ -152,7 +152,7 @@ impl<T: Obj> List<T> {
     }
 
     /// Applies `f` to each element of the list and returns the successful outputs as another lists.
-    /// If at least one call to `f` failed it's error is returned instead.
+    /// If at least one call to `f` failed its error is returned instead.
     pub fn try_map<O: Obj, E>(self, f: impl FnMut(T) -> E) -> <<E as Try>::Residual as Residual<List<O>>>::TryType
         where E: Try<Output=O>,
               <E as Try>::Residual: Residual<List<O>>,

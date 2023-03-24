@@ -79,7 +79,7 @@ fn translate_relocation<'cx, 'tcx>(alloc_id: rs::AllocId, offset: rs::Size, fcx:
 }
 
 // calls `translate_const_allocation` with the allocation of alloc_id,
-// and adds the alloc_id and it's newly-created global to alloc_map.
+// and adds the alloc_id and its newly-created global to alloc_map.
 fn translate_alloc_id<'cx, 'tcx>(alloc_id: rs::AllocId, fcx: &mut FnCtxt<'cx, 'tcx>) -> GlobalName {
     if let Some(x) = fcx.cx.alloc_map.get(&alloc_id) {
         return *x;
