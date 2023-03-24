@@ -18,7 +18,7 @@ pub fn auto_obj_bound(mut ast: syn::File) -> syn::File {
                 add_bound_punct(&mut t.supertraits);
                 for it in &mut t.items {
                     match it {
-                        TraitItem::Method(itm) => {
+                        TraitItem::Fn(itm) => {
                             add_bound(&mut itm.sig.generics);
                         },
                         TraitItem::Type(itt) => {
@@ -33,7 +33,7 @@ pub fn auto_obj_bound(mut ast: syn::File) -> syn::File {
                 add_bound(&mut i.generics);
                 for ii in &mut i.items {
                     match ii {
-                        ImplItem::Method(iim) => {
+                        ImplItem::Fn(iim) => {
                             add_bound(&mut iim.sig.generics);
                         },
                         ImplItem::Type(iit) => {

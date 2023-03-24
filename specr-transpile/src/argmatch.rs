@@ -41,21 +41,21 @@ pub fn argmatch(mut mods: Vec<Module>) -> Vec<Module> {
 
 // represents a `fn` item within an impl block.
 #[derive(PartialEq, Eq)]
-struct MethodIdx {
+struct FnIdx {
     item_idx: usize,
     fn_idx: usize,
 }
 
-impl MethodIdx {
-    fn as_ref<'a>(&self, ast: &'a syn::File) -> &'a ImplItemMethod {
+impl FnIdx {
+    fn as_ref<'a>(&self, ast: &'a syn::File) -> &'a ImplItemFn {
         let Item::Impl(ref ii) = ast.items[self.item_idx] else { panic!() };
-        let ImplItem::Method(ref iim) = ii.items[self.fn_idx] else { panic!() };
+        let ImplItem::Fn(ref iim) = ii.items[self.fn_idx] else { panic!() };
         iim
     }
 
-    fn as_mut<'a>(&self, ast: &'a mut syn::File) -> &'a mut ImplItemMethod {
+    fn as_mut<'a>(&self, ast: &'a mut syn::File) -> &'a mut ImplItemFn {
         let Item::Impl(ref mut ii) = ast.items[self.item_idx] else { panic!() };
-        let ImplItem::Method(ref mut iim) = ii.items[self.fn_idx] else { panic!() };
+        let ImplItem::Fn(ref mut iim) = ii.items[self.fn_idx] else { panic!() };
         iim
     }
 }
@@ -73,7 +73,7 @@ struct AttrInfo {
 
 struct Argmatch {
     // the method which has the `argmatch` attribute.
-    method_idx: MethodIdx,
+    method_idx: FnIdx,
 
     // the information in this attribute.
     attr_info: AttrInfo,
@@ -103,9 +103,9 @@ fn locate_argmatch(ast: &syn::File) -> Option<Argmatch> {
     for (i, x) in ast.items.iter().enumerate() {
         let Item::Impl(ii) = x else { continue };
         for (j, y) in ii.items.iter().enumerate() {
-            let ImplItem::Method(ref iim) = y else { continue };
+            let ImplItem::Fn(ref iim) = y else { continue };
             let Some(attr_info) = get_attr_info(iim) else { continue };
-            let method_idx = MethodIdx { item_idx: i, fn_idx: j };
+            let method_idx = FnIdx { item_idx: i, fn_idx: j };
             return Some(Argmatch { attr_info, method_idx });
         }
     }
@@ -113,7 +113,7 @@ fn locate_argmatch(ast: &syn::File) -> Option<Argmatch> {
     None
 }
 
-fn construct_block(argmatch: &Argmatch, ast: &syn::File, submatches: &[MethodIdx]) -> Block {
+fn construct_block(argmatch: &Argmatch, ast: &syn::File, submatches: &[FnIdx]) -> Block {
     let match_ident = &argmatch.attr_info.match_ident;
     let pats: Vec<&Pat> = submatches.iter().map(|x| {
             let iim = x.as_ref(ast);
@@ -134,15 +134,15 @@ fn construct_block(argmatch: &Argmatch, ast: &syn::File, submatches: &[MethodIdx
 }
 
 // returns the submatches in the order they are written down in the input file.
-fn locate_submatches(argmatch: &Argmatch, ast: &syn::File) -> Vec<MethodIdx> {
+fn locate_submatches(argmatch: &Argmatch, ast: &syn::File) -> Vec<FnIdx> {
     let mut submatches = Vec::new();
 
     for (i, x) in ast.items.iter().enumerate() {
         let Item::Impl(ref ii) = x else { continue };
         for (j, y) in ii.items.iter().enumerate() {
-            let ImplItem::Method(_) = y else { continue };
+            let ImplItem::Fn(_) = y else { continue };
 
-            let method_idx = MethodIdx { item_idx: i, fn_idx: j };
+            let method_idx = FnIdx { item_idx: i, fn_idx: j };
             match is_submatch(argmatch, &method_idx, ast) {
                 SubmatchResult::Yes => {
                     submatches.push(method_idx);
@@ -167,7 +167,7 @@ enum SubmatchResult {
     YesButMismatch { error_msg: String },
 }
 
-fn is_submatch(argmatch: &Argmatch, method_idx: &MethodIdx, ast: &syn::File) -> SubmatchResult {
+fn is_submatch(argmatch: &Argmatch, method_idx: &FnIdx, ast: &syn::File) -> SubmatchResult {
     if *method_idx == argmatch.method_idx {
         // this is no "submatch", it's the original method_idx itself!
         return SubmatchResult::No;
@@ -216,7 +216,7 @@ fn is_submatch(argmatch: &Argmatch, method_idx: &MethodIdx, ast: &syn::File) -> 
 
 }
 
-fn clear_submatches(ast: &mut syn::File, mut submatches: Vec<MethodIdx>) {
+fn clear_submatches(ast: &mut syn::File, mut submatches: Vec<FnIdx>) {
     submatches.reverse();
 
     for s in submatches {
@@ -231,22 +231,21 @@ fn clear_submatches(ast: &mut syn::File, mut submatches: Vec<MethodIdx>) {
 }
 
 // Searches for an `argmatch` attribute and returns its info, if successful.
-fn get_attr_info(iim: &ImplItemMethod) -> Option<AttrInfo> {
+fn get_attr_info(iim: &ImplItemFn) -> Option<AttrInfo> {
     let attrs = &iim.attrs;
     for i in 0..attrs.len() {
-        let attr = &attrs[i];
-        let segments: Vec<String> = attr.path.segments
+        let Meta::List(list) = &attrs[i].meta else { continue };
+        let segments: Vec<String> = list.path.segments
                                              .iter()
                                              .map(|x| format!("{}", x.to_token_stream()))
                                              .collect();
         let [l, r] = &segments[..] else { continue };
         if l == "specr" && r == "argmatch" {
-            let Some(tok) = attr.tokens.clone().into_iter().next() else { continue };
-            let TokenTree::Group(g) = tok else { continue };
+            let Some(tok) = list.tokens.clone().into_iter().next() else { continue };
+            let TokenTree::Ident(match_ident) = tok else { continue };
 
             let attr_idx = i;
-            let match_ident = format_ident!("{}", g.stream().to_string());
-            let match_idx = if match_ident == "self" {
+            let match_idx = if match_ident.to_string() == "self" {
                 0
             } else {
                 iim.sig.inputs.iter().position(|arg| {

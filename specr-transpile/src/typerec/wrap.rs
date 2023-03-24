@@ -18,7 +18,7 @@ pub(in crate::typerec) fn wrap_variant_elements(mods: &mut [Module]) -> HashSet<
 }
 
 fn is_indirection_attr(attr: &Attribute) -> bool {
-    let s = format!("{}", attr.path.to_token_stream()).replace(" ", "");
+    let s = format!("{}", attr.path().to_token_stream()).replace(" ", "");
     s == "specr::indirection"
 }
 

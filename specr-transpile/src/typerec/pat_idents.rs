@@ -42,7 +42,7 @@ impl Visit<'_> for Visitor<'_> {
             if e.variant != var { continue; }
             let ElementIdx::Unnamed(idx) = &e.idx else { continue };
 
-            let Some(f) = pat.pat.elems.iter().nth(*idx) else { continue };
+            let Some(f) = pat.elems.iter().nth(*idx) else { continue };
             if let Pat::Ident(id) = f {
                 self.idents.insert(id.ident.clone());
             }

@@ -1,5 +1,4 @@
 // TODO consistent module naming scheme for module and entry function.
-mod let_else;
 mod imports;
 mod argmatch;
 mod merge_impls;
@@ -103,8 +102,7 @@ fn compile(mods: Vec<Module>, config: &Config) {
 
     for m in mods.into_iter() {
         // apply all other compilation stages.
-        let ast = let_else::let_else(m.ast);
-        let ast = merge_impls::merge(ast);
+        let ast = merge_impls::merge(m.ast);
         let ast = auto_derive::auto_derive(ast);
         let ast = index::index(ast);
         let ast = auto_obj_bound::auto_obj_bound(ast);

@@ -1,6 +1,5 @@
 use crate::prelude::*;
 
-///
 pub fn merge(mut ast: syn::File) -> syn::File {
     let mut ii_list: Vec<&mut ItemImpl> = 
         ast.items.iter_mut()
@@ -20,11 +19,12 @@ pub fn merge(mut ast: syn::File) -> syn::File {
         }
     }
 
+    // TODO shouldn't this be removed?
     // remove ';'-methods
     for i in &mut ast.items {
         let Item::Impl(ii) = i else { continue };
         ii.items.retain(|ii| {
-            let ImplItem::Method(iim) = ii else { return true };
+            let ImplItem::Fn(iim) = ii else { return true };
             let blk = format!("{}", iim.block.to_token_stream());
 
             blk != "{ ; }"

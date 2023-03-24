@@ -24,8 +24,9 @@ pub fn auto_derive(mut ast: syn::File) -> syn::File {
 // checks whether `attrs` contains some attribute `#[derive(..., t, ...)]`
 fn contains_derive_attr(t: &str, attrs: &[Attribute]) -> bool {
     attrs.iter().any(|attr| {
-        if format!("{}", attr.path.to_token_stream()) != "derive" { return false; }
-        let Some(TokenTree::Group(g)) = attr.tokens.clone().into_iter().next() else { return false };
+        let Meta::List(list) = &attr.meta else { return false };
+        if format!("{}", list.path.to_token_stream()) != "derive" { return false; }
+        let Some(TokenTree::Group(g)) = list.tokens.clone().into_iter().next() else { return false };
 
         g.stream().into_iter().any(|tk| format!("{}", tk) == t)
     })
