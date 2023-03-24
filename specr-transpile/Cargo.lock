@@ -84,7 +84,7 @@ dependencies = [
 
 [[package]]
 name = "specr-transpile"
-version = "0.1.10"
+version = "0.1.11"
 dependencies = [
  "prettyplease",
  "proc-macro2",
