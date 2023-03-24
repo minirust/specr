@@ -19,20 +19,8 @@ pub fn merge(mut ast: syn::File) -> syn::File {
         }
     }
 
-    // TODO shouldn't this be removed?
-    // remove ';'-methods
-    for i in &mut ast.items {
-        let Item::Impl(ii) = i else { continue };
-        ii.items.retain(|ii| {
-            let ImplItem::Fn(iim) = ii else { return true };
-            let blk = format!("{}", iim.block.to_token_stream());
-
-            blk != "{ ; }"
-        });
-    }
-
     ast.items.retain(|item| match item {
-        Item::Impl(ii) if ii.items.len() == 0 => false,
+        Item::Impl(ii) if ii.items.is_empty() => false,
         _ => true,
     });
 
