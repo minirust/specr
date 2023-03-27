@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 gen-minirust = { path = "../minirust/tooling/gen-minirust" }
-miniutil = { path = "../miniutil"}
+miniutil = { path = "../minirust/tooling/miniutil"}
 
 [dev-dependencies]
 ui_test = "0.5"
