@@ -8,11 +8,11 @@ use std::alloc::{System, Layout, Allocator};
 use std::ptr::NonNull;
 
 pub fn print(t: impl Display) {
-    println!("{}", t);
+    println!("{t}");
 }
 
 pub fn eprint(t: impl Display) {
-    eprintln!("{}", t);
+    eprintln!("{t}");
 }
 
 pub fn exit() {
