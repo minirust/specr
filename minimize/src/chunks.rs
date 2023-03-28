@@ -22,14 +22,14 @@ pub fn calc_chunks(fields: Fields, size: Size) -> List<(Size, Size)> {
         match (b, &current_chunk_start) {
             (true, None) => {
                 current_chunk_start = Some(i);
-            },
+            }
             (false, Some(s)) => {
                 let start = Size::from_bytes(*s).unwrap();
                 let length = Size::from_bytes(i - *s).unwrap();
                 chunks.push((start, length));
                 current_chunk_start = None;
-            },
-            _ => {},
+            }
+            _ => {}
         }
     }
 
@@ -51,7 +51,7 @@ fn mark_used_bytes(ty: Type, markers: &mut [bool]) {
                 let offset = offset.bytes().try_to_usize().unwrap();
                 mark_used_bytes(ty, &mut markers[offset..]);
             }
-        },
+        }
         Type::Union { chunks, .. } => {
             for (offset, len) in chunks {
                 let offset = offset.bytes().try_to_usize().unwrap();

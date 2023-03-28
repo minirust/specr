@@ -3,7 +3,10 @@ use crate::*;
 // Some Rust features are not supported, and are ignored by `minimize`.
 // Those can be found by grepping "IGNORED".
 
-pub fn translate_bb<'cx, 'tcx>(bb: &rs::BasicBlockData<'tcx>, fcx: &mut FnCtxt<'cx, 'tcx>) -> BasicBlock {
+pub fn translate_bb<'cx, 'tcx>(
+    bb: &rs::BasicBlockData<'tcx>,
+    fcx: &mut FnCtxt<'cx, 'tcx>,
+) -> BasicBlock {
     let mut statements = List::new();
     for stmt in bb.statements.iter() {
         // unsupported statements will be IGNORED.
@@ -17,20 +20,19 @@ pub fn translate_bb<'cx, 'tcx>(bb: &rs::BasicBlockData<'tcx>, fcx: &mut FnCtxt<'
     }
 }
 
-fn translate_stmt<'cx, 'tcx>(stmt: &rs::Statement<'tcx>, fcx: &mut FnCtxt<'cx, 'tcx>) -> Option<Statement> {
+fn translate_stmt<'cx, 'tcx>(
+    stmt: &rs::Statement<'tcx>,
+    fcx: &mut FnCtxt<'cx, 'tcx>,
+) -> Option<Statement> {
     Some(match &stmt.kind {
         rs::StatementKind::Assign(box (place, rval)) => {
             Statement::Assign {
                 destination: translate_place(place, fcx),
                 source: translate_rvalue(rval, fcx)?, // assign of unsupported rvalues are IGNORED.
             }
-        },
-        rs::StatementKind::StorageLive(local) => {
-            Statement::StorageLive(fcx.local_name_map[&local])
-        },
-        rs::StatementKind::StorageDead(local) => {
-            Statement::StorageDead(fcx.local_name_map[&local])
-        },
+        }
+        rs::StatementKind::StorageLive(local) => Statement::StorageLive(fcx.local_name_map[&local]),
+        rs::StatementKind::StorageDead(local) => Statement::StorageDead(fcx.local_name_map[&local]),
         rs::StatementKind::Deinit(..) | rs::StatementKind::Retag(..) => return None, // IGNORED for now.
         x => {
             dbg!(x);
@@ -39,11 +41,20 @@ fn translate_stmt<'cx, 'tcx>(stmt: &rs::Statement<'tcx>, fcx: &mut FnCtxt<'cx, '
     })
 }
 
-fn translate_terminator<'cx, 'tcx>(terminator: &rs::Terminator<'tcx>, fcx: &mut FnCtxt<'cx, 'tcx>) -> Terminator {
+fn translate_terminator<'cx, 'tcx>(
+    terminator: &rs::Terminator<'tcx>,
+    fcx: &mut FnCtxt<'cx, 'tcx>,
+) -> Terminator {
     match &terminator.kind {
         rs::TerminatorKind::Return => Terminator::Return,
         rs::TerminatorKind::Goto { target } => Terminator::Goto(fcx.bb_name_map[&target]),
-        rs::TerminatorKind::Call { func, target, destination, args, .. } => translate_call(fcx, func, args, destination, target),
+        rs::TerminatorKind::Call {
+            func,
+            target,
+            destination,
+            args,
+            ..
+        } => translate_call(fcx, func, args, destination, target),
         rs::TerminatorKind::SwitchInt { discr, targets } => {
             assert!(discr.ty(&fcx.body, fcx.cx.tcx).is_bool()); // for now we only support bool branching.
 
@@ -60,8 +71,10 @@ fn translate_terminator<'cx, 'tcx>(terminator: &rs::Terminator<'tcx>, fcx: &mut 
                 else_block,
             }
         }
-        // those are ignored currently.
-        rs::TerminatorKind::Drop { target, .. } | rs::TerminatorKind::Assert { target, .. } => Terminator::Goto(fcx.bb_name_map[&target]),
+        // those are IGNORED currently.
+        rs::TerminatorKind::Drop { target, .. } | rs::TerminatorKind::Assert { target, .. } => {
+            Terminator::Goto(fcx.bb_name_map[&target])
+        }
         x => {
             dbg!(x);
             todo!()
@@ -69,7 +82,13 @@ fn translate_terminator<'cx, 'tcx>(terminator: &rs::Terminator<'tcx>, fcx: &mut 
     }
 }
 
-fn translate_call<'cx, 'tcx>(fcx: &mut FnCtxt<'cx, 'tcx>, func: &rs::Operand<'tcx>, args: &[rs::Operand<'tcx>], destination: &rs::Place<'tcx>, target: &Option<rs::BasicBlock>) -> Terminator {
+fn translate_call<'cx, 'tcx>(
+    fcx: &mut FnCtxt<'cx, 'tcx>,
+    func: &rs::Operand<'tcx>,
+    args: &[rs::Operand<'tcx>],
+    destination: &rs::Place<'tcx>,
+    target: &Option<rs::BasicBlock>,
+) -> Terminator {
     let rs::Operand::Constant(box f1) = func else { panic!() };
     let rs::ConstantKind::Val(_, f2) = f1.literal else { panic!() };
     let rs::TyKind::FnDef(f, substs_ref) = f2.kind() else { panic!() };

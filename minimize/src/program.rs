@@ -3,11 +3,11 @@ use crate::*;
 pub struct Ctxt<'tcx> {
     pub tcx: rs::TyCtxt<'tcx>,
 
-    /// maps Rust function calls to minirust FnNames.
+    /// maps Rust function calls to MiniRust FnNames.
     pub fn_name_map: HashMap<(rs::DefId, rs::SubstsRef<'tcx>), FnName>,
 
     /// Stores which AllocId evaluates to which GlobalName.
-    /// Note that not every AllocId and GlobalName is coming up in this map (for example constants are missing).
+    /// Note that not every AllocId and not every GlobalName is coming up in this map (for example constants are missing).
     pub alloc_map: HashMap<rs::AllocId, GlobalName>,
 
     pub globals: Map<GlobalName, Global>,
@@ -34,11 +34,18 @@ impl<'tcx> Ctxt<'tcx> {
         self.fn_name_map.insert((entry, substs_ref), entry_name);
 
         // take any not-yet-implemented function:
-        while let Some(fn_name) = self.fn_name_map.values().find(|k| !self.functions.contains_key(**k)).copied() {
-            let (def_id, substs_ref) = self.fn_name_map.iter()
-                                                .find(|(_, f)| **f == fn_name)
-                                                .map(|(r, _)| r)
-                                                .unwrap();
+        while let Some(fn_name) = self
+            .fn_name_map
+            .values()
+            .find(|k| !self.functions.contains_key(**k))
+            .copied()
+        {
+            let (def_id, substs_ref) = self
+                .fn_name_map
+                .iter()
+                .find(|(_, f)| **f == fn_name)
+                .map(|(r, _)| r)
+                .unwrap();
 
             let f = FnCtxt::new(*def_id, substs_ref, &mut self).translate();
             self.functions.insert(fn_name, f);
@@ -56,7 +63,6 @@ impl<'tcx> Ctxt<'tcx> {
             globals: self.globals,
         }
     }
-
 }
 
 fn mk_start_fn(entry: u32) -> Function {
@@ -116,9 +122,17 @@ pub struct FnCtxt<'cx, 'tcx> {
 }
 
 impl<'cx, 'tcx> FnCtxt<'cx, 'tcx> {
-    pub fn new(def_id: rs::DefId, substs_ref: rs::SubstsRef<'tcx>, cx: &'cx mut Ctxt<'tcx>) -> Self {
+    pub fn new(
+        def_id: rs::DefId,
+        substs_ref: rs::SubstsRef<'tcx>,
+        cx: &'cx mut Ctxt<'tcx>,
+    ) -> Self {
         let body = cx.tcx.optimized_mir(def_id);
-        let body = cx.tcx.subst_and_normalize_erasing_regions(substs_ref, rs::ParamEnv::empty(), body.clone());
+        let body = cx.tcx.subst_and_normalize_erasing_regions(
+            substs_ref,
+            rs::ParamEnv::empty(),
+            body.clone(),
+        );
 
         FnCtxt {
             body,
@@ -153,7 +167,8 @@ impl<'cx, 'tcx> FnCtxt<'cx, 'tcx> {
         // convert mirs Local-types to minirust.
         for (id, local_name) in &self.local_name_map {
             let local_decl = &self.body.local_decls[*id];
-            self.locals.insert(*local_name, translate_local(local_decl, self.cx.tcx));
+            self.locals
+                .insert(*local_name, translate_local(local_decl, self.cx.tcx));
         }
 
         // the number of locals which are implicitly storage live.
@@ -166,15 +181,18 @@ impl<'cx, 'tcx> FnCtxt<'cx, 'tcx> {
         // except for those which are implicitly storage live in Minirust;
         // like the return local and function args.
         let init_blk = BasicBlock {
-            statements: rs::always_storage_live_locals(&self.body).iter()
-                            .map(|loc| self.local_name_map[&loc])
-                            .filter(|LocalName(i)| i.get_internal() as usize >= free_argc)
-                            .map(Statement::StorageLive).collect(),
+            statements: rs::always_storage_live_locals(&self.body)
+                .iter()
+                .map(|loc| self.local_name_map[&loc])
+                .filter(|LocalName(i)| i.get_internal() as usize >= free_argc)
+                .map(Statement::StorageLive)
+                .collect(),
             terminator: Terminator::Goto(rs_start),
         };
 
         // convert mirs BBs to minirust.
-        for (id, bb_name) in self.bb_name_map.clone() { // TODO fix clone
+        for (id, bb_name) in self.bb_name_map.clone() {
+            // TODO fix clone
             let bb_data = &self.body.basic_blocks[id].clone(); // TODO fix clone
             let bb = translate_bb(bb_data, &mut self);
             self.blocks.insert(bb_name, bb);
@@ -189,7 +207,7 @@ impl<'cx, 'tcx> FnCtxt<'cx, 'tcx> {
 
         let mut args = List::default();
         for (i, arg_abi) in arg_abis.iter().enumerate() {
-            let i = i+1; // this starts counting with 1, as id 0 is the return value of the function.
+            let i = i + 1; // this starts counting with 1, as id 0 is the return value of the function.
             let local_name = LocalName(Name::from_internal(i as _));
             args.push((local_name, arg_abi));
         }
@@ -209,15 +227,24 @@ impl<'cx, 'tcx> FnCtxt<'cx, 'tcx> {
 /// translates a function body.
 /// Any fn calls occuring during this translation will be added to the `FnNameMap`.
 // TODO simplify this function.
-pub fn calc_abis<'tcx>(def_id: rs::DefId, substs_ref: rs::SubstsRef<'tcx>, tcx: rs::TyCtxt<'tcx>) -> (/*ret:*/ ArgAbi, /*args:*/ List<ArgAbi>) {
+pub fn calc_abis<'tcx>(
+    def_id: rs::DefId,
+    substs_ref: rs::SubstsRef<'tcx>,
+    tcx: rs::TyCtxt<'tcx>,
+) -> (/*ret:*/ ArgAbi, /*args:*/ List<ArgAbi>) {
     let ty = tcx.type_of(def_id);
     let fn_sig = ty.fn_sig(tcx);
     let ty_list = substs_ref.try_as_type_list().unwrap();
     let fn_abi = if ty_list.is_empty() {
-        tcx.fn_abi_of_fn_ptr(rs::ParamEnv::empty().and((fn_sig, ty_list))).unwrap()
+        tcx.fn_abi_of_fn_ptr(rs::ParamEnv::empty().and((fn_sig, ty_list)))
+            .unwrap()
     } else {
-        let inst = tcx.resolve_instance(rs::ParamEnv::empty().and((def_id, substs_ref))).unwrap().unwrap();
-        tcx.fn_abi_of_instance(rs::ParamEnv::empty().and((inst, rs::List::empty()))).unwrap()
+        let inst = tcx
+            .resolve_instance(rs::ParamEnv::empty().and((def_id, substs_ref)))
+            .unwrap()
+            .unwrap();
+        tcx.fn_abi_of_instance(rs::ParamEnv::empty().and((inst, rs::List::empty())))
+            .unwrap()
     };
     let ret = translate_arg_abi(&fn_abi.ret);
     let args = fn_abi.args.iter().map(|x| translate_arg_abi(x)).collect();
@@ -249,7 +276,6 @@ fn translate_local<'tcx>(local: &rs::LocalDecl<'tcx>, tcx: rs::TyCtxt<'tcx>) -> 
 
     PlaceType { ty, align }
 }
-
 
 pub fn translate_align(align: rs::Align) -> Align {
     Align::from_bytes(align.bytes()).unwrap()

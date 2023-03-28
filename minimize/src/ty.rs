@@ -31,29 +31,25 @@ pub fn translate_ty<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> Type {
             let layout = tcx.layout_of(a).unwrap().layout;
             let size = translate_size(layout.size());
 
-            let fields = ts.iter()
-                           .enumerate()
-                           .map(|(i, t)| {
-                                let t = translate_ty(t, tcx);
-                                let offset = layout.fields().offset(i);
-                                let offset = translate_size(offset);
+            let fields = ts
+                .iter()
+                .enumerate()
+                .map(|(i, t)| {
+                    let t = translate_ty(t, tcx);
+                    let offset = layout.fields().offset(i);
+                    let offset = translate_size(offset);
 
-                                (offset, t)
-                           }).collect();
+                    (offset, t)
+                })
+                .collect();
 
-            Type::Tuple {
-                fields,
-                size,
-            }
-        },
+            Type::Tuple { fields, size }
+        }
         rs::TyKind::Adt(adt_def, sref) if adt_def.is_struct() => {
             let (fields, size) = translate_adt_fields(ty, *adt_def, sref, tcx);
 
-            Type::Tuple {
-                fields,
-                size,
-            }
-        },
+            Type::Tuple { fields, size }
+        }
         rs::TyKind::Adt(adt_def, sref) if adt_def.is_union() => {
             let (fields, size) = translate_adt_fields(ty, *adt_def, sref, tcx);
             let chunks = calc_chunks(fields, size);
@@ -63,26 +59,26 @@ pub fn translate_ty<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> Type {
                 size,
                 chunks,
             }
-        },
+        }
         rs::TyKind::Adt(adt_def, _) if adt_def.is_box() => {
             let ty = ty.boxed_ty();
             let pointee = layout_of(ty, tcx);
             Type::Ptr(PtrType::Box { pointee })
-        },
+        }
         rs::TyKind::Ref(_, ty, mutbl) => {
             let pointee = layout_of(*ty, tcx);
             let mutbl = translate_mutbl(*mutbl);
-            Type::Ptr(PtrType::Ref { pointee, mutbl } )
-        },
+            Type::Ptr(PtrType::Ref { pointee, mutbl })
+        }
         rs::TyKind::RawPtr(rs::TypeAndMut { ty, mutbl: _ }) => {
             let pointee = layout_of(*ty, tcx);
-            Type::Ptr(PtrType::Raw { pointee } )
-        },
+            Type::Ptr(PtrType::Raw { pointee })
+        }
         rs::TyKind::Array(ty, c) => {
             let count = Int::from(c.eval_usize(tcx, rs::ParamEnv::empty()));
             let elem = GcCow::new(translate_ty(*ty, tcx));
             Type::Array { elem, count }
-        },
+        }
         x => {
             dbg!(x);
             todo!()
@@ -90,20 +86,26 @@ pub fn translate_ty<'tcx>(ty: rs::Ty<'tcx>, tcx: rs::TyCtxt<'tcx>) -> Type {
     }
 }
 
-fn translate_adt_fields<'tcx>(ty: rs::Ty<'tcx>, adt_def: rs::AdtDef<'tcx>, sref: rs::SubstsRef<'tcx>, tcx: rs::TyCtxt<'tcx>) -> (Fields, Size) {
+fn translate_adt_fields<'tcx>(
+    ty: rs::Ty<'tcx>,
+    adt_def: rs::AdtDef<'tcx>,
+    sref: rs::SubstsRef<'tcx>,
+    tcx: rs::TyCtxt<'tcx>,
+) -> (Fields, Size) {
     let a = rs::ParamEnv::empty().and(ty);
     let layout = tcx.layout_of(a).unwrap().layout;
     let fields = adt_def
-       .all_fields()
-       .enumerate()
-       .map(|(i, field)| {
+        .all_fields()
+        .enumerate()
+        .map(|(i, field)| {
             let ty = field.ty(tcx, sref);
             let ty = translate_ty(ty, tcx);
             let offset = layout.fields().offset(i);
             let offset = translate_size(offset);
 
             (offset, ty)
-       }).collect();
+        })
+        .collect();
     let size = translate_size(layout.size());
 
     (fields, size)
