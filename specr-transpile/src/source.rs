@@ -46,6 +46,8 @@ fn mk_mod(basename: &str, modname: &str) -> Option<Module> {
         if !ty.is_file() { continue; }
 
         let name = f.file_name().into_string().unwrap();
+        if !name.ends_with(".md") { continue; }
+
         let name = format!("{dirname}/{name}");
 
         let fcode = fs::read_to_string(name).unwrap();
