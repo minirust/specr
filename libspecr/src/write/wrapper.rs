@@ -1,4 +1,4 @@
-use std::{io::Write, rc::Rc, fmt::{Debug, self}, hash::Hash, cell::RefCell};
+use std::{io::Write, rc::Rc, fmt::{Debug, self}, hash::Hash, cell::RefCell, ptr};
 
 use crate::gc::GcCompat;
 
@@ -34,7 +34,9 @@ impl Debug for WriteWrapper {
 }
 
 impl Hash for WriteWrapper {
-    fn hash<H: ~const std::hash::Hasher>(&self, _state: &mut H) {}
+    fn hash<H: ~const std::hash::Hasher>(&self, state: &mut H) {
+        ptr::hash(self.0.as_ptr(), state);
+    }
 }
 
 impl PartialEq for WriteWrapper {
