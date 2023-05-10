@@ -51,6 +51,9 @@ pub use set::*;
 mod map;
 pub use map::*;
 
+mod write;
+pub use write::*;
+
 mod string;
 pub use string::*;
 
@@ -94,6 +97,7 @@ pub mod prelude {
     pub use crate::list::*;
     pub use crate::set::*;
     pub use crate::map::*;
+    pub use crate::write::*;
     pub use crate::endianness::*;
     pub use crate::mutability::*;
     pub use crate::signedness::*;
