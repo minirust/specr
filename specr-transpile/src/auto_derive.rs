@@ -1,3 +1,5 @@
+use std::mem;
+
 use crate::prelude::*;
 
 static TRAITS: &[&str] = &["Clone", "Copy", "Debug", "PartialEq", "Eq", "Hash", "GcCompat"];
@@ -18,6 +20,18 @@ pub fn auto_derive(mut ast: syn::File) -> syn::File {
         }
     }
 
+    for i in ast.items.iter_mut() {
+        match i {
+            Item::Struct(s) => {
+                remove_no_auto_derive(&mut s.attrs);
+            },
+            Item::Enum(e) => {
+                remove_no_auto_derive(&mut e.attrs);
+            },
+            _ => {},
+        }
+    }
+
     ast
 }
 
@@ -32,8 +46,26 @@ fn contains_derive_attr(t: &str, attrs: &[Attribute]) -> bool {
     })
 }
 
+// checks existence of `#[no_auto_derive]`
+fn is_no_auto_derive(attr: &Attribute) -> bool {
+    let Meta::Path(path) = &attr.meta else {
+        return false 
+    };
+
+    format!("{}", path.to_token_stream()) == "no_auto_derive"
+}
+
+// removes `#[no_auto_derive]`
+fn remove_no_auto_derive(attrs: &mut Vec<Attribute>) {
+    let owned_attrs = mem::replace(attrs, vec![]);
+    let owned_attrs = owned_attrs.into_iter().filter(|a| !is_no_auto_derive(a)).collect::<Vec<_>>();
+    _ = mem::replace(attrs, owned_attrs);
+}
+
 // adds `#[derive(t)]` to `attrs`, if it's missing.
 fn add_derive_attr(t: &str, attrs: &mut Vec<Attribute>) {
+    if attrs.iter().any(is_no_auto_derive) { return }
+
     if !contains_derive_attr(t, attrs) {
         attrs.push(derive_attr(t));
     }
