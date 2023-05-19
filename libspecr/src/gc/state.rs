@@ -1,3 +1,4 @@
+use std::mem;
 use crate::*;
 
 // mark_and_sweep won't cleanup, if you didn't allocate at least LEEWAY_MEMORY bytes since the last cleanup.
@@ -46,7 +47,7 @@ impl GcState {
             }
         };
 
-        self.current_memory += obj.size();
+        self.current_memory += mem::size_of_val(&*obj);
         self.data[idx] = Some(obj);
 
         idx
@@ -76,7 +77,7 @@ impl GcState {
     }
 
     fn full_memory_consumption(&self) -> usize {
-        self.data.iter().map(|x| x.size()).sum::<usize>()
+        self.data.iter().map(|x| mem::size_of_val(&*x)).sum::<usize>()
     }
 
     pub fn mark_and_sweep(&mut self, root: impl GcCompat) {
