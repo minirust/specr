@@ -1,6 +1,6 @@
 use crate::*;
 
-use std::convert::Infallible;
+use std::{convert::Infallible, cell::RefCell};
 
 /// `GcCompat` expresses that a type is compatible with the garbage collector.
 /// It is required in order to contain `GcCow` and to be the generic param to `GcCow`.
@@ -67,3 +67,22 @@ impl<T: GcCompat, E: GcCompat> GcCompat for Result<T, E> {
     fn as_any(&self) -> &dyn Any { self }
 }
 
+impl<G: GcCompat + ?Sized> GcCompat for Box<G> {
+    fn points_to(&self, buffer: &mut HashSet<usize>) {
+        (**self).points_to(buffer)
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+impl<G: GcCompat> GcCompat for RefCell<G> {
+    fn points_to(&self, buffer: &mut HashSet<usize>) {
+        self.borrow().points_to(buffer)
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
