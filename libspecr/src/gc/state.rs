@@ -79,7 +79,7 @@ impl GcState {
         self.data.iter().map(|x| x.size()).sum::<usize>()
     }
 
-    pub fn mark_and_sweep(&mut self, root: impl GcCompat) {
+    pub fn mark_and_sweep(&mut self, root: &impl GcCompat) {
         // don't cleanup, if you didn't allocate at least LEEWAY_MEMORY bytes since the last cleanup.
         if self.current_memory < self.last_memory + LEEWAY_MEMORY {
             return;

@@ -26,7 +26,7 @@ fn with_gc_mut<O>(f: impl FnOnce(&mut GcState) -> O) -> O {
 }
 
 /// clears every object not recursively reachable from `root`.
-pub fn mark_and_sweep(root: impl GcCompat) {
+pub fn mark_and_sweep(root: &impl GcCompat) {
     with_gc_mut(|st| st.mark_and_sweep(root) );
 }
 
