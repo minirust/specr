@@ -6,8 +6,8 @@ use crate::*;
 pub trait GcWrite: GcCompat + Write {}
 impl<T> GcWrite for T where T: GcCompat + Write {}
 
+/// Garbage-collected data structure representing a write stream and implementing `Copy`.
 #[derive(Copy, Clone, GcCompat)]
-/// Garbage-collected datastructure representing a write stream and implementing `Copy`.
 pub struct DynWrite(GcCow<RefCell<Box<dyn GcWrite>>>);
 
 impl DynWrite {
