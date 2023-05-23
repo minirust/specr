@@ -3,10 +3,10 @@ use std::mem;
 use crate::prelude::*;
 
 /// Traits all structs & enums should derive.
-static GENERAL_TRAITS: &[&str] = &["GcCompat", "Clone", "Debug"];
+static GENERAL_TRAITS: &[&str] = &["GcCompat", "Debug"];
 
 /// Traits only "objects" should derive. They get used in maps, sets, etc.
-static OBJ_TRAITS: &[&str] = &["Copy", "PartialEq", "Eq", "Hash"];
+static OBJ_TRAITS: &[&str] = &["Clone", "Copy", "PartialEq", "Eq", "Hash"];
 
 /// Adds `#[derive(_)]` for all missing traits in `GENERAL_TRAITS` and `OBJ_TRAITS`.
 pub fn auto_derive(mut ast: syn::File) -> syn::File {
