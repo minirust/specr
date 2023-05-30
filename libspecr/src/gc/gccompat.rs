@@ -2,14 +2,22 @@ use crate::*;
 
 use std::{convert::Infallible, cell::RefCell};
 
+/// A trait to work around not having trait object upcasting.
+pub trait AsAny: Any {
+    fn as_any(&self) -> &dyn Any;
+}
+impl<T: Any> AsAny for T {
+    #[inline(always)]
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
 /// `GcCompat` expresses that a type is compatible with the garbage collector.
 /// It is required in order to contain `GcCow` and to be the generic param to `GcCow`.
-pub trait GcCompat: 'static {
+pub trait GcCompat: AsAny {
     /// Writes the gc'd objs, that `self` directly points to, into `buffer`.
     fn points_to(&self, buffer: &mut HashSet<usize>);
-
-    /// converts self to `Any`.
-    fn as_any(&self) -> &dyn Any;
 }
 
 // impls for GcCompat:
@@ -19,7 +27,6 @@ macro_rules! empty_gccompat {
         $(
             impl GcCompat for $t {
                 fn points_to(&self, _m: &mut HashSet<usize>) {}
-                fn as_any(&self) -> &dyn Any { self }
             }
         )*
     };
@@ -33,7 +40,6 @@ impl<A, B> GcCompat for (A, B) where A: GcCompat, B: GcCompat {
         a.points_to(m);
         b.points_to(m);
     }
-    fn as_any(&self) -> &dyn Any { self }
 }
 
 impl<T: GcCompat> GcCompat for Option<T> {
@@ -43,7 +49,6 @@ impl<T: GcCompat> GcCompat for Option<T> {
             None => {},
         }
     }
-    fn as_any(&self) -> &dyn Any { self }
 }
 
 impl<T: GcCompat, E: GcCompat> GcCompat for Result<T, E> {
@@ -53,25 +58,16 @@ impl<T: GcCompat, E: GcCompat> GcCompat for Result<T, E> {
             Err(x) => x.points_to(m),
         }
     }
-    fn as_any(&self) -> &dyn Any { self }
 }
 
 impl<G: GcCompat + ?Sized> GcCompat for Box<G> {
     fn points_to(&self, buffer: &mut HashSet<usize>) {
         (**self).points_to(buffer)
     }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
 }
 
 impl<G: GcCompat> GcCompat for RefCell<G> {
     fn points_to(&self, buffer: &mut HashSet<usize>) {
         self.borrow().points_to(buffer)
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }
