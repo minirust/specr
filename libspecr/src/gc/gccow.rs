@@ -25,7 +25,6 @@ impl<T: GcCompat> GcCompat for GcCow<T> {
     fn points_to(&self, buffer: &mut HashSet<usize>) {
         buffer.insert(self.idx);
     }
-    fn as_any(&self) -> &dyn Any { self }
 }
 
 // methods for specr-internal use:

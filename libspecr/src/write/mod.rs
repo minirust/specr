@@ -35,16 +35,8 @@ impl Debug for DynWrite {
 // GcCompat implementation that are only relevant to `DynWrite`.
 impl GcCompat for Stdout {
     fn points_to(&self, _buffer: &mut std::collections::HashSet<usize>) {}
-
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
-    }
 }
 
 impl GcCompat for Stderr {
     fn points_to(&self, _buffer: &mut std::collections::HashSet<usize>) {}
-
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
-    }
 }

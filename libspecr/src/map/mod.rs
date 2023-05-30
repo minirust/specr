@@ -14,7 +14,6 @@ impl<K: Obj, V: Obj> GcCompat for IMHashMap<K, V> {
             v.points_to(m);
         }
     }
-    fn as_any(&self) -> &dyn Any { self }
 }
 
 // This is not #[derive]d, as this would wrongly require K: Default.
