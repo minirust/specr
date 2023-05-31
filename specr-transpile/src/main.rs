@@ -64,8 +64,8 @@ fn create_cargo_toml(config: &Config) {
                 edition = \"2021\"\n\
                 \n\
                 [dependencies]\n\
-                libspecr = \"=0.1.15\"\n\
-                gccompat-derive = \"=0.1.1\"\n\
+                libspecr = \"=0.1.16\"\n\
+                gccompat-derive = \"=0.1.2\"\n\
                ", package_name);
     fs::write(config.output_path().join("Cargo.toml"), &toml).unwrap();
 }
