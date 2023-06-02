@@ -32,16 +32,16 @@ impl<T: ToInt> From<T> for Int {
 impl Int {
     /// Create an `Int` from any suitable type.
     // This is an inherent method so that we can make it `const`.
-    pub const fn from<T: ~const ToInt>(t: T) -> Int {
+    pub const fn const_from<T: ~const ToInt>(t: T) -> Int {
         t.to_int()
     }
 }
 
 impl Int {
     /// The number 0
-    pub const ZERO: Int = Int::from(0);
+    pub const ZERO: Int = Int::const_from(0);
     /// The number 1
-    pub const ONE: Int = Int::from(1);
+    pub const ONE: Int = Int::const_from(1);
 
     pub(crate) fn ext(self) -> ExtInt {
         match self.0 {
