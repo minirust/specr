@@ -23,7 +23,9 @@ use im::HashMap as IMHashMap;
 use im::Vector as IMVector;
 
 extern crate gccompat_derive;
-use gccompat_derive::GcCompat;
+// Re-export the derive macro so reverse dependencies can use it
+// without directly depending on gccompat_derive.
+pub use gccompat_derive::GcCompat;
 
 mod int;
 pub use int::*;

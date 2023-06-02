@@ -59,14 +59,13 @@ fn main() {
 fn create_cargo_toml(config: &Config) {
     let package_name = &config.name;
     let toml = format!("[package]\n\
-                name = \"{}\"\n\
+                name = \"{name}\"\n\
                 version = \"0.1.0\"\n\
                 edition = \"2021\"\n\
                 \n\
                 [dependencies]\n\
-                libspecr = \"=0.1.15\"\n\
-                gccompat-derive = \"=0.1.1\"\n\
-               ", package_name);
+                libspecr = \"={libspecr_version}\"\n\
+               ", name = package_name, libspecr_version = env!("CARGO_PKG_VERSION"));
     fs::write(config.output_path().join("Cargo.toml"), &toml).unwrap();
 }
 
