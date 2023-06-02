@@ -23,8 +23,16 @@ enum IntInner {
     Small(i128),
 }
 
-impl<T: ~const ToInt> const From<T> for Int {
+impl<T: ToInt> From<T> for Int {
     fn from(t: T) -> Int {
+        t.to_int()
+    }
+}
+
+impl Int {
+    /// Create an `Int` from any suitable type.
+    // This is an inherent method so that we can make it `const`.
+    pub const fn from<T: ~const ToInt>(t: T) -> Int {
         t.to_int()
     }
 }
