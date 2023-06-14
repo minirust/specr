@@ -2,13 +2,11 @@
 
 #![warn(missing_docs)]
 
-#![feature(int_roundings)]
 #![feature(const_trait_impl)]
 #![feature(try_trait_v2)]
 #![feature(try_trait_v2_yeet)]
 #![feature(try_trait_v2_residual)]
 #![feature(decl_macro)]
-#![feature(never_type)]
 #![feature(iterator_try_collect)]
 #![feature(negative_impls)]
 #![feature(step_trait)]
@@ -22,7 +20,6 @@ use im::HashSet as IMHashSet;
 use im::HashMap as IMHashMap;
 use im::Vector as IMVector;
 
-extern crate gccompat_derive;
 // Re-export the derive macro so reverse dependencies can use it
 // without directly depending on gccompat_derive.
 pub use gccompat_derive::GcCompat;
