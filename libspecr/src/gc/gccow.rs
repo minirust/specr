@@ -9,20 +9,21 @@ pub struct GcCow<T> {
     phantom: PhantomData<T>,
 }
 
+// Keep them in the same thread, since the GC state is per-thread.
 impl<T> !Send for GcCow<T> {}
 impl<T> !Sync for GcCow<T> {}
 
+// Need a custom impl to avoid the `T: Clone` bound.
 impl<T> Clone for GcCow<T> {
     fn clone(&self) -> Self {
-        let idx = self.idx;
-        let phantom = PhantomData;
-        GcCow { idx, phantom }
+        *self
     }
 }
 impl<T> Copy for GcCow<T> {}
 
-impl<T: GcCompat> GcCompat for GcCow<T> {
+impl<T: 'static> GcCompat for GcCow<T> {
     fn points_to(&self, buffer: &mut HashSet<usize>) {
+        // We do *not* recurse into the pointee, that is the job of mark-and-sweep!
         buffer.insert(self.idx);
     }
 }
@@ -43,7 +44,7 @@ impl<T: GcCompat> GcCow<T> {
         self.call_ref_unchecked(|o| o.clone())
     }
 
-    // will fail, if `f` manipulates GC_STATE.
+    /// will fail, if `f` manipulates GC_STATE.
     pub(crate) fn call_ref_unchecked<O>(self, f: impl FnOnce(&T) -> O) -> O {
         with_gc(|st| {
             let x = st.get_ref_typed::<T>(self.idx);
@@ -52,17 +53,17 @@ impl<T: GcCompat> GcCow<T> {
         })
     }
 
-    // this does the copy-on-write
+    /// this does the clone-on-write
     pub(crate) fn mutate<O>(&mut self, f: impl FnOnce(&mut T) -> O) -> O where T: Clone {
-        let mut val = self.extract();
-        let out = f(&mut val);
-        *self = GcCow::new(val);
+        let mut val = self.extract(); // get a clone
+        let out = f(&mut val); // act on the clone
+        *self = GcCow::new(val); // put the result into the GC heap
 
         out
     }
 
-    // the same as above with an argument.
-    // will fail, if `f` manipulates GC_STATE.
+    /// The same as `call_ref_unchecked`, but gives access to two `GcCow`.
+    /// will fail, if `f` manipulates GC_STATE.
     pub(crate) fn call_ref1_unchecked<U: GcCompat, O>(self, arg: GcCow<U>, f: impl FnOnce(&T, &U) -> O) -> O {
         with_gc(|st| {
             let x = st.get_ref_typed::<T>(self.idx);
@@ -72,7 +73,8 @@ impl<T: GcCompat> GcCow<T> {
         })
     }
 
-    // will fail, if `f` manipulates GC_STATE.
+    /// The same as `mutate` but also gives read-only access to another `GcCow`.
+    /// will fail, if `f` manipulates GC_STATE.
     pub(crate) fn call_mut1_unchecked<U: GcCompat, O>(&mut self, arg: GcCow<U>, f: impl FnOnce(&mut T, &U) -> O) -> O where T: Clone {
         let mut val = self.extract();
         let out = with_gc(|st| {
