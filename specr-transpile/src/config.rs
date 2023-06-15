@@ -2,6 +2,9 @@ use std::path::{Path, PathBuf};
 use std::fs;
 
 pub struct Config {
+    /// Whether to run `cargo check` on the generated code.
+    pub check: bool,
+
     /// config root directory.
     pub root: PathBuf,
 
@@ -24,14 +27,30 @@ pub struct Config {
 
 impl Config {
     pub fn load() -> Config {
-        let [_, ref f] = std::env::args().collect::<Vec<_>>()[..] else {
+        let mut args = std::env::args();
+        args.next().unwrap(); // skip program name
+
+        let Some(file) = args.next() else {
             eprintln!("Usage:");
-            eprintln!("specr-transpile <specr.toml>");
+            eprintln!("specr-transpile <specr.toml> [--check]");
             eprintln!("");
             panic!("invalid amount of command-line arguments!");
         };
 
-        let f = fs::canonicalize(f).unwrap();
+        let check = match args.next() {
+            Some(flag) if flag == "--check" => {
+                if args.next().is_some() {
+                    panic!("too many command-line arguments");
+                }
+                true
+            }
+            Some(flag) => {
+                panic!("unknown flag `{flag}`");
+            }
+            None => false,
+        };
+
+        let f = fs::canonicalize(file).unwrap();
         let s = fs::read_to_string(&f).unwrap();
         let root = f.parent().unwrap().to_path_buf();
 
@@ -49,6 +68,7 @@ impl Config {
                           .clone().try_into().expect("`name` is required to be a string!");
 
         Config {
+            check,
             root,
             input,
             output,

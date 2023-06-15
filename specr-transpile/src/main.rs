@@ -11,6 +11,7 @@ mod config;
 
 use std::fs;
 use std::path::{PathBuf, Path};
+use std::process::Command;
 
 pub mod prelude {
     pub use crate::source::Module;
@@ -54,6 +55,9 @@ fn main() {
     create_rust_toolchain(&config);
     create_lib(&mods, &config);
     compile(mods, &config);
+    if config.check {
+        check(&config);
+    }
 }
 
 fn create_cargo_toml(config: &Config) {
@@ -109,5 +113,16 @@ fn compile(mods: Vec<Module>, config: &Config) {
         let filename = format!("{}.rs", m.name);
         let p: PathBuf = config.output_path().join("src").join(filename);
         fs::write(&p, &code).unwrap();
+    }
+}
+
+fn check(config: &Config) {
+    let mut cmd = Command::new("cargo");
+    cmd.current_dir(config.output_path());
+    cmd.arg("check");
+    let status = cmd.status().unwrap();
+    if !status.success() {
+        // Cargo already printed an error, we just forward the failed status code.
+        std::process::exit(1);
     }
 }
