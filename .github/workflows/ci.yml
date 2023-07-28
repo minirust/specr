@@ -13,7 +13,4 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Check build
-        run: |
-          export RUSTFLAGS="-D warnings"
-          cargo check --locked --manifest-path libspecr/Cargo.toml
-          cargo check --locked --manifest-path specr-transpile/Cargo.toml
+        run: export RUSTFLAGS="-D warnings" cargo check --locked
