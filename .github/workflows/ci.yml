@@ -1,0 +1,19 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+    - 'main'
+
+jobs:
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Check build
+        run: |
+          export RUSTFLAGS="-D warnings"
+          cargo check --locked --manifest-path libspecr/Cargo.toml
+          cargo check --locked --manifest-path specr-transpile/Cargo.toml
