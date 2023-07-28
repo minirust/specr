@@ -1,6 +1,6 @@
 use crate::*;
 
-use std::{convert::Infallible, cell::RefCell};
+use std::{convert::Infallible, cell::RefCell, marker::PhantomData};
 
 /// A trait to work around not having trait object upcasting.
 pub trait AsAny: Any {
@@ -70,4 +70,8 @@ impl<G: GcCompat> GcCompat for RefCell<G> {
     fn points_to(&self, buffer: &mut HashSet<usize>) {
         self.borrow().points_to(buffer)
     }
+}
+
+impl<G: GcCompat> GcCompat for PhantomData<G> {
+    fn points_to(&self, _buffer: &mut HashSet<usize>) {}
 }
