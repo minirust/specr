@@ -65,5 +65,10 @@ impl Align {
             .map(|align| align.min(self))
             .unwrap_or(self)
     }
+
+    /// Check if the given address is sufficiently aligned.
+    pub fn is_aligned(self, addr: Int) -> bool {
+        addr % self.bytes() == 0
+    }
 }
 
