@@ -40,6 +40,11 @@ impl<T: Obj> List<T> {
         let i = i.try_to_usize().expect("List::mutate_at: index out of range of `usize`!");
         self.0.mutate(|v| f(&mut v[i]))
     }
+    /// Like `mutate_at`, but the closure is fallible
+    pub fn try_mutate_at<O: Obj, E>(&mut self, i: Int, f: impl FnOnce(&mut T) -> NdResult<O, E>) -> NdResult<O, E> {
+        let i = i.try_to_usize().expect("List::mutate_at: index out of range of `usize`!");
+        self.0.mutate(|v| f(&mut v[i]))
+    }
 
     /// Returns the `i`th element of the list.
     pub fn get(&self, i: Int) -> Option<T> {
