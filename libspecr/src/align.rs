@@ -1,9 +1,18 @@
+use std::fmt;
+
 use crate::*;
 
 /// This type is basically a copy of the `Align` type in the Rust compiler.
 /// See [Align](https://doc.rust-lang.org/nightly/nightly-rustc/rustc_target/abi/struct.Align.html).
-#[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Debug, Hash, GcCompat)]
+#[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Hash, GcCompat)]
 pub struct Align { raw: Int }
+
+// This is debug-printed a lot in larger structs, don't waste too much space there
+impl fmt::Debug for Align {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Align({} bytes)", self.bytes())
+    }
+}
 
 impl Align {
     /// The `1 byte` alignment.

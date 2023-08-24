@@ -1,6 +1,7 @@
-use crate::*;
-
+use std::fmt;
 use std::ops::{Add, Mul};
+
+use crate::*;
 
 /// `Size` represents a non-negative number of bytes or bits.
 ///
@@ -9,8 +10,15 @@ use std::ops::{Add, Mul};
 ///
 /// Note that the `Size` type has no upper-bound.
 /// Users needs check whether a given `Size` is too large for their Machine themselves.
-#[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Debug, Hash, GcCompat)]
+#[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Hash, GcCompat)]
 pub struct Size { raw: Int }
+
+// This is debug-printed a lot in larger structs, don't waste too much space there
+impl fmt::Debug for Size {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Size({} bytes)", self.bytes())
+    }
+}
 
 impl Size {
     /// The "0 bytes" size.
