@@ -13,4 +13,4 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Check build
-        run: RUSTFLAGS="-D warnings" cargo check --locked
+        run: RUSTFLAGS="-D warnings" cargo build --locked
