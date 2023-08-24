@@ -11,7 +11,7 @@ pub use to::ToInt;
 pub(crate) use num_bigint::BigInt as ExtInt;
 use num_traits::ToPrimitive;
 
-#[derive(Copy, Clone, Debug, Hash, GcCompat)]
+#[derive(Copy, Clone, Hash, GcCompat)]
 /// Garbage collected big integer that implements `Copy` and supports construction in `const` contexts.
 pub struct Int(IntInner);
 

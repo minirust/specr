@@ -10,6 +10,12 @@ impl Display for Int {
         write!(f, "{}", self.ext())
     }
 }
+// For the benefit of `derive(Debug)` elsewhere, we make this debug-print in a nice way.
+impl Debug for Int {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+        Display::fmt(self, f)
+    }
+}
 
 // Arithmetics
 impl Neg for Int {
