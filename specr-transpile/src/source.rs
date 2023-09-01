@@ -1,7 +1,7 @@
 /// This module gets the source code of MiniRust.
 
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 pub struct Module {
     pub name: String,
@@ -38,21 +38,26 @@ pub fn fetch(folder: &Path) -> Vec<Module> {
 // TODO use Rusts Path API for this.
 fn mk_mod(basename: &str, modname: &str) -> Option<Module> {
     let mut code = String::new();
-    let dirname = format!("{basename}/{modname}");
+    let dirname = PathBuf::from(format!("{basename}/{modname}"));
 
-    for f in fs::read_dir(&dirname).unwrap() {
-        let f = f.unwrap();
-        let ty = f.file_type().unwrap();
-        if !ty.is_file() { continue; }
+    let mut dirs = vec![dirname];
+    while let Some(dir) = dirs.pop() {
+        for f in fs::read_dir(&dir).unwrap() {
+            let f = f.unwrap();
+            let ty = f.file_type().unwrap();
+            if ty.is_dir() {
+                dirs.push(f.path());
+                continue;
+            }
+            if !ty.is_file() { continue; }
 
-        let name = f.file_name().into_string().unwrap();
-        if !name.ends_with(".md") { continue; }
+            let name = f.file_name().into_string().unwrap();
+            if !name.ends_with(".md") { continue; }
 
-        let name = format!("{dirname}/{name}");
-
-        let fcode = fs::read_to_string(name).unwrap();
-        let fcode = filter_specr_lang(&*fcode);
-        code.push_str(&*fcode);
+            let fcode = fs::read_to_string(f.path()).unwrap();
+            let fcode = filter_specr_lang(&*fcode);
+            code.push_str(&*fcode);
+        }
     }
 
     if code.is_empty() { return None; }
