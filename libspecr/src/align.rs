@@ -30,7 +30,7 @@ impl Align {
     /// Variation of `from_bytes` for const contexts.
     pub const fn from_bytes_const(align: u64) -> Option<Align> {
         if align.is_power_of_two() {
-            let raw = Int::const_from(align);
+            let raw = Int::from_u64(align);
             Some(Align { raw })
         } else { None }
     }

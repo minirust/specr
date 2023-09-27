@@ -1,6 +1,5 @@
 use crate::*;
 
-#[const_trait]
 /// Satisfied by types that can be constructed from some inner types.
 pub trait MonadicReturn {
     /// The inner type.
@@ -10,26 +9,26 @@ pub trait MonadicReturn {
 }
 
 /// Wraps a value `i` as `Some(i)`, `Ok(i)` or something similar of type `T`.
-pub const fn ret<T: ~const MonadicReturn>(i: T::Inner) -> T {
+pub fn ret<T: MonadicReturn>(i: T::Inner) -> T {
     T::monadic_return(i)
 }
 
-impl<T> const MonadicReturn for Option<T> {
+impl<T> MonadicReturn for Option<T> {
     type Inner = T;
     fn monadic_return(t: T) -> Self { Some(t) }
 }
 
-impl<T, E> const MonadicReturn for Result<T, E> {
+impl<T, E> MonadicReturn for Result<T, E> {
     type Inner = T;
     fn monadic_return(t: T) -> Self { Ok(t) }
 }
 
-impl<T> const MonadicReturn for Nondet<T> {
+impl<T> MonadicReturn for Nondet<T> {
     type Inner = T;
     fn monadic_return(t: T) -> Self { Nondet(t) }
 }
 
-impl<T, E> const MonadicReturn for NdResult<T, E> {
+impl<T, E> MonadicReturn for NdResult<T, E> {
     type Inner = T;
     fn monadic_return(t: T) -> Self { NdResult(Ok(t)) }
 }

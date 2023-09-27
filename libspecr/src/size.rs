@@ -39,7 +39,7 @@ impl Size {
     pub const fn from_bits_const(bits: u64) -> Option<Size> {
         if bits % 8 != 0 { return None; }
         let bytes = bits / 8;
-        let raw = Int::const_from(bytes);
+        let raw = Int::from_u64(bytes);
         Some(Size { raw })
     }
 
@@ -54,7 +54,7 @@ impl Size {
     /// Variation of `from_bytes` for const contexts.
     /// Cannot fail since the input is unsigned and already in bytes.
     pub const fn from_bytes_const(bytes: u64) -> Size {
-        let raw = Int::const_from(bytes);
+        let raw = Int::from_u64(bytes);
         Size { raw }
     }
 

@@ -30,18 +30,20 @@ impl<T: ToInt> From<T> for Int {
 }
 
 impl Int {
-    /// Create an `Int` from any suitable type.
-    // This is an inherent method so that we can make it `const`.
-    pub const fn const_from<T: ~const ToInt>(t: T) -> Int {
-        t.to_int()
+    /// Create an `Int` from a regular Rust integer.
+    ///
+    /// `const fn` cannot be generic but it turns out `u64` is all we need.
+    pub const fn from_u64(i: u64) -> Int {
+        // `as` conversion is guaranteed lossless
+        Int(IntInner::Small(i as i128))
     }
 }
 
 impl Int {
     /// The number 0
-    pub const ZERO: Int = Int::const_from(0);
+    pub const ZERO: Int = Int::from_u64(0);
     /// The number 1
-    pub const ONE: Int = Int::const_from(1);
+    pub const ONE: Int = Int::from_u64(1);
 
     pub(crate) fn ext(self) -> ExtInt {
         match self.0 {

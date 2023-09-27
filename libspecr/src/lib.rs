@@ -2,7 +2,6 @@
 
 #![warn(missing_docs)]
 
-#![feature(const_trait_impl)]
 #![feature(try_trait_v2)]
 #![feature(try_trait_v2_yeet)]
 #![feature(try_trait_v2_residual)]
