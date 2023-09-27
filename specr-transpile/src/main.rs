@@ -62,14 +62,18 @@ fn main() {
 
 fn create_cargo_toml(config: &Config) {
     let package_name = &config.name;
+    let libspecr = match &config.libspecr_path {
+        None => format!("\"={}\"", env!("CARGO_PKG_VERSION")),
+        Some(path) => format!("{{ path = \"{}\" }}", path),
+    };
     let toml = format!("[package]\n\
                 name = \"{name}\"\n\
                 version = \"0.1.0\"\n\
                 edition = \"2021\"\n\
                 \n\
                 [dependencies]\n\
-                libspecr = \"={libspecr_version}\"\n\
-               ", name = package_name, libspecr_version = env!("CARGO_PKG_VERSION"));
+                libspecr = {libspecr}\n\
+               ", name = package_name);
     fs::write(config.output_path().join("Cargo.toml"), &toml).unwrap();
 }
 

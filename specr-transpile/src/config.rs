@@ -23,6 +23,9 @@ pub struct Config {
 
     /// The name of the generated crate.
     pub name: String,
+
+    /// Can be set to build against a local version of libspecr, rather than the one from crates.io.
+    pub libspecr_path: Option<String>,
 }
 
 impl Config {
@@ -66,6 +69,7 @@ impl Config {
                           .map(|v| v.clone().try_into().expect("`channel` is required to be a string!"));
         let name = table.get("name").expect("`name` is missing in config file")
                           .clone().try_into().expect("`name` is required to be a string!");
+        let libspecr_path = table.get("libspecr_path").map(|s| s.clone().try_into().expect("`libspecr_path` is required to be a string"));
 
         Config {
             check,
@@ -75,6 +79,7 @@ impl Config {
             attrs,
             channel,
             name,
+            libspecr_path,
         }
     }
 
