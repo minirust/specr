@@ -7,7 +7,6 @@
 #![feature(try_trait_v2_residual)]
 #![feature(decl_macro)]
 #![feature(iterator_try_collect)]
-#![feature(negative_impls)]
 #![feature(step_trait)]
 
 use std::collections::HashSet;

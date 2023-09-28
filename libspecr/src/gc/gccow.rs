@@ -6,12 +6,10 @@ use std::marker::PhantomData;
 /// A gargabe-collected pointer type implementing Copy.
 pub struct GcCow<T> {
     idx: usize,
-    phantom: PhantomData<T>,
+    phantom_owned: PhantomData<T>,
+    /// Keep them in the same thread, since the GC state is per-thread.
+    phantom_not_send_sync: PhantomData<*mut T>,
 }
-
-// Keep them in the same thread, since the GC state is per-thread.
-impl<T> !Send for GcCow<T> {}
-impl<T> !Sync for GcCow<T> {}
 
 // Need a custom impl to avoid the `T: Clone` bound.
 impl<T> Clone for GcCow<T> {
@@ -35,8 +33,7 @@ impl<T: GcCompat> GcCow<T> {
         let idx = with_gc_mut(|st| {
             st.alloc(t)
         });
-        let phantom = PhantomData;
-        GcCow { idx, phantom }
+        GcCow { idx, phantom_owned: PhantomData, phantom_not_send_sync: PhantomData }
     }
 
     /// Extracts the inner value from the `GcCow`.
