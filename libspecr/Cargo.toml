@@ -4,7 +4,7 @@ description = "standard library for specr lang"
 # This version should be the same as the specr-transpile version.
 version = "0.1.26"
 edition = "2021"
-repository = "https://github.com/memoryleak47/minirust-tooling"
+repository = "https://github.com/minirust/minirust-tooling"
 license = "MIT OR Apache-2.0"
 documentation = "https://docs.rs/libspecr"
 

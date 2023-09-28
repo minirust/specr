@@ -5,7 +5,7 @@ description = "Converts Specr lang code to Rust"
 version = "0.1.26"
 rust-version = "1.65"
 edition = "2021"
-repository = "https://github.com/memoryleak47/minirust-tooling"
+repository = "https://github.com/minirust/minirust-tooling"
 license = "MIT OR Apache-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

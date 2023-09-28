@@ -4,10 +4,10 @@ use std::convert::Infallible;
 use std::ops::*;
 
 #[derive(Copy, Clone, GcCompat)]
-/// Non-determinism primitive. See [Non-determinism](https://github.com/RalfJung/minirust/blob/master/README.md#non-determinism).
+/// Non-determinism primitive. See [Non-determinism](https://github.com/minirust/minirust/blob/master/README.md#non-determinism).
 pub struct Nondet<T>(pub(crate) T);
 
-/// The `pick` function from the minirust spec.  See [Non-determinism](https://github.com/RalfJung/minirust/blob/master/README.md#non-determinism).
+/// The `pick` function from the minirust spec.  See [Non-determinism](https://github.com/minirust/minirust/blob/master/README.md#non-determinism).
 pub fn pick<T: Obj>(distr: impl Distribution<T>, f: impl Fn(T) -> bool) -> crate::Nondet<T> {
     let mut rng = rand::thread_rng();
     for _ in 0..50 {
@@ -20,7 +20,7 @@ pub fn pick<T: Obj>(distr: impl Distribution<T>, f: impl Fn(T) -> bool) -> crate
     panic!("Timeout! `pick` could not find a valid value.");
 }
 
-/// The `predict` function from the minirust spec. See [Non-determinism](https://github.com/RalfJung/minirust/blob/master/README.md#non-determinism).
+/// The `predict` function from the minirust spec. See [Non-determinism](https://github.com/minirust/minirust/blob/master/README.md#non-determinism).
 pub fn predict<T>(_f: impl Fn(T) -> bool) -> crate::Nondet<T> { unimplemented!() }
 
 impl<T> Try for Nondet<T> {

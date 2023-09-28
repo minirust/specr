@@ -2,7 +2,7 @@
 name = "gccompat-derive"
 version = "0.1.2"
 edition = "2021"
-repository = "https://github.com/memoryleak47/minirust-tooling"
+repository = "https://github.com/minirust/minirust-tooling"
 license = "MIT OR Apache-2.0"
 description = "derive macro for GcCompat"
 
