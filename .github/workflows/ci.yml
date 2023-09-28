@@ -5,6 +5,9 @@ on:
   push:
     branches: ['main']
 
+env:
+  RUSTFLAGS: "-D warnings"
+
 jobs:
   test:
     name: Test Suite
@@ -12,4 +15,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Check build
-        run: RUSTFLAGS="-D warnings" cargo build --locked
+        run: cargo check --locked --workspace --all-targets
+      - name: Run tests
+        run: cargo test --locked --workspace
