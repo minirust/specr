@@ -2,6 +2,9 @@
 
 #![warn(missing_docs)]
 
+// We need nightly features since we want to imbue `NdResult` with `?` behavior,
+// and we want to be able to call `Result`-returning functions from inside
+// `NdResult` seamlessly.
 #![feature(try_trait_v2)]
 #![feature(try_trait_v2_yeet)]
 #![feature(try_trait_v2_residual)]
