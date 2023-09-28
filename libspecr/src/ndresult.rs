@@ -15,6 +15,11 @@ impl<T, E> NdResult<T, E> {
     pub fn get_internal(self) -> Result<T, E> {
         self.0
     }
+
+    /// Monadic bind: chains `f` after the current result, if this is not already an error.
+    pub fn and_then<U>(self, f: impl FnOnce(T) -> NdResult<U, E>) -> NdResult<U, E> {
+        NdResult(self.0.and_then(|x| f(x).0))
+    }
 }
 
 impl<T, E> Try for NdResult<T, E> {
