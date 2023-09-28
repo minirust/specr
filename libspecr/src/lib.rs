@@ -104,9 +104,6 @@ pub mod prelude {
     pub use crate::string::{String, format};
     pub use crate::nondet::{pick, predict};
     pub use crate::option::*;
-
-    pub use std::hash::Hash;
-    pub use std::fmt::Debug;
 }
 
 // This exists so that `gccompat-derive` can use `libspecr::hidden::GcCompat` to address GcCompat,
