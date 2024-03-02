@@ -1,3 +1,6 @@
+use std::hash::Hash;
+use std::fmt::Debug;
+
 use crate::*;
 
 /// A specr lang object.

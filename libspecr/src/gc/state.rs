@@ -1,4 +1,7 @@
 use std::mem;
+use std::any::Any;
+use std::collections::HashSet;
+
 use crate::*;
 
 // mark_and_sweep won't cleanup, if you didn't allocate at least LEEWAY_MEMORY bytes since the last cleanup.

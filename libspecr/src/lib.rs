@@ -12,15 +12,6 @@
 #![feature(iterator_try_collect)]
 #![feature(step_trait)]
 
-use std::collections::HashSet;
-use std::any::Any;
-use std::fmt::Debug;
-use std::hash::Hash;
-
-use im::HashSet as IMHashSet;
-use im::HashMap as IMHashMap;
-use im::Vector as IMVector;
-
 // Re-export the derive macro so reverse dependencies can use it
 // without directly depending on gccompat_derive.
 pub use gccompat_derive::GcCompat;
@@ -84,9 +75,6 @@ pub mod hidden {
     pub use crate::obj::*;
     pub use crate::gc::{GcCow, GcCompat, mark_and_sweep, clear};
 }
-
-pub use crate::nondet::*;
-pub use crate::name::*;
 
 /// The items from this module are automatically imported.
 pub mod prelude {

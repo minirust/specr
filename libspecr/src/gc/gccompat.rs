@@ -1,6 +1,8 @@
 use crate::*;
 
 use std::{convert::Infallible, cell::RefCell, marker::PhantomData};
+use std::any::Any;
+use std::collections::HashSet;
 
 /// A trait to work around not having trait object upcasting.
 pub trait AsAny: Any {

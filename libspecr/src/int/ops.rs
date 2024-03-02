@@ -1,7 +1,7 @@
 use crate::*;
 
 use std::ops::*;
-use std::fmt::{Formatter, Display, Error};
+use std::fmt::{Formatter, Debug, Display, Error};
 use std::cmp::Ordering;
 use num_traits::ToPrimitive;
 

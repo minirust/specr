@@ -1,7 +1,7 @@
-use crate::*;
-
-use std::fmt::{Formatter, Debug, Error};
+use std::fmt::{Debug, Formatter, Error};
 use std::hash::{Hash, Hasher};
+
+use crate::*;
 
 impl<T> Debug for GcCow<T> where T: Debug + GcCompat + Clone {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {

@@ -1,4 +1,7 @@
-use std::{io::{Write, Stdout, Stderr, Error}, cell::RefCell, fmt};
+use std::fmt;
+use std::cell::RefCell;
+use std::io::{Write, Stdout, Stderr, Error};
+use std::fmt::Debug;
 
 use crate::*;
 

@@ -1,3 +1,7 @@
+use std::collections::HashSet;
+
+use im::HashMap as IMHashMap;
+
 use crate::*;
 
 mod func;

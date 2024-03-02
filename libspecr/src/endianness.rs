@@ -1,7 +1,5 @@
 use crate::*;
 
-use crate::{Size, Signedness};
-
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 /// Either `LittleEndian` or `BigEndian`.
 pub enum Endianness {

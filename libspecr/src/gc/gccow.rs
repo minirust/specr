@@ -1,7 +1,7 @@
-use crate::*;
-use crate::gc::*;
-
 use std::marker::PhantomData;
+use std::collections::HashSet;
+
+use crate::gc::*;
 
 /// A gargabe-collected pointer type implementing Copy.
 pub struct GcCow<T> {

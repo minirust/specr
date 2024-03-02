@@ -1,6 +1,8 @@
-use crate::*;
-
 use std::ops::*;
+
+use im::Vector as IMVector;
+
+use crate::*;
 
 impl<T: Obj> List<T> {
     /// Returns an empty `List`.

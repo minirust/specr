@@ -1,6 +1,7 @@
-use crate::*;
-
+use im::HashMap as IMHashMap;
 use im::hashmap::ConsumingIter;
+
+use crate::*;
 
 impl<K: Obj, V: Obj> Map<K, V> {
     /// Returns an iterator over all (key, value) pairs.

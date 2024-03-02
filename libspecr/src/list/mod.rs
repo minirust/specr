@@ -1,3 +1,7 @@
+use std::collections::HashSet;
+
+use im::Vector as IMVector;
+
 use crate::*;
 
 mod iter;

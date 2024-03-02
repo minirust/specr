@@ -1,7 +1,6 @@
 use crate::*;
 
-use std::iter::FromIterator;
-
+use im::Vector as IMVector;
 use im::vector::ConsumingIter;
 
 impl<T: Obj> List<T> {
