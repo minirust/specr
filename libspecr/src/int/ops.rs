@@ -137,6 +137,20 @@ impl<T: Into<Int>> BitOr<T> for Int {
     }
 }
 
+impl<T: Into<Int>> BitXor<T> for Int {
+    type Output = Self;
+    fn bitxor(self, other: T) -> Self {
+        Self::wrap(self.ext() ^ other.into().ext())
+    }
+}
+
+impl Not for Int {
+    type Output = Self;
+    fn not(self) -> Self::Output {
+        Self::wrap(!self.ext())
+    }
+}
+
 // Ord
 impl<T: Into<Int> + Clone> PartialOrd<T> for Int {
     fn partial_cmp(&self, other: &T) -> Option<Ordering> {
