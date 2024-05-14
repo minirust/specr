@@ -2,7 +2,7 @@
 name = "specr-transpile"
 description = "Converts Specr lang code to Rust"
 # This version should be the same as the libspecr version.
-version = "0.1.26"
+version = "0.1.27"
 rust-version = "1.65"
 edition = "2021"
 repository = "https://github.com/minirust/minirust-tooling"
