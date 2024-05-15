@@ -93,10 +93,6 @@ impl<T: Into<Int>> RemAssign<T> for Int {
 impl<T: Into<Int>> Shl<T> for Int {
     type Output = Self;
     fn shl(self, other: T) -> Self {
-        if self == 0 {
-            return self;
-        }
-
         let i = other.into().into_inner().to_i128().unwrap();
         Self::wrap(self.into_inner() << i)
     }
@@ -111,10 +107,6 @@ impl<T: Into<Int>> ShlAssign<T> for Int {
 impl<T: Into<Int>> Shr<T> for Int {
     type Output = Self;
     fn shr(self, other: T) -> Self {
-        if self == 0 {
-            return self;
-        }
-
         let i = other.into().into_inner().to_i128().unwrap();
         Self::wrap(self.into_inner() >> i)
     }
