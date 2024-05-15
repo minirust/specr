@@ -56,6 +56,7 @@ impl Int {
 
     /// Raises `self` to the power of `other`.
     pub fn pow(self, other: Int) -> Int {
+        // We only support powers that fit into u32; this is more than enough for now.
         let val = other.into_inner().to_u32().unwrap();
         Self::wrap(self.into_inner().pow(val))
     }

@@ -93,7 +93,8 @@ impl<T: Into<Int>> RemAssign<T> for Int {
 impl<T: Into<Int>> Shl<T> for Int {
     type Output = Self;
     fn shl(self, other: T) -> Self {
-        let i = other.into().into_inner().to_i128().unwrap();
+        // Negative shifts are anyway not allowed by `BigInt`, so we support up to `u128` here.
+        let i = other.into().into_inner().to_u128().unwrap();
         Self::wrap(self.into_inner() << i)
     }
 }
@@ -107,7 +108,8 @@ impl<T: Into<Int>> ShlAssign<T> for Int {
 impl<T: Into<Int>> Shr<T> for Int {
     type Output = Self;
     fn shr(self, other: T) -> Self {
-        let i = other.into().into_inner().to_i128().unwrap();
+        // Negative shifts are anyway not allowed by `BigInt`, so we support up to `u128` here.
+        let i = other.into().into_inner().to_u128().unwrap();
         Self::wrap(self.into_inner() >> i)
     }
 }
@@ -169,3 +171,23 @@ impl<T: Into<Int> + Clone> PartialEq<T> for Int {
 }
 
 impl Eq for Int {}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    /// Double-check how right-shifts behave.
+    #[test]
+    fn shr() {
+        // Logical on positive numbers.
+        assert_eq!(Int::from(1i32) >> Int::from(1i32), Int::from(0i32));
+        assert_eq!(Int::from(2i32) >> Int::from(1i32), Int::from(1i32));
+        assert_eq!(Int::from(3i32) >> Int::from(1i32), Int::from(1i32));
+        assert_eq!(Int::from(4i32) >> Int::from(1i32), Int::from(2i32));
+        // Arithmetic on negative numbers.
+        assert_eq!(Int::from(-1i32) >> Int::from(1i32), Int::from(-1i32));
+        assert_eq!(Int::from(-2i32) >> Int::from(1i32), Int::from(-1i32));
+        assert_eq!(Int::from(-3i32) >> Int::from(1i32), Int::from(-2i32));
+        assert_eq!(Int::from(-4i32) >> Int::from(1i32), Int::from(-2i32));
+    }
+}
