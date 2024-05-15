@@ -3,8 +3,8 @@ use crate::int::*;
 impl Int {
     /// Returns true if `self` is a power of two. `false` otherwise.
     pub fn is_power_of_two(self) -> bool {
-        let ext = self.ext();
-        if let Some(uint) = ext.to_biguint() {
+        let bigint = self.into_inner();
+        if let Some(uint) = bigint.to_biguint() {
             uint.count_ones() == 1
         } else { false }
     }
@@ -24,7 +24,7 @@ impl Int {
         //
         // [10000] <- correct result
 
-        let Some(mut n) = self.ext().to_biguint() else {
+        let Some(mut n) = self.into_inner().to_biguint() else {
             // return 1 for negative inputs.
             // should this be an error instead?
             return Int::ONE;
@@ -35,7 +35,7 @@ impl Int {
             n = n + 1u32;
         }
 
-        Self::wrap(ExtInt::from(n))
+        Self::wrap(BigInt::from(n))
     }
 
     /// Computes the absolute value of self.
@@ -56,33 +56,33 @@ impl Int {
 
     /// Raises `self` to the power of `other`.
     pub fn pow(self, other: Int) -> Int {
-        fn ext_pow(x: &ExtInt, other: &ExtInt) -> ExtInt {
+        fn bigint_pow(x: &BigInt, other: &BigInt) -> BigInt {
             use num_traits::{Zero, One};
 
-            assert!(x != &ExtInt::zero());
+            assert!(x != &BigInt::zero());
 
-            if other == &ExtInt::zero()  {
-                ExtInt::one()
-            } else if other == &ExtInt::one() {
+            if other == &BigInt::zero()  {
+                BigInt::one()
+            } else if other == &BigInt::one() {
                 x.clone()
-            } else if other % 2 == ExtInt::zero() {
-                let other = other >> 1;
-                let a = ext_pow(x, &other);
+            } else if other % 2 == BigInt::zero() {
+                let other = other / 2;
+                let a = bigint_pow(x, &other);
                 &a * &a
             } else {
-                let other = (other-1) >> 1;
-                let a = ext_pow(x, &other);
+                let other = (other-1) / 2;
+                let a = bigint_pow(x, &other);
                 &a * &a * x
             }
         }
 
-        Self::wrap(ext_pow(&self.ext(), &other.ext()))
+        Self::wrap(bigint_pow(&self.into_inner(), &other.into_inner()))
     }
 
     /// Returns the number of least-significant bits that are zero
     /// or None if the entire number is zero.
     pub fn trailing_zeros(self) -> Option<Int> {
-        self.ext()
+        self.into_inner()
             .trailing_zeros()
             .map(|x| x.into())
     }
@@ -91,7 +91,7 @@ impl Int {
     pub fn div_ceil(self, other: impl Into<Int>) -> Int {
         use num_integer::Integer;
 
-        Self::wrap(self.ext().div_ceil(&other.into().ext()))
+        Self::wrap(self.into_inner().div_ceil(&other.into().into_inner()))
     }
 
     /// Returns the unique value that is equal to `self` modulo `2^size.bits()`.
@@ -127,12 +127,12 @@ impl Int {
 
     #[doc(hidden)]
     pub fn try_to_usize(self) -> Option<usize> {
-        self.ext().to_usize()
+        self.into_inner().to_usize()
     }
 
     #[doc(hidden)]
     pub fn try_to_u8(self) -> Option<u8> {
-        self.ext().to_u8()
+        self.into_inner().to_u8()
     }
 }
 

@@ -8,7 +8,7 @@ mod step;
 pub use to::ToInt;
 
 /// The external Bigint Type, which we use under the hood.
-pub(crate) use num_bigint::BigInt as ExtInt;
+pub(crate) use num_bigint::BigInt;
 use num_traits::ToPrimitive;
 
 #[derive(Copy, Clone, Hash, GcCompat)]
@@ -18,7 +18,7 @@ pub struct Int(IntInner);
 // IntInner only exists to hide the enum implementation details.
 #[derive(Copy, Clone, Debug, Hash, GcCompat)]
 enum IntInner {
-    Big(GcCow<ExtInt>),
+    Big(GcCow<BigInt>),
     /// i128 is used to contain u64 and i64.
     Small(i128),
 }
@@ -45,17 +45,17 @@ impl Int {
     /// The number 1
     pub const ONE: Int = Int::from_u64(1);
 
-    pub(crate) fn ext(self) -> ExtInt {
+    pub(crate) fn into_inner(self) -> BigInt {
         match self.0 {
             IntInner::Big(x) => x.extract(),
             IntInner::Small(x) => x.into(),
         }
     }
 
-    pub(crate) fn wrap(ext: ExtInt) -> Self {
-        match ext.to_i128() {
+    pub(crate) fn wrap(big: BigInt) -> Self {
+        match big.to_i128() {
             Some(x) => Self(IntInner::Small(x)),
-            None => Self(IntInner::Big(GcCow::new(ext)))
+            None => Self(IntInner::Big(GcCow::new(big)))
         }
     }
 }

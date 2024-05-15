@@ -34,7 +34,7 @@ macro_rules! empty_gccompat {
     };
 }
 
-empty_gccompat!((), bool, u8, i8, u16, i16, u32, i32, u64, i64, u128, i128, usize, isize, std::string::String, Infallible, ExtInt);
+empty_gccompat!((), bool, u8, i8, u16, i16, u32, i32, u64, i64, u128, i128, usize, isize, std::string::String, Infallible, BigInt);
 
 impl<A, B> GcCompat for (A, B) where A: GcCompat, B: GcCompat {
     fn points_to(&self, m: &mut HashSet<usize>) {

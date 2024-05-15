@@ -23,12 +23,12 @@ pub struct IntDistribution {
 
 impl Distribution<Int> for IntDistribution {
     fn sample(&self, rng: &mut ThreadRng) -> Int {
-        let start = self.start.ext();
-        let end = self.end.ext();
-        let divisor = self.divisor.ext();
+        let start = self.start.into_inner();
+        let end = self.end.into_inner();
+        let divisor = self.divisor.into_inner();
 
-        assert!(start >= ExtInt::zero());
-        assert!(divisor > ExtInt::zero());
+        assert!(start >= BigInt::zero());
+        assert!(divisor > BigInt::zero());
 
         let start = start.div_ceil(&divisor);
         let end = end.div_ceil(&divisor);
