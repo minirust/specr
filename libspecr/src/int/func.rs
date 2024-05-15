@@ -56,27 +56,8 @@ impl Int {
 
     /// Raises `self` to the power of `other`.
     pub fn pow(self, other: Int) -> Int {
-        fn bigint_pow(x: &BigInt, other: &BigInt) -> BigInt {
-            use num_traits::{Zero, One};
-
-            assert!(x != &BigInt::zero());
-
-            if other == &BigInt::zero()  {
-                BigInt::one()
-            } else if other == &BigInt::one() {
-                x.clone()
-            } else if other % 2 == BigInt::zero() {
-                let other = other / 2;
-                let a = bigint_pow(x, &other);
-                &a * &a
-            } else {
-                let other = (other-1) / 2;
-                let a = bigint_pow(x, &other);
-                &a * &a * x
-            }
-        }
-
-        Self::wrap(bigint_pow(&self.into_inner(), &other.into_inner()))
+        let val = other.into_inner().to_u32().unwrap();
+        Self::wrap(self.into_inner().pow(val))
     }
 
     /// Returns the number of least-significant bits that are zero
