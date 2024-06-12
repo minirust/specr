@@ -19,8 +19,8 @@ impl<K: Obj, V: Obj> Map<K, V> {
     }
 
     /// Removes `k` from the map.
-    /// If the pair (k, v)` was in the map `Some(v)` is returned.
-    /// Otherwise `None` is returned.
+    /// If the pair `(k, v)` was in the map, `Some(v)` is returned.
+    /// Otherwise, `None` is returned.
     pub fn remove(&mut self, k: K) -> Option<V> {
         self.0.mutate(|m| {
             m.remove(&k)
