@@ -20,6 +20,19 @@ impl<T: Obj> Set<T> {
         });
     }
 
+    /// Like `insert`, but fails if `t` was already in the set.
+    pub fn try_insert(&mut self, t: T) -> Result<(), ()> {
+        if self.contains(t) {
+            return Err(());
+        }
+
+        self.0.mutate(|s| {
+            s.insert(t);
+        });
+
+        Ok(())
+    }
+
     /// Removes `t` from `self`.
     pub fn remove(&mut self, t: T) {
         self.0.mutate(|s| {

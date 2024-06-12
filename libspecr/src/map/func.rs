@@ -44,7 +44,7 @@ impl<K: Obj, V: Obj> Map<K, V> {
 
     /// Like `insert`, but fails if `k` was already in the map.
     pub fn try_insert(&mut self, k: K, v: V) -> Result<(), ()> {
-        if self.contains_key(k.clone()) {
+        if self.contains_key(k) {
             return Err(());
         }
 
