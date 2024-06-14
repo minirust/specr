@@ -98,7 +98,7 @@ impl Int {
         }
     }
 
-    /// Returns the unique value that is equal to `self` modulo `2^size.bits()`.
+    /// Returns the unique value that is equal to `self` modulo `2^size.bits()`
     /// and within the bounds of a finite integer type with the given signedness and size.
     /// If `signed == Unsigned` the result is in the interval `0..2^size.bits()`.
     /// Otherwise it is in the interval `-2^(size.bits()-1) .. 2^(size.bits()-1)`.
