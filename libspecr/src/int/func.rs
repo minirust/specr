@@ -76,12 +76,35 @@ impl Int {
         Self::wrap(self.into_inner().div_ceil(&other.into().into_inner()))
     }
 
-    /// Returns the unique value that is equal to `self` modulo `2^size.bits()`.
+    /// Calculates Euclidean division: the result is rounded towards -INF 
+    /// for `other > 0` and towards +INF for `other < 0`.
+    /// The result `n` satisfies `self == n * other + self.rem_euclid(other)`.
+    pub fn div_euclid(self, other: Int) -> Int {
+        let q = self / other;
+        if self % other < 0 {
+            if other > 0 { q - 1 } else { q + 1 }
+        } else {
+            q
+        }
+    }
+
+    /// Calculate nonnegative remainder of (self mod other) in range 0..other.abs()
+    pub fn rem_euclid(self, other: Int) -> Int {
+        let rem = self % other;
+        if rem < 0 { 
+            rem + other.abs() 
+        } else { 
+            rem
+        }
+    }
+
+    /// Returns the unique value that is equal to `self` modulo `2^size.bits()`
+    /// and within the bounds of a finite integer type with the given signedness and size.
     /// If `signed == Unsigned` the result is in the interval `0..2^size.bits()`.
     /// Otherwise it is in the interval `-2^(size.bits()-1) .. 2^(size.bits()-1)`.
     ///
     /// `size` must not be zero.
-    pub fn modulo(self, signed: Signedness, size: Size) -> Int {
+    pub fn bring_in_bounds(self, signed: Signedness, size: Size) -> Int {
         if size.is_zero() {
             panic!("Int::modulo received invalid size zero!");
         }
@@ -104,7 +127,7 @@ impl Int {
 
     /// Tests whether an integer is in-bounds of a finite integer type.
     pub fn in_bounds(self, signed: Signedness, size: Size) -> bool {
-        self == self.modulo(signed, size)
+        self == self.bring_in_bounds(signed, size)
     }
 
     #[doc(hidden)]
@@ -134,9 +157,9 @@ mod tests {
         range.contains(&int)
     }
 
-    fn test_modulo_helper(x: Int, signed: Signedness, size: Size) {
+    fn bring_in_bounds_helper(x: Int, signed: Signedness, size: Size) {
         // check in bounds
-        let out = x.modulo(signed, size);
+        let out = x.bring_in_bounds(signed, size);
         assert!(in_bounds_helper(out, signed, size));
 
         // check `out == x (mod size.bits())`
@@ -145,7 +168,7 @@ mod tests {
     }
 
     #[test]
-    fn test_modulo() {
+    fn bring_in_bounds() {
         for s in [Signed, Unsigned] {
             for bits in [16, 32, 64] {
                 let size = Size::from_bits_const(bits).unwrap();
@@ -155,11 +178,31 @@ mod tests {
                     for offset1 in [-m/2, Int::ZERO, m/2] {
                         for offset2 in [-3, -2, -1, 0, 1, 2, 3] {
                             let x = base + offset1 + offset2;
-                            test_modulo_helper(x, s, size);
+                            bring_in_bounds_helper(x, s, size);
                         }
                     }
                 }
             }
         }
+    }
+
+    #[test]
+    fn div_euclid() {
+        let a = Int::from(7);
+        let b = Int::from(4);
+        assert_eq!(a.div_euclid(b), Int::from(1)); //  7 =  1 *  4 + 3
+        assert_eq!((-a).div_euclid(b), Int::from(-2)); // -7 = -2 *  4 + 1
+        assert_eq!(a.div_euclid(-b), Int::from(-1)); //  7 = -1 * -4 + 3
+        assert_eq!((-a).div_euclid(-b), Int::from(2)); // -7 =  2 * -4 + 1
+    }
+
+    #[test]
+    fn rem_euclid() {
+        let a = Int::from(7);
+        let b = Int::from(4);
+        assert_eq!(a.rem_euclid(b), Int::from(3));
+        assert_eq!((-a).rem_euclid(b), Int::from(1));
+        assert_eq!(a.rem_euclid(-b), Int::from(3));
+        assert_eq!((-a).rem_euclid(-b), Int::from(1));
     }
 }
