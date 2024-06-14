@@ -88,7 +88,8 @@ impl Int {
         }
     }
 
-    /// Calculate nonnegative remainder of (self mod other) in range 0..other.abs()
+    /// Calculate nonnegative remainder of `self (mod other)`.
+    /// The return value is in the range `0..other.abs()`.
     pub fn rem_euclid(self, other: Int) -> Int {
         let rem = self % other;
         if rem < 0 { 
@@ -112,16 +113,18 @@ impl Int {
         // the modulus.
         let m = Int::from(2).pow(size.bits());
 
-        // n is in range `-(m-1)..m`.
-        let n = self % m;
+        // `rem` is in range `0..m`.
+        let rem = self.rem_euclid(m);
 
         match signed {
-            // if `Unsigned`, output needs to be in range `0..m`:
-            Unsigned if n < 0 => n + m,
-            // if `Signed`, output needs to be in range `-m/2 .. m/2`:
-            Signed if n >= m/2 => n - m,
-            Signed if n < -m/2 => n + m,
-            _ => n,
+            Unsigned => rem, // already in the right range
+            Signed =>
+                // Bring value into the right range
+                if rem >= m/2 {
+                    rem - m
+                } else {
+                    rem
+                }
         }
     }
 
