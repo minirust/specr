@@ -76,14 +76,16 @@ impl Int {
         Self::wrap(self.into_inner().div_ceil(&other.into().into_inner()))
     }
 
-    /// Calculates Euclidean division, matching rem_euclid.
-    /// Such that `self = n * other + self.rem_euclid(other)` holds
+    /// Calculates Euclidean division: the result is rounded towards -INF 
+    /// for `other > 0` and towards +INF for `other < 0`.
+    /// The result `n` satisfies `self == n * other + self.rem_euclid(other)`.
     pub fn div_euclid(self, other: Int) -> Int {
         let q = self / other;
         if self % other < 0 {
-            return if other > 0 { q - 1 } else { q + 1 };
+            if other > 0 { q - 1 } else { q + 1 }
+        } else {
+            q
         }
-        q
     }
 
     /// Calculate nonnegative remainder of (self mod other) in range 0..other.abs()
@@ -97,11 +99,12 @@ impl Int {
     }
 
     /// Returns the unique value that is equal to `self` modulo `2^size.bits()`.
+    /// and within the bounds of a finite integer type with the given signedness and size.
     /// If `signed == Unsigned` the result is in the interval `0..2^size.bits()`.
     /// Otherwise it is in the interval `-2^(size.bits()-1) .. 2^(size.bits()-1)`.
     ///
     /// `size` must not be zero.
-    pub fn bring_in_range(self, signed: Signedness, size: Size) -> Int {
+    pub fn bring_in_bounds(self, signed: Signedness, size: Size) -> Int {
         if size.is_zero() {
             panic!("Int::modulo received invalid size zero!");
         }
@@ -124,7 +127,7 @@ impl Int {
 
     /// Tests whether an integer is in-bounds of a finite integer type.
     pub fn in_bounds(self, signed: Signedness, size: Size) -> bool {
-        self == self.bring_in_range(signed, size)
+        self == self.bring_in_bounds(signed, size)
     }
 
     #[doc(hidden)]
@@ -156,7 +159,7 @@ mod tests {
 
     fn bring_in_bounds_helper(x: Int, signed: Signedness, size: Size) {
         // check in bounds
-        let out = x.bring_in_range(signed, size);
+        let out = x.bring_in_bounds(signed, size);
         assert!(in_bounds_helper(out, signed, size));
 
         // check `out == x (mod size.bits())`
