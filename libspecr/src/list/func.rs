@@ -76,6 +76,11 @@ impl<T: Obj> List<T> {
         self.0.mutate(|v| v.pop_back())
     }
 
+    /// Push an element to the beginning of the list.
+    pub fn push_front(&mut self, t: T) {
+        self.0.mutate(|v| v.push_front(t));
+    }
+
     /// Pop the element from the beginning of the list.
     /// Returns `None` is the list was empty.
     pub fn pop_front(&mut self) -> Option<T> {
