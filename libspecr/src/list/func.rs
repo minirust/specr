@@ -106,6 +106,28 @@ impl<T: Obj> List<T> {
         List(GcCow::new(v))
     }
 
+    /// Returns the first element and the rest of the list.
+    /// Returns `None` if the list is empty.
+    pub fn split_first(&self) -> Option<(T, List<T>)> {
+        if let Some(first) = self.first() {
+            let rest = self.subslice_with_length(Int::ONE, self.len() - Int::ONE);
+            Some((first, rest))
+        } else {
+            None
+        }
+    }
+
+    /// Returns the last element and the rest of the list.
+    /// Returns `None` if the list is empty.
+    pub fn split_last(&self) -> Option<(T, List<T>)> {
+        if let Some(last) = self.last() {
+            let rest = self.subslice_with_length(Int::ZERO, self.len() - Int::ONE);
+            Some((last, rest))
+        } else {
+            None
+        }
+    }
+
     /// Conceptually equivalent to `self[start..src.len()] = src;`
     pub fn write_subslice_at_index(&mut self, start: Int, src: List<T>) {
         // exclusive end
