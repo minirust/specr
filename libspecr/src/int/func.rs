@@ -38,6 +38,14 @@ impl Int {
         Self::wrap(BigInt::from(n))
     }
 
+    /// If `other` is positive, calculates the smallest value greater than or equal to self that is a multiple of `other`.
+    /// If `other` is negative, calculates the largest value less than or equal to self that is a multiple of `other`.
+    ///
+    /// Panics if `other` is zero.
+    pub fn next_multiple_of(self, other: Int) -> Int {
+        self.div_ceil(other) * other
+    }
+
     /// Computes the absolute value of self.
     pub fn abs(self) -> Int {
         if self < 0 {
@@ -207,5 +215,30 @@ mod tests {
         assert_eq!((-a).rem_euclid(b), Int::from(1));
         assert_eq!(a.rem_euclid(-b), Int::from(3));
         assert_eq!((-a).rem_euclid(-b), Int::from(1));
+    }
+
+    /// Test cases from <https://doc.rust-lang.org/nightly/std/primitive.i32.html#method.next_multiple_of>
+    #[test]
+    fn next_multiple_of() {
+        assert_eq!(Int::from(16).next_multiple_of(Int::from(8)), Int::from(16));
+        assert_eq!(Int::from(23).next_multiple_of(Int::from(8)), Int::from(24));
+        assert_eq!(Int::from(16).next_multiple_of(Int::from(-8)), Int::from(16));
+        assert_eq!(Int::from(23).next_multiple_of(Int::from(-8)), Int::from(16));
+        assert_eq!(
+            Int::from(-16_i32).next_multiple_of(Int::from(8)),
+            Int::from(-16)
+        );
+        assert_eq!(
+            Int::from(-23_i32).next_multiple_of(Int::from(8)),
+            Int::from(-16)
+        );
+        assert_eq!(
+            Int::from(-16_i32).next_multiple_of(Int::from(-8)),
+            Int::from(-16)
+        );
+        assert_eq!(
+            Int::from(-23_i32).next_multiple_of(Int::from(-8)),
+            Int::from(-24)
+        );
     }
 }
