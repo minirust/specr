@@ -68,6 +68,12 @@ impl Size {
     pub fn is_zero(&self) -> bool {
         self.bytes() == 0
     }
+
+    /// Returns the smallest `Size` larger than `self` which is aligned to `align`.
+    pub fn align_to(self, align: Align) -> Size {
+        // Both self and align are positive, thus the next multiple is positive as well.
+        Size::from_bytes(self.bytes().next_multiple_of(align.bytes())).unwrap()
+    }
 }
 
 impl Add for Size {
@@ -94,3 +100,17 @@ impl Mul<Size> for Int {
     }
 }
 
+#[test]
+fn test_align_to() {
+    fn size(x: impl Into<Int>) -> Size {
+        Size::from_bytes(x).unwrap()
+    }
+    fn align(x: impl Into<Int>) -> Align {
+        Align::from_bytes(x).unwrap()
+    }
+
+    assert_eq!(size(0).align_to(align(16)), size(0));
+    assert_eq!(size(1).align_to(align(4)), size(4));
+    assert_eq!(size(4).align_to(align(4)), size(4));
+    assert_eq!(size(7489).align_to(align(1)), size(7489));
+}
