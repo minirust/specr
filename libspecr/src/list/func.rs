@@ -93,6 +93,12 @@ impl<T: Obj> List<T> {
         *self = List(GcCow::new(v));
     }
 
+    /// Append another list to this list.
+    pub fn append(&mut self, other: List<T>) {
+        let other = other.0.call_ref_unchecked(|v| v.clone());
+        self.0.mutate(|v| v.append(other));
+    }
+
     /// Conceptually equivalent to `self[start..length]`.
     pub fn subslice_with_length(&self, start: Int, length: Int) -> List<T> {
         let start = start.try_to_usize().expect("List::subslice_with_length: `start` out of range of `usize`!");
