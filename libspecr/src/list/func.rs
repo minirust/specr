@@ -181,9 +181,15 @@ impl<T: Obj> List<T> {
         self.iter().all(f)
     }
 
-    /// applies `f` to each element of the list and returns the outputs as another list.
+    /// Applies `f` to each element of the list and returns the outputs as another list.
     pub fn map<O: Obj>(self, f: impl FnMut(T) -> O) -> List<O> {
         self.iter().map(f).collect()
+    }
+
+    /// Applies `f` pointwise to each element of the list, also passing it the index
+    /// of the element in the list.
+    pub fn map_with_idx<O: Obj>(self, mut f: impl FnMut(Int, T) -> O) -> List<O> {
+        self.iter().enumerate().map(move |(i, x)| f(Int::from(i), x)).collect()
     }
 
     /// Works like map, but flattens nested structure.
