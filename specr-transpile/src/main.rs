@@ -69,7 +69,7 @@ fn create_cargo_toml(config: &Config) {
     let toml = format!("[package]\n\
                 name = \"{name}\"\n\
                 version = \"0.1.0\"\n\
-                edition = \"2021\"\n\
+                edition = \"2024\"\n\
                 \n\
                 [dependencies]\n\
                 libspecr = {libspecr}\n\
