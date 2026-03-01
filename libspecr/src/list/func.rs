@@ -192,6 +192,17 @@ impl<T: Obj> List<T> {
         self.iter().enumerate().map(move |(i, x)| f(Int::from(i), x)).collect()
     }
 
+    /// Fold over the list with the given initial value and step function.
+    pub fn fold<A: Obj>(self, init: A, f: impl FnMut(A, T) -> A) -> A {
+        self.iter().fold(init, f)
+    }
+
+    /// Fold over the list with the given initial value and step function;
+    /// the step function also has access to where in the list we are.
+    pub fn fold_with_idx<A: Obj>(self, init: A, mut f: impl FnMut(A, Int, T) -> A) -> A {
+        self.iter().enumerate().fold(init, move |a, (i, x)| f(a, i.into(), x))
+    }
+
     /// Works like map, but flattens nested structure.
     pub fn flat_map<O: Obj>(self, f: impl FnMut(T) -> List<O>) -> List<O> {
         self.iter().flat_map(f).collect()
