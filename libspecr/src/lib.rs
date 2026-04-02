@@ -89,7 +89,7 @@ pub mod prelude {
     pub use crate::endianness::*;
     pub use crate::mutability::*;
     pub use crate::signedness::*;
-    pub use crate::string::{String, format};
+    pub use crate::string::String;
     pub use crate::nondet::{pick, predict};
     pub use crate::option::*;
 }
