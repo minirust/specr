@@ -6,7 +6,15 @@ use crate::prelude::*;
 static GENERAL_TRAITS: &[&str] = &["GcCompat", "Debug"];
 
 /// Traits only "objects" should derive. They get used in maps, sets, etc.
-static OBJ_TRAITS: &[&str] = &["Clone", "Copy", "PartialEq", "Eq", "Hash"];
+static OBJ_TRAITS: &[&str] = &[
+    "Clone",
+    "Copy",
+    "PartialEq",
+    "Eq",
+    "Hash",
+    "serde::Serialize",
+    "serde::Deserialize",
+];
 
 /// Adds `#[derive(_)]` for all missing traits in `GENERAL_TRAITS` and `OBJ_TRAITS`.
 pub fn auto_derive(mut ast: syn::File) -> syn::File {
@@ -75,11 +83,23 @@ fn add_derive_attr(t: &str, attrs: &mut Vec<Attribute>) {
 
 /// generates `#[derive(t)]`
 fn derive_attr(t: &str) -> Attribute {
-    let id = format_ident!("{}", t);
+    let mut path = Path {
+        leading_colon: None,
+        segments: Punctuated::new(),
+    };
+
+    for n in t.split("::") {
+        path.segments.push(PathSegment {
+            ident: format_ident!("{n}"),
+            arguments: PathArguments::None,
+        });
+    }
 
     // Attributes can not be parsed in of itself,
     // but only as prefix to some Item.
-    let code = quote! { #[derive(#id)] struct X; };
-    let Item::Struct(item) = parse2(code).unwrap() else { unreachable!() };
+    let code = quote! { #[derive(#path)] struct X; };
+    let Item::Struct(item) = parse2(code).unwrap() else {
+        unreachable!()
+    };
     item.attrs[0].clone()
 }

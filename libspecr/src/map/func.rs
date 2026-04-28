@@ -65,8 +65,14 @@ impl<K: Obj, V: Obj> Map<K, V> {
 
     /// Returns the number of elements in `self`.
     pub fn len(self) -> Int {
-        Int::from(self.0.call_ref_unchecked(|m| m.len()))
+        Int::from(self.len_as_usize())
     }
+
+    /// Returns the number of elements in `self`, as `usize`.
+    pub(crate) fn len_as_usize(self) -> usize {
+        self.0.call_ref_unchecked(|m| m.len())
+    }
+
 
     /// Returns `true` if the map contains no elements.
     pub fn is_empty(self) -> bool {
