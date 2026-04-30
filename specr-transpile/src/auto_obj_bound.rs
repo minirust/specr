@@ -32,8 +32,11 @@ pub fn auto_obj_bound(mut ast: syn::File) -> syn::File {
             },
             Item::Impl(i) => {
                 add_obj_bound(&mut i.generics);
-                // We need serde bounds for trait impls. We choose to add them for all impl blocks for consistency.
-                add_serde_bounds(&mut i.generics);
+                if i.trait_.is_some() {
+                    // We need serde bounds for trait impls. We only want these bounds
+                    // on trait impls, not on regular impl blocks, where they would get in the way.
+                    add_serde_bounds(&mut i.generics);
+                }
                 for ii in &mut i.items {
                     match ii {
                         ImplItem::Fn(iim) => {
