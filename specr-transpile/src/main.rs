@@ -73,6 +73,7 @@ fn create_cargo_toml(config: &Config) {
                 \n\
                 [dependencies]\n\
                 libspecr = {libspecr}\n\
+                serde = {{version = \"1.0\", features = [\"derive\"]}}\n\
                ", name = package_name);
     fs::write(config.output_path().join("Cargo.toml"), &toml).unwrap();
 }

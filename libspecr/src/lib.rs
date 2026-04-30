@@ -70,6 +70,8 @@ use gc::*;
 mod obj;
 use obj::*;
 
+mod serde;
+
 #[doc(hidden)]
 pub mod hidden {
     pub use crate::obj::*;
