@@ -1,7 +1,7 @@
 use crate::*;
 use ::serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, GcCompat, Serialize, Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, GcCompat, Serialize, Deserialize, PartialOrd, Ord)]
 /// Expresses whether an integer has a sign or not
 pub enum Signedness {
     #[allow(missing_docs)]

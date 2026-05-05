@@ -7,7 +7,7 @@ use crate::*;
 mod iter;
 mod func;
 
-#[derive(Clone, Copy, Hash, PartialEq, Eq, Debug, GcCompat)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq, Debug, GcCompat, PartialOrd, Ord)]
 /// Garbage-collected `Vec`-like datastructure implementing `Copy`.
 /// Note that functions which seem to mutate the `List`, actually clone the list and allocate a new `GcCow` under the hood.
 pub struct List<T: Obj>(pub(crate) GcCow<IMVector<T>>);

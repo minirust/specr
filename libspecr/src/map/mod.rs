@@ -7,8 +7,10 @@ use crate::*;
 mod func;
 mod iter;
 
-#[derive(Clone, Copy, Hash, PartialEq, Eq, Debug, GcCompat)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq, Debug, GcCompat, PartialOrd, Ord)]
 /// Garbage-collected hash map implementing `Copy`.
+/// This implements `Ord` but the order is not meaningful; this is just so one can use `BTreeMap`s.
+/// In particular, the order might differ across two runs of the same program.
 pub struct Map<K: Obj, V: Obj>(pub(crate) GcCow<IMHashMap<K, V>>);
 
 impl<K: Obj, V: Obj> GcCompat for IMHashMap<K, V> {

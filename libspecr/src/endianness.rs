@@ -1,6 +1,6 @@
 use crate::*;
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, PartialOrd, Ord)]
 /// Either `LittleEndian` or `BigEndian`.
 pub enum Endianness {
     #[allow(missing_docs)]

@@ -12,6 +12,9 @@ static OBJ_TRAITS: &[&str] = &[
     "PartialEq",
     "Eq",
     "Hash",
+    // The order isn't meaningful but useful for using BTree types.
+    "PartialOrd",
+    "Ord",
     "serde::Serialize",
     "serde::Deserialize",
 ];
