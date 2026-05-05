@@ -8,5 +8,5 @@ use crate::*;
 /// will implement this trait.
 ///
 /// A notable exception is closures.
-pub trait Obj: GcCompat + Copy + Debug + Eq + Hash {}
-impl<T> Obj for T where T: GcCompat + Copy + Debug + Eq + Hash {}
+pub trait Obj: GcCompat + Copy + Debug + Eq + Hash + Ord {}
+impl<T> Obj for T where T: GcCompat + Copy + Debug + Eq + Hash + Ord {}

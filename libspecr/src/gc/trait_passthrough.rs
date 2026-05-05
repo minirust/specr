@@ -28,3 +28,16 @@ impl<T> Default for GcCow<T> where T: Default + GcCompat {
         Self::new(T::default())
     }
 }
+
+
+impl<T> PartialOrd for GcCow<T> where T: GcCompat + PartialOrd + Clone {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.call_ref1_unchecked(*other, |x, y| x.partial_cmp(y))
+    }
+}
+
+impl<T> Ord for GcCow<T> where T: GcCompat + Ord + Clone {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.call_ref1_unchecked(*other, |x, y| x.cmp(y))
+    }
+}

@@ -2,7 +2,7 @@ use crate::*;
 
 use std::fmt::{Display, Formatter, Error};
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Hash, GcCompat)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Hash, GcCompat, PartialOrd, Ord)]
 /// Garbage-collected wrapper around `std::string::String` implementing `Copy`.
 pub struct String(pub(crate) GcCow<std::string::String>);
 
