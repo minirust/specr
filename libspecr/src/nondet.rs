@@ -1,6 +1,5 @@
 use crate::*;
 
-use std::convert::Infallible;
 use std::ops::*;
 
 #[derive(Copy, Clone, GcCompat)]
@@ -20,12 +19,16 @@ pub fn pick<T: Obj>(distr: impl Distribution<T>, f: impl Fn(T) -> bool) -> crate
     panic!("Timeout! `pick` could not find a valid value.");
 }
 
+/// An empty type that we can implement foreign traits on without violating trait solver rules.
+/// Used because `Try` requires that its `Residual` implements a certain trait.
+pub enum MyInfallible {}
+
 /// The `predict` function from the minirust spec. See [Non-determinism](https://github.com/minirust/minirust/blob/master/README.md#non-determinism).
 pub fn predict<T>(_f: impl Fn(T) -> bool) -> crate::Nondet<T> { unimplemented!() }
 
 impl<T> Try for Nondet<T> {
     type Output = T;
-    type Residual = Infallible;
+    type Residual = MyInfallible;
 
     fn from_output(output: Self::Output) -> Self {
         Nondet(output)
@@ -36,8 +39,12 @@ impl<T> Try for Nondet<T> {
     }
 }
 
-impl<T> FromResidual<Infallible> for Nondet<T> {
-    fn from_residual(residual: Infallible) -> Self {
+impl<T> FromResidual<MyInfallible> for Nondet<T> {
+    fn from_residual(residual: MyInfallible) -> Self {
         match residual {}
     }
+}
+
+impl<T> Residual<T> for MyInfallible {
+    type TryType = Nondet<T>;
 }

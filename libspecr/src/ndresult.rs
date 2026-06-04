@@ -1,6 +1,8 @@
 use std::ops::{Try, FromResidual, ControlFlow, Residual, Yeet};
 use std::convert::Infallible;
 
+use crate::MyInfallible;
+
 /// Conceptually, this is a `Nondet<Result<T, E>>`.
 ///
 /// This newtype is necessary so that applying `?` on a `NdResult<T, E>` yields `T` and not `Result<T, E>`.
@@ -59,8 +61,8 @@ impl<T, E> FromResidual<Result<Infallible, E>> for NdResult<T, E> {
 }
 
 // in order to use `?` on Nondet in a NdResult-returning fn.
-impl<T, E> FromResidual<Infallible> for NdResult<T, E> {
-    fn from_residual(residual: Infallible) -> Self {
+impl<T, E> FromResidual<MyInfallible> for NdResult<T, E> {
+    fn from_residual(residual: MyInfallible) -> Self {
         match residual {}
     }
 }
