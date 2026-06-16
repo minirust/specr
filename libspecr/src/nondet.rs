@@ -19,9 +19,17 @@ pub fn pick<T: Obj>(distr: impl Distribution<T>, f: impl Fn(T) -> bool) -> crate
     panic!("Timeout! `pick` could not find a valid value.");
 }
 
-/// An empty type that we can implement foreign traits on without violating trait solver rules.
-/// Used because `Try` requires that its `Residual` implements a certain trait.
-pub enum MyInfallible {}
+pub(crate) mod unnameable_infallible {
+
+    /// An empty type that we can implement foreign traits on without violating coherence rules.
+    /// Used because `Try` requires that its `Residual` implements a certain trait.
+    /// This type is not `pub`-licly nameable directly due to the surrounding module,
+    /// but still `pub` since it can be referred to as `Nondet<T>::Residual` due to the trait implementation below.
+    pub enum MyInfallible {}
+
+}
+
+use unnameable_infallible::MyInfallible;
 
 /// The `predict` function from the minirust spec. See [Non-determinism](https://github.com/minirust/minirust/blob/master/README.md#non-determinism).
 pub fn predict<T>(_f: impl Fn(T) -> bool) -> crate::Nondet<T> { unimplemented!() }

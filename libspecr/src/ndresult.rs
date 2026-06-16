@@ -1,7 +1,7 @@
 use std::ops::{Try, FromResidual, ControlFlow, Residual, Yeet};
 use std::convert::Infallible;
 
-use crate::MyInfallible;
+use crate::unnameable_infallible::MyInfallible;
 
 /// Conceptually, this is a `Nondet<Result<T, E>>`.
 ///
