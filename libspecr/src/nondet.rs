@@ -19,7 +19,7 @@ pub fn pick<T: Obj>(distr: impl Distribution<T>, f: impl Fn(T) -> bool) -> crate
     panic!("Timeout! `pick` could not find a valid value.");
 }
 
-pub(crate) mod unnameable_infallible {
+pub(crate) mod sealed {
 
     /// An empty type that we can implement foreign traits on without violating coherence rules.
     /// Used because `Try` requires that its `Residual` implements a certain trait.
@@ -29,7 +29,7 @@ pub(crate) mod unnameable_infallible {
 
 }
 
-use unnameable_infallible::MyInfallible;
+pub(crate) use sealed::MyInfallible;
 
 /// The `predict` function from the minirust spec. See [Non-determinism](https://github.com/minirust/minirust/blob/master/README.md#non-determinism).
 pub fn predict<T>(_f: impl Fn(T) -> bool) -> crate::Nondet<T> { unimplemented!() }
