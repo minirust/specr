@@ -19,24 +19,20 @@ pub fn pick<T: Obj>(distr: impl Distribution<T>, f: impl Fn(T) -> bool) -> crate
     panic!("Timeout! `pick` could not find a valid value.");
 }
 
-pub(crate) mod sealed {
 
-    /// An empty type that we can implement foreign traits on without violating coherence rules.
-    /// Used because `Try` requires that its `Residual` implements a certain trait.
-    /// This type is not `pub`-licly nameable directly due to the surrounding module,
-    /// but still `pub` since it can be referred to as `Nondet<T>::Residual` due to the trait implementation below.
-    pub enum MyInfallible {}
+/// The `Try::Residual` for `Nondet`. This type is empty because `Nondet` has no residual
+/// as using the `?` operator on a `Nondet<T>` can not fail. We can not use `Infallible` here
+/// since we must implement the `Residual` trait, which coherence blocks us from doing for
+/// foreign types.
+pub enum NondetResidual {}
 
-}
-
-pub(crate) use sealed::MyInfallible;
 
 /// The `predict` function from the minirust spec. See [Non-determinism](https://github.com/minirust/minirust/blob/master/README.md#non-determinism).
 pub fn predict<T>(_f: impl Fn(T) -> bool) -> crate::Nondet<T> { unimplemented!() }
 
 impl<T> Try for Nondet<T> {
     type Output = T;
-    type Residual = MyInfallible;
+    type Residual = NondetResidual;
 
     fn from_output(output: Self::Output) -> Self {
         Nondet(output)
@@ -47,12 +43,12 @@ impl<T> Try for Nondet<T> {
     }
 }
 
-impl<T> FromResidual<MyInfallible> for Nondet<T> {
-    fn from_residual(residual: MyInfallible) -> Self {
+impl<T> FromResidual<NondetResidual> for Nondet<T> {
+    fn from_residual(residual: NondetResidual) -> Self {
         match residual {}
     }
 }
 
-impl<T> Residual<T> for MyInfallible {
+impl<T> Residual<T> for NondetResidual {
     type TryType = Nondet<T>;
 }

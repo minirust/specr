@@ -1,7 +1,7 @@
 use std::ops::{Try, FromResidual, ControlFlow, Residual, Yeet};
 use std::convert::Infallible;
 
-use crate::MyInfallible;
+use crate::NondetResidual;
 
 /// Conceptually, this is a `Nondet<Result<T, E>>`.
 ///
@@ -61,8 +61,8 @@ impl<T, E> FromResidual<Result<Infallible, E>> for NdResult<T, E> {
 }
 
 // in order to use `?` on Nondet in a NdResult-returning fn.
-impl<T, E> FromResidual<MyInfallible> for NdResult<T, E> {
-    fn from_residual(residual: MyInfallible) -> Self {
+impl<T, E> FromResidual<NondetResidual> for NdResult<T, E> {
+    fn from_residual(residual: NondetResidual) -> Self {
         match residual {}
     }
 }
