@@ -17,4 +17,12 @@ impl Step for Int {
     fn backward_checked(start: Self, count: usize) -> Option<Self> {
         Some(start - count)
     }
+
+    fn forward_overflowing(start: Self, count: usize) -> (Self, bool) {
+        (start + count, false)
+    }
+
+    fn backward_overflowing(start: Self, count: usize) -> (Self, bool) {
+        (start - count, false)
+    }
 }
