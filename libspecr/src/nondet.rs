@@ -7,7 +7,7 @@ use std::ops::*;
 pub struct Nondet<T>(pub(crate) T);
 
 /// The `pick` function from the minirust spec.  See [Non-determinism](https://github.com/minirust/minirust/blob/master/README.md#non-determinism).
-pub fn pick<T: Obj>(distr: impl Distribution<T>, f: impl Fn(T) -> bool) -> crate::Nondet<T> {
+pub fn pick<T: Obj, D: Distribution<T>>(distr: D, f: impl Fn(T) -> bool) -> crate::Nondet<T> {
     let mut rng = rand::thread_rng();
     for _ in 0..50 {
         let s = distr.sample(&mut rng);
